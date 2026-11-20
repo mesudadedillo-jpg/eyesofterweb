@@ -1,0 +1,23 @@
+@model Tutor
+@{
+    ViewData["Title"] = "Eliminar tutor";
+}
+
+<h1 class="h3 text-danger">Eliminar tutor</h1>
+<div class="card border-danger shadow-sm">
+    <div class="card-body">
+        <p>¿Seguro que deseas eliminar a <strong>@Model.NombreCompleto</strong> (@Model.Parentesco, tel. @Model.Telefono)?</p>
+        @if (Model.Alumnos.Any())
+        {
+            <div class="alert alert-warning">
+                <i class="bi bi-exclamation-triangle me-1"></i>
+                Tiene <strong>@Model.Alumnos.Count</strong> alumno(s) a su cargo. La aplicación no permitirá eliminarlo hasta reasignarlos.
+            </div>
+        }
+        <form asp-action="Delete" method="post" class="d-flex gap-2">
+            <input type="hidden" asp-for="Id" />
+            <button type="submit" class="btn btn-danger"><i class="bi bi-trash me-1"></i>Eliminar</button>
+            <a asp-action="Index" class="btn btn-outline-secondary">Cancelar</a>
+        </form>
+    </div>
+</div>

@@ -1,0 +1,20 @@
+@model Caso
+@{
+    ViewData["Title"] = "Eliminar caso";
+}
+
+<h1 class="h3 text-danger">Eliminar caso</h1>
+<div class="card border-danger shadow-sm">
+    <div class="card-body">
+        <p>¿Seguro que deseas eliminar el caso <code>@Model.Folio</code> de <strong>@Model.Alumno?.NombreCompleto</strong>?</p>
+        <div class="alert alert-warning">
+            <i class="bi bi-exclamation-triangle me-1"></i>
+            También se eliminarán sus <strong>@Model.Eventos.Count</strong> evento(s) de la línea de tiempo (borrado en cascada).
+        </div>
+        <form asp-action="Delete" method="post" class="d-flex gap-2">
+            <input type="hidden" asp-for="Id" />
+            <button type="submit" class="btn btn-danger"><i class="bi bi-trash me-1"></i>Eliminar</button>
+            <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-outline-secondary">Cancelar</a>
+        </form>
+    </div>
+</div>

@@ -1,0 +1,37 @@
+@model Tutor
+<div asp-validation-summary="ModelOnly" class="alert alert-danger py-2" role="alert"></div>
+<div class="row g-3">
+    <div class="col-md-6">
+        <label asp-for="Nombre" class="form-label requerido"></label>
+        <input asp-for="Nombre" class="form-control" />
+        <span asp-validation-for="Nombre" class="text-danger small"></span>
+    </div>
+    <div class="col-md-6">
+        <label asp-for="Apellidos" class="form-label requerido"></label>
+        <input asp-for="Apellidos" class="form-control" />
+        <span asp-validation-for="Apellidos" class="text-danger small"></span>
+    </div>
+    <div class="col-md-4">
+        <label asp-for="Parentesco" class="form-label requerido"></label>
+        <select asp-for="Parentesco" class="form-select">
+            <option>Madre</option>
+            <option>Padre</option>
+            <option>Abuela</option>
+            <option>Abuelo</option>
+            <option>Tía</option>
+            <option>Tío</option>
+            <option>Tutor legal</option>
+        </select>
+        <span asp-validation-for="Parentesco" class="text-danger small"></span>
+    </div>
+    <div class="col-md-4">
+        <label asp-for="Telefono" class="form-label requerido"></label>
+        <input asp-for="Telefono" class="form-control" inputmode="numeric" maxlength="10" placeholder="10 dígitos" />
+        <span asp-validation-for="Telefono" class="text-danger small"></span>
+    </div>
+    <div class="col-md-4">
+        <label asp-for="Correo" class="form-label"></label>
+        <input asp-for="Correo" class="form-control" />
+        <span asp-validation-for="Correo" class="text-danger small"></span>
+    </div>
+</div>

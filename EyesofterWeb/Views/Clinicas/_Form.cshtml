@@ -1,0 +1,35 @@
+@model Clinica
+<div asp-validation-summary="ModelOnly" class="alert alert-danger py-2" role="alert"></div>
+<div class="row g-3">
+    <div class="col-md-8">
+        <label asp-for="Nombre" class="form-label requerido"></label>
+        <input asp-for="Nombre" class="form-control" />
+        <span asp-validation-for="Nombre" class="text-danger small"></span>
+    </div>
+    <div class="col-md-4">
+        <label asp-for="Tipo" class="form-label requerido"></label>
+        <select asp-for="Tipo" asp-items="Html.GetEnumSelectList<TipoClinica>()" class="form-select"></select>
+        <span asp-validation-for="Tipo" class="text-danger small"></span>
+    </div>
+    <div class="col-12">
+        <label asp-for="Direccion" class="form-label requerido"></label>
+        <input asp-for="Direccion" class="form-control" />
+        <span asp-validation-for="Direccion" class="text-danger small"></span>
+    </div>
+    <div class="col-md-4">
+        <label asp-for="Telefono" class="form-label requerido"></label>
+        <input asp-for="Telefono" class="form-control" inputmode="numeric" maxlength="10" placeholder="10 dígitos" />
+        <span asp-validation-for="Telefono" class="text-danger small"></span>
+    </div>
+    <div class="col-md-5">
+        <label asp-for="Correo" class="form-label"></label>
+        <input asp-for="Correo" class="form-control" />
+        <span asp-validation-for="Correo" class="text-danger small"></span>
+    </div>
+    <div class="col-md-3 d-flex align-items-end">
+        <div class="form-check form-switch mb-2">
+            <input asp-for="EsAsociada" class="form-check-input" role="switch" />
+            <label asp-for="EsAsociada" class="form-check-label"></label>
+        </div>
+    </div>
+</div>

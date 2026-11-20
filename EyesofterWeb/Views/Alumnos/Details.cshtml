@@ -1,0 +1,84 @@
+@model Alumno
+@{
+    ViewData["Title"] = "Alumno";
+    var esAdmin = User.IsInRole(Roles.Administrador);
+    var puedeEditar = esAdmin || User.IsInRole(Roles.Enfermeria);
+    var tieneCasoActivo = Model.Casos.Any(c => c.Estado != EstadoCaso.Cerrado);
+}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <div>
+        <h1 class="h3 mb-0">@Model.NombreCompleto</h1>
+        <span class="text-body-secondary">Matrícula <code>@Model.Matricula</code></span>
+    </div>
+    <div class="d-flex flex-wrap gap-2">
+        @if (puedeEditar)
+        {
+            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-outline-primary"><i class="bi bi-pencil me-1"></i>Editar</a>
+        }
+        @if (esAdmin)
+        {
+            <a asp-action="Delete" asp-route-id="@Model.Id" class="btn btn-outline-danger"><i class="bi bi-trash me-1"></i>Eliminar</a>
+        }
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-5">
+        <div class="card shadow-sm h-100">
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-5">Grado y grupo</dt><dd class="col-7">@Model.GradoGrupo</dd>
+                    <dt class="col-5">Nacimiento</dt><dd class="col-7">@Model.FechaNacimiento.ToString("dd/MM/yyyy")</dd>
+                    <dt class="col-5">@Html.DisplayNameFor(m => m.UsaLentes)</dt><dd class="col-7">@(Model.UsaLentes ? "Sí" : "No")</dd>
+                    <dt class="col-5">Tutor</dt>
+                    <dd class="col-7">
+                        @if (puedeEditar)
+                        {
+                            <a asp-controller="Tutores" asp-action="Details" asp-route-id="@Model.TutorId">@Model.Tutor?.NombreCompleto</a>
+                            <div class="small text-body-secondary">@Model.Tutor?.Parentesco · @Model.Tutor?.Telefono</div>
+                        }
+                        else
+                        {
+                            @Model.Tutor?.NombreCompleto
+                            <div class="small text-body-secondary">Datos de contacto restringidos para tu rol.</div>
+                        }
+                    </dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-7">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-body d-flex justify-content-between align-items-center">
+                <h2 class="h6 mb-0">Casos (@Model.Casos.Count)</h2>
+                @if (puedeEditar && !tieneCasoActivo)
+                {
+                    <a asp-controller="Casos" asp-action="Create" asp-route-alumnoId="@Model.Id" class="btn btn-sm btn-marca"><i class="bi bi-plus-lg"></i> Abrir caso</a>
+                }
+            </div>
+            <div class="table-responsive">
+                <table class="table table-sm align-middle mb-0">
+                    <thead><tr><th>Folio</th><th>Semáforo</th><th>Estado</th><th>Clínica</th></tr></thead>
+                    <tbody>
+                        @if (!Model.Casos.Any())
+                        {
+                            <tr><td colspan="4" class="text-body-secondary">Sin casos registrados.</td></tr>
+                        }
+                        @foreach (var c in Model.Casos.OrderByDescending(c => c.FechaDeteccion))
+                        {
+                            <tr>
+                                <td><a asp-controller="Casos" asp-action="Details" asp-route-id="@c.Id">@c.Folio</a></td>
+                                <td><partial name="_Semaforo" model="c.Semaforo" /></td>
+                                <td><partial name="_Estado" model="c.Estado" /></td>
+                                <td>@(c.Clinica?.Nombre ?? "—")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<a asp-action="Index" class="btn btn-link mt-3 px-0"><i class="bi bi-arrow-left"></i> Volver a alumnos</a>

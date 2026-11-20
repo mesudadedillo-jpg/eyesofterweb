@@ -1,0 +1,55 @@
+@model Alumno
+<div asp-validation-summary="ModelOnly" class="alert alert-danger py-2" role="alert"></div>
+<div class="row g-3">
+    <div class="col-md-4">
+        <label asp-for="Matricula" class="form-label requerido"></label>
+        <input asp-for="Matricula" class="form-control campo-mayusculas" placeholder="Ej. PRI2026010" />
+        <span asp-validation-for="Matricula" class="text-danger small"></span>
+    </div>
+    <div class="col-md-4">
+        <label asp-for="Nombre" class="form-label requerido"></label>
+        <input asp-for="Nombre" class="form-control" />
+        <span asp-validation-for="Nombre" class="text-danger small"></span>
+    </div>
+    <div class="col-md-4">
+        <label asp-for="Apellidos" class="form-label requerido"></label>
+        <input asp-for="Apellidos" class="form-control" />
+        <span asp-validation-for="Apellidos" class="text-danger small"></span>
+    </div>
+    <div class="col-md-4">
+        <label asp-for="FechaNacimiento" class="form-label requerido">Fecha de nacimiento</label>
+        <input asp-for="FechaNacimiento" class="form-control" />
+        <span asp-validation-for="FechaNacimiento" class="text-danger small"></span>
+    </div>
+    <div class="col-6 col-md-3">
+        <label asp-for="Nivel" class="form-label requerido"></label>
+        <select asp-for="Nivel" asp-items="Html.GetEnumSelectList<NivelEducativo>()" class="form-select"></select>
+        <span asp-validation-for="Nivel" class="text-danger small"></span>
+    </div>
+    <div class="col-3 col-md-2">
+        <label asp-for="Grado" class="form-label requerido"></label>
+        <input asp-for="Grado" class="form-control" min="1" max="6" />
+        <span asp-validation-for="Grado" class="text-danger small"></span>
+    </div>
+    <div class="col-3 col-md-3">
+        <label asp-for="Grupo" class="form-label requerido"></label>
+        <select asp-for="Grupo" class="form-select">
+            <option>A</option><option>B</option><option>C</option><option>D</option><option>E</option><option>F</option>
+        </select>
+        <span asp-validation-for="Grupo" class="text-danger small"></span>
+    </div>
+    <div class="col-md-8">
+        <label asp-for="TutorId" class="form-label requerido"></label>
+        <select asp-for="TutorId" asp-items="ViewBag.TutorId" class="form-select">
+            <option value="">-- Selecciona un tutor --</option>
+        </select>
+        <span asp-validation-for="TutorId" class="text-danger small"></span>
+        <div class="form-text">¿No aparece? <a asp-controller="Tutores" asp-action="Create" target="_blank">Registra al tutor</a> y recarga.</div>
+    </div>
+    <div class="col-md-4 d-flex align-items-end">
+        <div class="form-check form-switch mb-2">
+            <input asp-for="UsaLentes" class="form-check-input" role="switch" />
+            <label asp-for="UsaLentes" class="form-check-label"></label>
+        </div>
+    </div>
+</div>

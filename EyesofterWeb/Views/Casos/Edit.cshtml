@@ -1,0 +1,36 @@
+@model Caso
+@{
+    ViewData["Title"] = "Editar caso";
+}
+
+<h1 class="h3">Editar caso <code>@Model.Folio</code></h1>
+<p class="text-body-secondary">Alumno: <strong>@Model.Alumno?.NombreCompleto</strong></p>
+<div class="card shadow-sm">
+    <div class="card-body">
+        <form asp-action="Edit" method="post">
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2" role="alert"></div>
+            <input type="hidden" asp-for="Id" />
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label asp-for="Estado" class="form-label requerido"></label>
+                    <select asp-for="Estado" class="form-select">
+                        <option value="@EstadoCaso.Abierto">Abierto</option>
+                        <option value="@EstadoCaso.EnSeguimiento">En seguimiento</option>
+                    </select>
+                    <span asp-validation-for="Estado" class="text-danger small"></span>
+                    <div class="form-text">Para cerrar el caso usa el botón "Cerrar caso".</div>
+                </div>
+                <div class="col-md-6"></div>
+                <partial name="_Campos" model="Model" />
+            </div>
+            <div class="d-flex gap-2 mt-4">
+                <button type="submit" class="btn btn-marca"><i class="bi bi-save me-1"></i>Guardar cambios</button>
+                <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-outline-secondary">Cancelar</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

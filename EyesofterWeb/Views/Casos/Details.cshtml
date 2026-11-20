@@ -1,0 +1,105 @@
+@model Caso
+@{
+    ViewData["Title"] = "Caso " + Model.Folio;
+    var esAdmin = User.IsInRole(Roles.Administrador);
+    var puedeEditar = esAdmin || User.IsInRole(Roles.Enfermeria);
+    var cerrado = Model.Estado == EstadoCaso.Cerrado;
+}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <div>
+        <h1 class="h3 mb-1">Caso <code>@Model.Folio</code></h1>
+        <partial name="_Semaforo" model="Model.Semaforo" />
+        <partial name="_Estado" model="Model.Estado" />
+    </div>
+    <div class="d-flex flex-wrap gap-2">
+        @if (puedeEditar && !cerrado)
+        {
+            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-outline-primary"><i class="bi bi-pencil me-1"></i>Editar</a>
+            <a asp-action="Cerrar" asp-route-id="@Model.Id" class="btn btn-outline-success"><i class="bi bi-check2-square me-1"></i>Cerrar caso</a>
+        }
+        @if (esAdmin && cerrado)
+        {
+            <form asp-action="Reabrir" asp-route-id="@Model.Id" method="post" class="d-inline">
+                <button type="submit" class="btn btn-outline-warning"><i class="bi bi-arrow-counterclockwise me-1"></i>Reabrir</button>
+            </form>
+        }
+        @if (esAdmin)
+        {
+            <a asp-action="Delete" asp-route-id="@Model.Id" class="btn btn-outline-danger"><i class="bi bi-trash me-1"></i>Eliminar</a>
+        }
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-5">
+        <div class="card shadow-sm mb-3">
+            <div class="card-header bg-body"><h2 class="h6 mb-0">Datos del caso</h2></div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-5">Alumno</dt>
+                    <dd class="col-7"><a asp-controller="Alumnos" asp-action="Details" asp-route-id="@Model.AlumnoId">@Model.Alumno?.NombreCompleto</a>
+                        <div class="small text-body-secondary">@Model.Alumno?.GradoGrupo</div></dd>
+                    <dt class="col-5">Detección</dt><dd class="col-7">@Model.FechaDeteccion.ToString("dd/MM/yyyy")</dd>
+                    <dt class="col-5">Agudeza OD / OI</dt><dd class="col-7">@Model.AgudezaOjoDerecho / @Model.AgudezaOjoIzquierdo</dd>
+                    <dt class="col-5">Clínica</dt>
+                    <dd class="col-7">
+                        @if (Model.Clinica is not null)
+                        {
+                            <a asp-controller="Clinicas" asp-action="Details" asp-route-id="@Model.ClinicaId">@Model.Clinica.Nombre</a>
+                        }
+                        else
+                        {
+                            <span class="text-body-secondary">Sin canalizar</span>
+                        }
+                    </dd>
+                    @if (Model.FechaCierre.HasValue)
+                    {
+                        <dt class="col-5">Cierre</dt><dd class="col-7">@Model.FechaCierre.Value.ToString("dd/MM/yyyy")</dd>
+                    }
+                    <dt class="col-5">Registrado por</dt><dd class="col-7 small">@(Model.RegistradoPor ?? "—")</dd>
+                    <dt class="col-12">Observaciones</dt><dd class="col-12">@(string.IsNullOrWhiteSpace(Model.Observaciones) ? "—" : Model.Observaciones)</dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-7">
+        <div class="card shadow-sm">
+            <div class="card-header bg-body d-flex justify-content-between align-items-center">
+                <h2 class="h6 mb-0">Línea de tiempo (@Model.Eventos.Count)</h2>
+                @if (puedeEditar && !cerrado)
+                {
+                    <a asp-controller="Eventos" asp-action="Create" asp-route-casoId="@Model.Id" class="btn btn-sm btn-marca"><i class="bi bi-plus-lg"></i> Agregar evento</a>
+                }
+            </div>
+            <div class="card-body">
+                <ul class="linea-tiempo mb-0">
+                    @foreach (var ev in Model.Eventos.OrderBy(e => e.Fecha).ThenBy(e => e.Id))
+                    {
+                        <li>
+                            <div class="d-flex flex-wrap justify-content-between gap-2">
+                                <strong>@ev.Tipo.Texto()</strong>
+                                <span class="small text-body-secondary">@ev.Fecha.ToString("dd/MM/yyyy")</span>
+                            </div>
+                            <div>@ev.Descripcion</div>
+                            <div class="small text-body-secondary">
+                                @ev.RegistradoPor
+                                @if (esAdmin)
+                                {
+                                    <a asp-controller="Eventos" asp-action="Edit" asp-route-id="@ev.Id" class="ms-2">Editar</a>
+                                    <form asp-controller="Eventos" asp-action="Delete" asp-route-id="@ev.Id" method="post" class="d-inline"
+                                          onsubmit="return confirm('¿Eliminar este evento?');">
+                                        <button type="submit" class="btn btn-link btn-sm text-danger p-0 ms-2 align-baseline">Eliminar</button>
+                                    </form>
+                                }
+                            </div>
+                        </li>
+                    }
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<a asp-action="Index" class="btn btn-link mt-3 px-0"><i class="bi bi-arrow-left"></i> Volver a casos</a>

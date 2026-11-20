@@ -1,0 +1,32 @@
+@model CerrarCasoViewModel
+@{
+    ViewData["Title"] = "Cerrar caso";
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+        <h1 class="h3">Cerrar caso <code>@Model.Folio</code></h1>
+        <p class="text-body-secondary">Alumno: <strong>@Model.Alumno</strong>. Se registrará un evento de cierre con la fecha de hoy.</p>
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <form asp-action="Cerrar" method="post">
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2" role="alert"></div>
+                    <input type="hidden" asp-for="CasoId" />
+                    <div class="mb-3">
+                        <label asp-for="Comentario" class="form-label requerido"></label>
+                        <textarea asp-for="Comentario" class="form-control" rows="4" placeholder="Ej. El alumno fue atendido y ya usa lentes."></textarea>
+                        <span asp-validation-for="Comentario" class="text-danger small"></span>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-success"><i class="bi bi-check2-square me-1"></i>Cerrar caso</button>
+                        <a asp-action="Details" asp-route-id="@Model.CasoId" class="btn btn-outline-secondary">Cancelar</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

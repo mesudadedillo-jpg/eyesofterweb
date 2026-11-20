@@ -1,0 +1,60 @@
+@model Clinica
+@{
+    ViewData["Title"] = "Clínica";
+    var esAdmin = User.IsInRole(Roles.Administrador);
+}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <div>
+        <h1 class="h3 mb-0">@Model.Nombre</h1>
+        <span class="text-body-secondary">@Model.Tipo.Texto() @(Model.EsAsociada ? "· Asociada" : "")</span>
+    </div>
+    @if (esAdmin)
+    {
+        <div class="d-flex gap-2">
+            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-outline-primary"><i class="bi bi-pencil me-1"></i>Editar</a>
+            <a asp-action="Delete" asp-route-id="@Model.Id" class="btn btn-outline-danger"><i class="bi bi-trash me-1"></i>Eliminar</a>
+        </div>
+    }
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-5">
+        <div class="card shadow-sm h-100">
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-4">@Html.DisplayNameFor(m => m.Direccion)</dt><dd class="col-8">@Model.Direccion</dd>
+                    <dt class="col-4">@Html.DisplayNameFor(m => m.Telefono)</dt><dd class="col-8">@Model.Telefono</dd>
+                    <dt class="col-4">@Html.DisplayNameFor(m => m.Correo)</dt><dd class="col-8">@(Model.Correo ?? "—")</dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-7">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-body"><h2 class="h6 mb-0">Casos canalizados (@Model.Casos.Count)</h2></div>
+            <div class="table-responsive">
+                <table class="table table-sm align-middle mb-0">
+                    <thead><tr><th>Folio</th><th>Alumno</th><th>Semáforo</th><th>Estado</th></tr></thead>
+                    <tbody>
+                        @if (!Model.Casos.Any())
+                        {
+                            <tr><td colspan="4" class="text-body-secondary">Sin casos canalizados.</td></tr>
+                        }
+                        @foreach (var c in Model.Casos.OrderByDescending(c => c.FechaDeteccion))
+                        {
+                            <tr>
+                                <td><a asp-controller="Casos" asp-action="Details" asp-route-id="@c.Id">@c.Folio</a></td>
+                                <td>@c.Alumno?.NombreCompleto</td>
+                                <td><partial name="_Semaforo" model="c.Semaforo" /></td>
+                                <td><partial name="_Estado" model="c.Estado" /></td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<a asp-action="Index" class="btn btn-link mt-3 px-0"><i class="bi bi-arrow-left"></i> Volver a clínicas</a>

@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <!-- Si en clase usan .NET 8: cambia a net8.0 y los paquetes de abajo a Version="8.0.*" -->
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>EyesofterWeb</RootNamespace>
+    <UserSecretsId>eyesofterweb-upt-403-actividad4</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Identity con almacenamiento en Entity Framework Core -->
+    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="10.0.*" />
+    <!-- Página de error de base de datos en desarrollo (aplicar migraciones pendientes) -->
+    <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="10.0.*" />
+    <!-- Proveedor de SQL Server -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.*" />
+    <!-- Fuerza la versión 10 de este paquete indirecto (la 9.0.11 que trae SqlClient tiene vulnerabilidades conocidas) -->
+    <PackageReference Include="System.Security.Cryptography.Pkcs" Version="10.0.*" />
+    <!-- Herramientas de migraciones (dotnet ef / Consola del Administrador de paquetes) -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.*">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.*">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+</Project>

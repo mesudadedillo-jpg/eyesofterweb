@@ -1,0 +1,51 @@
+@model IEnumerable<Clinica>
+@{
+    ViewData["Title"] = "Clínicas";
+    var esAdmin = User.IsInRole(Roles.Administrador);
+}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <div>
+        <h1 class="h3 mb-0">Clínicas</h1>
+        <p class="text-body-secondary mb-0">Ópticas y consultorios a los que se canaliza a los alumnos.</p>
+    </div>
+    @if (esAdmin)
+    {
+        <a asp-action="Create" class="btn btn-marca"><i class="bi bi-plus-lg me-1"></i>Nueva clínica</a>
+    }
+</div>
+
+<div class="row g-3">
+    @if (!Model.Any())
+    {
+        <div class="col-12"><div class="alert alert-light border">No hay clínicas registradas.</div></div>
+    }
+    @foreach (var item in Model)
+    {
+        <div class="col-md-6 col-xl-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start gap-2">
+                        <h2 class="h6 mb-1">@item.Nombre</h2>
+                        @if (item.EsAsociada)
+                        {
+                            <span class="badge text-bg-success"><i class="bi bi-patch-check me-1"></i>Asociada</span>
+                        }
+                    </div>
+                    <p class="small text-body-secondary mb-2">@item.Tipo.Texto()</p>
+                    <p class="small mb-1"><i class="bi bi-geo-alt me-1"></i>@item.Direccion</p>
+                    <p class="small mb-1"><i class="bi bi-telephone me-1"></i>@item.Telefono</p>
+                    <p class="small mb-0"><i class="bi bi-clipboard2-pulse me-1"></i>@item.Casos.Count caso(s) canalizados</p>
+                </div>
+                <div class="card-footer bg-body d-flex gap-2">
+                    <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-outline-secondary"><i class="bi bi-eye"></i> Ver</a>
+                    @if (esAdmin)
+                    {
+                        <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i> Editar</a>
+                        <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></a>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+</div>

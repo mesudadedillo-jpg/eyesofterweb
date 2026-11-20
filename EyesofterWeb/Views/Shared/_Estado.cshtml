@@ -1,0 +1,13 @@
+@model EstadoCaso
+@switch (Model)
+{
+    case EstadoCaso.Cerrado:
+        <span class="badge text-bg-secondary"><i class="bi bi-lock-fill me-1" aria-hidden="true"></i>Cerrado</span>
+        break;
+    case EstadoCaso.EnSeguimiento:
+        <span class="badge text-bg-info"><i class="bi bi-arrow-repeat me-1" aria-hidden="true"></i>En seguimiento</span>
+        break;
+    default:
+        <span class="badge text-bg-primary"><i class="bi bi-folder2-open me-1" aria-hidden="true"></i>Abierto</span>
+        break;
+}

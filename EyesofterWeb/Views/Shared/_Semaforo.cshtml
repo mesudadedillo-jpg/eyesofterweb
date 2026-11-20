@@ -1,0 +1,14 @@
+@model Semaforo
+@* El semáforo no depende solo del color: lleva icono y texto (accesibilidad). *@
+@switch (Model)
+{
+    case Semaforo.Rojo:
+        <span class="badge semaforo semaforo-rojo"><i class="bi bi-exclamation-octagon-fill me-1" aria-hidden="true"></i>Rojo</span>
+        break;
+    case Semaforo.Amarillo:
+        <span class="badge semaforo semaforo-amarillo"><i class="bi bi-exclamation-triangle-fill me-1" aria-hidden="true"></i>Amarillo</span>
+        break;
+    default:
+        <span class="badge semaforo semaforo-verde"><i class="bi bi-check-circle-fill me-1" aria-hidden="true"></i>Verde</span>
+        break;
+}

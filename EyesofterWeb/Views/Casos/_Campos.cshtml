@@ -1,0 +1,35 @@
+@model Caso
+@* Campos comunes de captura del caso (Create y Edit) *@
+<div class="col-md-6">
+    <label asp-for="ClinicaId" class="form-label"></label>
+    <select asp-for="ClinicaId" asp-items="ViewBag.ClinicaId" class="form-select">
+        <option value="">-- Sin canalizar todavía --</option>
+    </select>
+    <span asp-validation-for="ClinicaId" class="text-danger small"></span>
+    <div class="form-text">Obligatoria si el semáforo es rojo.</div>
+</div>
+<div class="col-md-6">
+    <label asp-for="Semaforo" class="form-label requerido"></label>
+    <select asp-for="Semaforo" asp-items="Html.GetEnumSelectList<Semaforo>()" class="form-select"></select>
+    <span asp-validation-for="Semaforo" class="text-danger small"></span>
+</div>
+<div class="col-md-4">
+    <label asp-for="FechaDeteccion" class="form-label requerido">Fecha de detección</label>
+    <input asp-for="FechaDeteccion" class="form-control" />
+    <span asp-validation-for="FechaDeteccion" class="text-danger small"></span>
+</div>
+<div class="col-6 col-md-4">
+    <label asp-for="AgudezaOjoDerecho" class="form-label requerido"></label>
+    <input asp-for="AgudezaOjoDerecho" class="form-control" placeholder="20/40" />
+    <span asp-validation-for="AgudezaOjoDerecho" class="text-danger small"></span>
+</div>
+<div class="col-6 col-md-4">
+    <label asp-for="AgudezaOjoIzquierdo" class="form-label requerido"></label>
+    <input asp-for="AgudezaOjoIzquierdo" class="form-control" placeholder="20/40" />
+    <span asp-validation-for="AgudezaOjoIzquierdo" class="text-danger small"></span>
+</div>
+<div class="col-12">
+    <label asp-for="Observaciones" class="form-label"></label>
+    <textarea asp-for="Observaciones" class="form-control" rows="3"></textarea>
+    <span asp-validation-for="Observaciones" class="text-danger small"></span>
+</div>

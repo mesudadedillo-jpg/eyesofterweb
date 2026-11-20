@@ -1,0 +1,23 @@
+@model EventoCaso
+@{
+    ViewData["Title"] = "Agregar evento";
+    var caso = ViewBag.Caso as Caso;
+}
+
+<h1 class="h3">Agregar evento</h1>
+<p class="text-body-secondary">Caso <code>@caso?.Folio</code> · @caso?.Alumno?.NombreCompleto</p>
+<div class="card shadow-sm">
+    <div class="card-body">
+        <form asp-action="Create" method="post">
+            <partial name="_Campos" model="Model" />
+            <div class="d-flex gap-2 mt-4">
+                <button type="submit" class="btn btn-marca"><i class="bi bi-save me-1"></i>Guardar evento</button>
+                <a asp-controller="Casos" asp-action="Details" asp-route-id="@Model.CasoId" class="btn btn-outline-secondary">Cancelar</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

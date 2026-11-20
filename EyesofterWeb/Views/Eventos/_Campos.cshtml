@@ -1,0 +1,21 @@
+@model EventoCaso
+<div asp-validation-summary="ModelOnly" class="alert alert-danger py-2" role="alert"></div>
+<input type="hidden" asp-for="CasoId" />
+<div class="row g-3">
+    <div class="col-md-6">
+        <label asp-for="Tipo" class="form-label requerido"></label>
+        <select asp-for="Tipo" asp-items="ViewBag.Tipos" class="form-select"></select>
+        <span asp-validation-for="Tipo" class="text-danger small"></span>
+    </div>
+    <div class="col-md-6">
+        <label asp-for="Fecha" class="form-label requerido"></label>
+        <input asp-for="Fecha" class="form-control" />
+        <span asp-validation-for="Fecha" class="text-danger small"></span>
+        <div class="form-text">Solo las citas pueden tener fecha futura.</div>
+    </div>
+    <div class="col-12">
+        <label asp-for="Descripcion" class="form-label requerido"></label>
+        <textarea asp-for="Descripcion" class="form-control" rows="3"></textarea>
+        <span asp-validation-for="Descripcion" class="text-danger small"></span>
+    </div>
+</div>

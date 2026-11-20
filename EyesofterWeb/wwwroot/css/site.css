@@ -1,0 +1,58 @@
+/* Personalización sobre Bootstrap 5 */
+:root {
+    --marca: #0f5e78;
+    --marca-oscura: #0a4457;
+    --marca-clara: #e6f2f6;
+}
+
+html { font-size: 15px; }
+@media (min-width: 768px) { html { font-size: 16px; } }
+
+.bg-marca { background-color: var(--marca) !important; }
+.text-marca { color: var(--marca) !important; }
+
+.btn-marca {
+    --bs-btn-color: #fff;
+    --bs-btn-bg: var(--marca);
+    --bs-btn-border-color: var(--marca);
+    --bs-btn-hover-color: #fff;
+    --bs-btn-hover-bg: var(--marca-oscura);
+    --bs-btn-hover-border-color: var(--marca-oscura);
+    --bs-btn-active-bg: var(--marca-oscura);
+}
+
+.hero {
+    background: linear-gradient(135deg, var(--marca) 0%, #1b8aa6 100%);
+    color: #fff;
+    border-radius: 1rem;
+}
+
+.tarjeta-dato { border: 0; border-left: 4px solid var(--marca); }
+.tarjeta-dato .numero { font-size: 2rem; font-weight: 700; line-height: 1; }
+
+/* Semáforo: color + icono + texto */
+.semaforo { font-weight: 600; }
+.semaforo-verde { background-color: #1f7a3a; color: #fff; }
+.semaforo-amarillo { background-color: #f2c94c; color: #3d3000; }
+.semaforo-rojo { background-color: #b42318; color: #fff; }
+
+/* Línea de tiempo de eventos del caso */
+.linea-tiempo { list-style: none; padding-left: 0; border-left: 3px solid var(--marca-clara); margin-left: .5rem; }
+.linea-tiempo li { position: relative; padding: 0 0 1rem 1.25rem; }
+.linea-tiempo li::before {
+    content: ""; position: absolute; left: -.55rem; top: .35rem;
+    width: .8rem; height: .8rem; border-radius: 50%;
+    background: var(--marca); border: 2px solid #fff;
+}
+
+.campo-mayusculas { text-transform: uppercase; }
+
+/* Tablas legibles en teléfono */
+@media (max-width: 575.98px) {
+    .table-responsive .btn { margin-bottom: .25rem; }
+}
+
+.form-label.requerido::after { content: " *"; color: #b42318; }
+
+.navbar .nav-link, .navbar-text { white-space: nowrap; }
+.folio { white-space: nowrap; }

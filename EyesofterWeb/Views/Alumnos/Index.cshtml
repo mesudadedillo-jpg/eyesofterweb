@@ -1,0 +1,81 @@
+@model IEnumerable<Alumno>
+@{
+    ViewData["Title"] = "Alumnos";
+    var esAdmin = User.IsInRole(Roles.Administrador);
+    var puedeEditar = esAdmin || User.IsInRole(Roles.Enfermeria);
+    var nivelSel = ViewBag.Nivel as NivelEducativo?;
+}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <div>
+        <h1 class="h3 mb-0">Alumnos</h1>
+        <p class="text-body-secondary mb-0">Alumnos de primaria y secundaria que participan en el tamizaje visual.</p>
+    </div>
+    @if (puedeEditar)
+    {
+        <a asp-action="Create" class="btn btn-marca"><i class="bi bi-plus-lg me-1"></i>Nuevo alumno</a>
+    }
+</div>
+
+<form method="get" class="row g-2 mb-3">
+    <div class="col-sm-6 col-md-5">
+        <input name="buscar" value="@ViewBag.Buscar" class="form-control" placeholder="Buscar por nombre o matrícula" aria-label="Buscar" />
+    </div>
+    <div class="col-sm-3 col-md-3">
+        <select name="nivel" class="form-select" aria-label="Nivel">
+            <option value="">Todos los niveles</option>
+            @foreach (var n in Enum.GetValues<NivelEducativo>())
+            {
+                <option value="@n" selected="@(nivelSel == n)">@n</option>
+            }
+        </select>
+    </div>
+    <div class="col-auto">
+        <button class="btn btn-outline-secondary" type="submit"><i class="bi bi-search"></i> Filtrar</button>
+        <a asp-action="Index" class="btn btn-link">Limpiar</a>
+    </div>
+</form>
+
+<div class="card shadow-sm">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>@Html.DisplayNameFor(m => m.Matricula)</th>
+                    <th>@Html.DisplayNameFor(m => m.NombreCompleto)</th>
+                    <th>Grado y grupo</th>
+                    <th>@Html.DisplayNameFor(m => m.UsaLentes)</th>
+                    <th>@Html.DisplayNameFor(m => m.Tutor)</th>
+                    <th class="text-end">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!Model.Any())
+                {
+                    <tr><td colspan="6" class="text-center text-body-secondary py-4">No se encontraron alumnos.</td></tr>
+                }
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td><code>@item.Matricula</code></td>
+                        <td>@item.NombreCompleto</td>
+                        <td>@item.GradoGrupo</td>
+                        <td>@(item.UsaLentes ? "Sí" : "No")</td>
+                        <td>@item.Tutor?.NombreCompleto</td>
+                        <td class="text-end text-nowrap">
+                            <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-outline-secondary" title="Detalles"><i class="bi bi-eye"></i></a>
+                            @if (puedeEditar)
+                            {
+                                <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary" title="Editar"><i class="bi bi-pencil"></i></a>
+                            }
+                            @if (esAdmin)
+                            {
+                                <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-outline-danger" title="Eliminar"><i class="bi bi-trash"></i></a>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
