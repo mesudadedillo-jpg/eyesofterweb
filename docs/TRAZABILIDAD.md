@@ -113,7 +113,7 @@ cabeceras) más la integración WEB↔API sobre la misma base.
 | C-RFNN-07 | ✅ | Clínica no registrada = no asociada → solo resumen |
 | C-RI-01 | ✅ | REST/JSON; HTTPS en Railway |
 | C-RI-02 | 🟡 | Resend para recuperación y avisos; requiere `RESEND_API_KEY` y un dominio verificado |
-| C-RC-01 | ✅ | Consultas indexadas; respuestas locales < 300 ms |
+| C-RC-01 | ✅ | Consultas indexadas; con 100 usuarios simultáneos el p95 fue de 545 ms (< 2 s) |
 | C-RC-02 | ✅ | Misma base: el cambio se ve al instante; la app revisa cada 5 s |
 | C-RC-03 | ✅ | TLS de Railway, HSTS en la web, la app de release sin HTTP |
 | C-RC-04 | ✅ | AES-256-GCM en agudezas, observaciones, línea de tiempo, valoraciones y archivos; misma llave en WEB y API |
@@ -126,7 +126,7 @@ cabeceras) más la integración WEB↔API sobre la misma base.
 | C-RC-11 | ✅ | El tamizaje se guarda tal como llega del escritorio (solo se cifra) |
 | C-RC-12 | 🟡 | Healthchecks y reinicio automático en Railway; la disponibilidad depende del plan contratado |
 | C-RC-13 | 🟡 | Respaldo diario cifrado con GitHub Actions ([`RESPALDO.md`](RESPALDO.md)); hay que cargar los secretos |
-| C-RC-14 | 🟡 | Pools de conexiones (20 en la API), consultas parametrizadas e índices. Falta una prueba de carga con 100 usuarios en Railway |
+| C-RC-14 | ✅ | Prueba de carga local (20/11/2026): 100 usuarios a la vez, 2000 peticiones de expediente, bandeja y directorio → 511 por segundo, mediana 140 ms, p95 545 ms, sin errores. Repetirla en Railway antes del piloto |
 | C-RC-15 | ✅ | Módulos por capa, documentación y Git en los tres repositorios |
 | C-RE-01 | 🟡 | Tablas `planteles` y campañas por plantel; falta separar la vista por institución en el portal |
 | C-RE-02 | ✅ | Interfaz `CanalNotificacion`: SMS o WhatsApp se agregan como un canal más |
