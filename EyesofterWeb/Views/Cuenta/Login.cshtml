@@ -7,8 +7,13 @@
     <div class="col-md-8 col-lg-5">
         <div class="card shadow-sm">
             <div class="card-body p-4">
-                <h1 class="h4 mb-1"><i class="bi bi-box-arrow-in-right text-marca me-1"></i>Iniciar sesión</h1>
-                <p class="text-body-secondary small mb-4">Entra con tu cuenta de EYESOFTER Web.</p>
+                <h1 class="h4 mb-1"><i class="bi bi-box-arrow-in-right text-marca me-1" aria-hidden="true"></i>Iniciar sesión</h1>
+                <p class="text-body-secondary small mb-4">Usa el mismo correo y contraseña que en la app EYESOFTER.</p>
+
+                @if (ViewBag.Aviso is string aviso)
+                {
+                    <div class="alert alert-warning py-2" role="status"><i class="bi bi-clock-history me-1" aria-hidden="true"></i>@aviso</div>
+                }
 
                 <form asp-action="Login" method="post" novalidate>
                     <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2" role="alert"></div>
@@ -24,28 +29,17 @@
                         <input asp-for="Password" class="form-control" autocomplete="current-password" />
                         <span asp-validation-for="Password" class="text-danger small"></span>
                     </div>
-                    <div class="form-check mb-3">
-                        <input asp-for="Recordarme" class="form-check-input" />
-                        <label asp-for="Recordarme" class="form-check-label"></label>
-                    </div>
                     <button type="submit" class="btn btn-marca w-100">Entrar</button>
                 </form>
 
                 <hr />
-                <p class="small mb-0 text-center">¿No tienes cuenta? <a asp-action="Registro">Regístrate</a></p>
+                <p class="small mb-1 text-center"><a asp-action="Olvide">¿Olvidaste tu contraseña?</a></p>
+                <p class="small mb-0 text-center text-body-secondary">¿No tienes cuenta? Pídela a la Dirección o a Enfermería de la escuela.</p>
             </div>
         </div>
-
-        <div class="card mt-3 border-0 bg-body-tertiary">
-            <div class="card-body small">
-                <p class="fw-semibold mb-2"><i class="bi bi-info-circle me-1"></i>Cuentas de prueba</p>
-                <ul class="mb-0 ps-3">
-                    <li><code>admin@@eyesofter.mx</code> / <code>Admin123!</code> (Administrador)</li>
-                    <li><code>enfermeria@@eyesofter.mx</code> / <code>Enfermeria123!</code> (Enfermería)</li>
-                    <li><code>docente@@eyesofter.mx</code> / <code>Docente123!</code> (Docente)</li>
-                </ul>
-            </div>
-        </div>
+        <p class="small text-center text-body-secondary mt-3 mb-0">
+            Por seguridad, tras 3 intentos fallidos la cuenta se bloquea 15 minutos y la sesión se cierra sola después de 15 minutos sin actividad.
+        </p>
     </div>
 </div>
 

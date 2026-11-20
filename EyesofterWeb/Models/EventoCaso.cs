@@ -21,6 +21,7 @@ namespace EyesofterWeb.Models
         [DataType(DataType.Date)]
         public DateTime Fecha { get; set; } = DateTime.Today;
 
+        [Cifrado]
         [Required(ErrorMessage = "Describe el evento.")]
         [StringLength(500, MinimumLength = 5, ErrorMessage = "La descripción debe tener entre {2} y {1} caracteres.")]
         [DataType(DataType.MultilineText)]

@@ -1,0 +1,33 @@
+@model List<EyesofterWeb.Controllers.ComprobantesController.Fila>
+@{
+    ViewData["Title"] = "Comprobantes";
+    var estado = (EstadoComprobante)ViewBag.Estado;
+}
+<h1 class="h3">Comprobantes y recetas</h1>
+<p class="text-body-secondary">Los suben los tutores desde la app o el portal. Al aprobarlos puedes registrar la atención y cerrar el caso.</p>
+<ul class="nav nav-pills mb-3">
+    <li class="nav-item"><a class="nav-link @(estado == EstadoComprobante.Pendiente ? "active" : "")" asp-route-estado="Pendiente">Por revisar <span class="badge text-bg-light">@ViewBag.Pendientes</span></a></li>
+    <li class="nav-item"><a class="nav-link @(estado == EstadoComprobante.Aprobado ? "active" : "")" asp-route-estado="Aprobado">Aprobados</a></li>
+    <li class="nav-item"><a class="nav-link @(estado == EstadoComprobante.Rechazado ? "active" : "")" asp-route-estado="Rechazado">Rechazados</a></li>
+</ul>
+<div class="card shadow-sm">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light"><tr><th scope="col">Recibido</th><th scope="col">Alumno</th><th scope="col">Caso</th><th scope="col">Tipo</th><th scope="col">Estado</th><th scope="col"></th></tr></thead>
+            <tbody>
+                @if (Model.Count == 0) { <tr><td colspan="6" class="text-center text-body-secondary py-4">No hay comprobantes en esta bandeja.</td></tr> }
+                @foreach (var f in Model)
+                {
+                    <tr>
+                        <td>@f.SubidoEn.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
+                        <td>@f.Alumno <span class="small text-body-secondary">@f.GradoGrupo</span></td>
+                        <td><a asp-controller="Casos" asp-action="Details" asp-route-id="@f.CasoId"><code>@f.Folio</code></a></td>
+                        <td>@f.Tipo.Texto()</td>
+                        <td><partial name="_EstadoComprobante" model="f.Estado" /></td>
+                        <td class="text-end"><a asp-action="Revisar" asp-route-id="@f.Id" class="btn btn-sm btn-marca">@(f.Estado == EstadoComprobante.Pendiente ? "Revisar" : "Ver")</a></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

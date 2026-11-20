@@ -39,6 +39,7 @@ namespace EyesofterWeb.Controllers
 
             var tutor = await _context.Tutores
                 .Include(t => t.Alumnos)
+                .Include(t => t.Usuarios)
                 .FirstOrDefaultAsync(t => t.Id == id);
             if (tutor is null) return NotFound();
 

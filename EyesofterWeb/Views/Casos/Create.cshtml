@@ -4,7 +4,7 @@
 }
 
 <h1 class="h3">Nuevo caso</h1>
-<p class="text-body-secondary">El folio se genera automáticamente y el tamizaje se agrega como primer evento.</p>
+<p class="text-body-secondary">Normalmente los casos se abren solos cuando llega el tamizaje del sistema de escritorio. Usa esta forma solo para registrar un tamizaje hecho fuera de él. El folio se genera solo y se avisa al tutor.</p>
 <div class="card shadow-sm">
     <div class="card-body">
         <form asp-action="Create" method="post">
@@ -16,6 +16,10 @@
                         <option value="">-- Selecciona un alumno --</option>
                     </select>
                     <span asp-validation-for="AlumnoId" class="text-danger small"></span>
+                </div>
+                <div class="col-md-6">
+                    <label for="campanaId" class="form-label">Campaña de tamizaje</label>
+                    <select id="campanaId" name="campanaId" asp-items="ViewBag.Campanas" class="form-select"><option value="">-- Sin campaña --</option></select>
                 </div>
                 <partial name="_Campos" model="Model" />
             </div>

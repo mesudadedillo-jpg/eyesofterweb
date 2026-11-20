@@ -1,0 +1,32 @@
+@model List<Clinica>
+@{ ViewData["Title"] = "Clínicas y ópticas"; }
+<h1 class="h3">Clínicas y ópticas</h1>
+<p class="text-body-secondary">Las <strong>asociadas</strong> al programa atienden con el pase médico con QR. En la app tienes además el mapa con tu ubicación.</p>
+<form method="get" class="d-flex gap-2 mb-3" role="search">
+    <label for="buscar" class="visually-hidden">Buscar</label>
+    <input id="buscar" name="buscar" value="@ViewBag.Buscar" class="form-control" placeholder="Nombre, ciudad, colonia o C.P." />
+    <button class="btn btn-outline-secondary">Buscar</button>
+</form>
+<div class="row g-3">
+    @foreach (var c in Model)
+    {
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 shadow-sm @(c.EsAsociada ? "border-success" : "")">
+                <div class="card-body">
+                    <h2 class="h6 mb-1">@c.Nombre</h2>
+                    @if (c.EsAsociada) { <span class="badge text-bg-success mb-2"><i class="bi bi-patch-check me-1" aria-hidden="true"></i>Asociada al programa</span> }
+                    else { <span class="badge text-bg-light mb-2">No asociada</span> }
+                    <p class="small mb-1">@c.Direccion, @c.Ciudad @c.CodigoPostal</p>
+                    @if (c.Horario is not null) { <p class="small mb-1 text-body-secondary">@c.Horario</p> }
+                    <div class="d-flex gap-2 mt-2">
+                        <a class="btn btn-sm btn-outline-primary" href="tel:@c.Telefono"><i class="bi bi-telephone me-1" aria-hidden="true"></i>@c.Telefono</a>
+                        @if (c.Latitud is not null && c.Longitud is not null)
+                        {
+                            <a class="btn btn-sm btn-outline-secondary" target="_blank" rel="noopener" href="https://www.google.com/maps/dir/?api=1&destination=@(c.Latitud.Value.ToString(System.Globalization.CultureInfo.InvariantCulture)),@(c.Longitud.Value.ToString(System.Globalization.CultureInfo.InvariantCulture))"><i class="bi bi-sign-turn-right me-1" aria-hidden="true"></i>Cómo llegar</a>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>

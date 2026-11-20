@@ -1,8 +1,9 @@
 /* Personalización sobre Bootstrap 5 */
 :root {
-    --marca: #0f5e78;
-    --marca-oscura: #0a4457;
-    --marca-clara: #e6f2f6;
+    /* Misma paleta que la app móvil EYESOFTER (marino y azul). Contraste AA sobre blanco. */
+    --marca: #0B47A8;
+    --marca-oscura: #0A1A3F;
+    --marca-clara: #E3EDFC;
 }
 
 html { font-size: 15px; }
@@ -22,7 +23,7 @@ html { font-size: 15px; }
 }
 
 .hero {
-    background: linear-gradient(135deg, var(--marca) 0%, #1b8aa6 100%);
+    background: linear-gradient(135deg, var(--marca-oscura) 0%, var(--marca) 100%);
     color: #fff;
     border-radius: 1rem;
 }
@@ -56,3 +57,25 @@ html { font-size: 15px; }
 
 .navbar .nav-link, .navbar-text { white-space: nowrap; }
 .folio { white-space: nowrap; }
+
+/* WCAG 2.1 AA (W-RC-03): enlace para saltar el menú con teclado y foco siempre visible. */
+.saltar-contenido {
+    position: absolute; left: -999px; top: .5rem; z-index: 2000;
+    background: #fff; color: var(--marca-oscura); padding: .5rem 1rem; border-radius: .375rem; font-weight: 600;
+}
+.saltar-contenido:focus { left: .5rem; }
+:focus-visible { outline: 3px solid #F2C94C; outline-offset: 2px; }
+main:focus { outline: none; }
+
+.aviso-inactividad { position: fixed; right: 1rem; bottom: 1rem; z-index: 1080; max-width: 22rem; }
+
+/* Reporte para el tutor: semáforo grande con icono y texto */
+.semaforo-grande { border-radius: 1rem; padding: 1.5rem; text-align: center; }
+.semaforo-grande .bi { font-size: 3rem; }
+.qr-pase { max-width: 260px; width: 100%; image-rendering: pixelated; }
+.codigo-pase { font-family: ui-monospace, monospace; font-size: 1.25rem; letter-spacing: .08em; }
+#lectorQr { max-width: 420px; }
+.barra { height: .75rem; background: var(--marca-clara); border-radius: 1rem; overflow: hidden; }
+.barra > span { display: block; height: 100%; background: var(--marca); }
+.barra-verde > span { background: #1f7a3a; } .barra-amarilla > span { background: #f2c94c; } .barra-roja > span { background: #b42318; }
+@media print { header, footer, .no-imprimir { display: none !important; } }

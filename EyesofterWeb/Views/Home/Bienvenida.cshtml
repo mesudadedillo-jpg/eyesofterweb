@@ -6,15 +6,12 @@
     <div class="row align-items-center g-4">
         <div class="col-lg-8">
             <p class="text-uppercase small fw-semibold mb-2 opacity-75">EYESOFTER Suite · Portal web</p>
-            <h1 class="display-6 fw-bold">Seguimiento de casos de salud visual escolar</h1>
+            <h1 class="display-6 fw-bold">Seguimiento de la salud visual escolar</h1>
             <p class="lead mb-4">
-                Registra a los alumnos detectados en el tamizaje visual, canalízalos a una clínica y da seguimiento a cada
-                caso hasta su cierre, con permisos distintos para Administración, Enfermería y Docentes.
+                Cada alumno detectado en el tamizaje visual tiene un expediente que acompaña su caso hasta que recibe
+                atención: aviso a la familia, cita, pase médico, comprobante y cierre.
             </p>
-            <div class="d-flex flex-wrap gap-2">
-                <a class="btn btn-light btn-lg" asp-controller="Cuenta" asp-action="Login"><i class="bi bi-box-arrow-in-right me-1"></i>Iniciar sesión</a>
-                <a class="btn btn-outline-light btn-lg" asp-controller="Cuenta" asp-action="Registro"><i class="bi bi-person-plus me-1"></i>Crear cuenta</a>
-            </div>
+            <a class="btn btn-light btn-lg" asp-controller="Cuenta" asp-action="Login"><i class="bi bi-box-arrow-in-right me-1" aria-hidden="true"></i>Iniciar sesión</a>
         </div>
         <div class="col-lg-4 text-center d-none d-lg-block">
             <i class="bi bi-eye" style="font-size: 9rem; opacity: .9" aria-hidden="true"></i>
@@ -23,28 +20,18 @@
 </section>
 
 <div class="row g-3">
-    <div class="col-md-4">
-        <div class="card h-100 shadow-sm">
-            <div class="card-body">
-                <h2 class="h5"><i class="bi bi-shield-check text-marca me-1"></i>Administrador</h2>
-                <p class="mb-0 text-body-secondary">Control total: catálogos, eliminación de registros, reapertura de casos y asignación de roles.</p>
-            </div>
+    @foreach (var (icono, titulo, texto) in new[]
+    {
+        ("bi-heart-pulse", "Enfermería y Dirección", "Expedientes, línea de tiempo, comprobantes, indicadores y reportes en PDF y Excel."),
+        ("bi-person-hearts", "Tutores", "El resultado de su hijo en lenguaje claro, el pase médico o el resumen, y el directorio de clínicas."),
+        ("bi-qr-code-scan", "Clínicas asociadas", "Leen el pase médico con la cámara y registran la atención brindada.")
+    })
+    {
+        <div class="col-md-4">
+            <div class="card h-100 shadow-sm"><div class="card-body">
+                <h2 class="h5"><i class="bi @icono text-marca me-1" aria-hidden="true"></i>@titulo</h2>
+                <p class="mb-0 text-body-secondary">@texto</p>
+            </div></div>
         </div>
-    </div>
-    <div class="col-md-4">
-        <div class="card h-100 shadow-sm">
-            <div class="card-body">
-                <h2 class="h5"><i class="bi bi-heart-pulse text-marca me-1"></i>Enfermería</h2>
-                <p class="mb-0 text-body-secondary">Registra tutores, alumnos y casos; agrega eventos de seguimiento y cierra casos.</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="card h-100 shadow-sm">
-            <div class="card-body">
-                <h2 class="h5"><i class="bi bi-book text-marca me-1"></i>Docente</h2>
-                <p class="mb-0 text-body-secondary">Consulta alumnos, casos y clínicas. No modifica información ni ve datos de contacto de tutores.</p>
-            </div>
-        </div>
-    </div>
+    }
 </div>

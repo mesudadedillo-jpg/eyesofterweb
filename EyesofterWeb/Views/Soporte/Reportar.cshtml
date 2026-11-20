@@ -1,0 +1,22 @@
+@model ReporteFalla
+@{ ViewData["Title"] = "Reportar una falla o duda"; }
+<div class="row justify-content-center"><div class="col-lg-7">
+    <h1 class="h3">Reportar una falla o duda</h1>
+    <p class="text-body-secondary">Durante el piloto, el equipo de desarrollo revisa cada reporte.</p>
+    <form asp-action="Reportar" method="post" class="card card-body shadow-sm">
+        <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2" role="alert"></div>
+        <fieldset class="mb-3">
+            <legend class="form-label">Tipo</legend>
+            <div class="form-check form-check-inline"><input class="form-check-input" type="radio" asp-for="Tipo" value="Falla" id="tFalla" /><label class="form-check-label" for="tFalla">Algo no funciona</label></div>
+            <div class="form-check form-check-inline"><input class="form-check-input" type="radio" asp-for="Tipo" value="Duda" id="tDuda" /><label class="form-check-label" for="tDuda">Tengo una duda</label></div>
+        </fieldset>
+        <div class="mb-3"><label asp-for="Mensaje" class="form-label requerido"></label><textarea asp-for="Mensaje" class="form-control" rows="5" placeholder="Qué estabas haciendo, qué esperabas y qué pasó."></textarea><span asp-validation-for="Mensaje" class="text-danger small"></span></div>
+        @if (User.Identity?.IsAuthenticated != true)
+        {
+            <div class="mb-3"><label asp-for="Correo" class="form-label"></label><input asp-for="Correo" class="form-control" /><span asp-validation-for="Correo" class="text-danger small"></span></div>
+        }
+        <p class="small text-body-secondary">No incluyas datos de salud de los alumnos en el reporte.</p>
+        <button class="btn btn-marca">Enviar</button>
+    </form>
+</div></div>
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

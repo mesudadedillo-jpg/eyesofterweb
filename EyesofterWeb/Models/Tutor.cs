@@ -34,6 +34,9 @@ namespace EyesofterWeb.Models
 
         public ICollection<Alumno> Alumnos { get; set; } = new List<Alumno>();
 
+        /// <summary>Cuentas de acceso de este tutor (normalmente una).</summary>
+        public ICollection<ApplicationUser> Usuarios { get; set; } = new List<ApplicationUser>();
+
         [NotMapped]
         [Display(Name = "Tutor")]
         public string NombreCompleto => $"{Nombre} {Apellidos}";

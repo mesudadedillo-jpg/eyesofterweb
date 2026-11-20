@@ -1,0 +1,21 @@
+@model DestinoViewModel
+@{ ViewData["Title"] = "Clínica de destino"; }
+<h1 class="h3">Clínica de destino</h1>
+<p class="text-body-secondary">Caso <code>@Model.Folio</code> · @Model.Alumno. Si la clínica está asociada y activa se genera el pase médico con QR; si no, solo el resumen del tamizaje.</p>
+<form asp-action="Destino" method="post" class="card card-body shadow-sm">
+    <div asp-validation-summary="All" class="alert alert-danger py-2" role="alert"></div>
+    <input type="hidden" asp-for="CasoId" />
+    <div class="mb-3">
+        <label asp-for="ClinicaId" class="form-label"></label>
+        <select asp-for="ClinicaId" asp-items="ViewBag.ClinicaId" class="form-select"><option value="">-- Ninguna de la lista --</option></select>
+    </div>
+    <div class="mb-3">
+        <label asp-for="NombreManual" class="form-label"></label>
+        <input asp-for="NombreManual" class="form-control" />
+        <div class="form-text">Una clínica que no está en el directorio se trata como no asociada.</div>
+    </div>
+    <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-marca">Guardar destino</button>
+        <a asp-action="Details" asp-route-id="@Model.CasoId" class="btn btn-outline-secondary">Cancelar</a>
+    </div>
+</form>

@@ -1,0 +1,9 @@
+@{ ViewData["Title"] = "Pase no válido"; }
+<div class="alert alert-danger d-flex gap-2" role="alert">
+    <i class="bi bi-x-octagon-fill fs-3" aria-hidden="true"></i>
+    <div>
+        <h1 class="h5">El pase no es válido</h1>
+        <p class="mb-0">@ViewBag.Mensaje</p>
+    </div>
+</div>
+<a asp-action="Escanear" class="btn btn-marca">Leer otro pase</a>

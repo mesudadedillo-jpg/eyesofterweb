@@ -1,7 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
-    <!-- Si en clase usan .NET 8: cambia a net8.0 y los paquetes de abajo a Version="8.0.*" -->
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
@@ -11,19 +10,27 @@
 
   <ItemGroup>
     <!-- Identity con almacenamiento en Entity Framework Core -->
-    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="10.0.*" />
+    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="10.0.15" />
     <!-- Página de error de base de datos en desarrollo (aplicar migraciones pendientes) -->
-    <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="10.0.*" />
-    <!-- Proveedor de SQL Server -->
-    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.*" />
-    <!-- Fuerza la versión 10 de este paquete indirecto (la 9.0.11 que trae SqlClient tiene vulnerabilidades conocidas) -->
-    <PackageReference Include="System.Security.Cryptography.Pkcs" Version="10.0.*" />
+    <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="10.0.15" />
+    <!-- PostgreSQL: la base es compartida con el servidor de la app móvil (eyesofter-backend, Ktor) -->
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
+    <!-- Tablas y columnas en snake_case (alumnos, fecha_deteccion): así el servidor Ktor las lee sin comillas -->
+    <PackageReference Include="EFCore.NamingConventions" Version="10.0.1" />
+    <!-- Llaves de cifrado de cookies guardadas en la base: la sesión sobrevive a un redespliegue -->
+    <PackageReference Include="Microsoft.AspNetCore.DataProtection.EntityFrameworkCore" Version="10.0.15" />
+    <!-- PDF (pase médico, resumen, reportes) - licencia Community gratuita para este uso -->
+    <PackageReference Include="QuestPDF" Version="2026.9.2" />
+    <!-- Excel (reportes y dashboard) -->
+    <PackageReference Include="ClosedXML" Version="0.105.1" />
+    <!-- Código QR del pase médico -->
+    <PackageReference Include="QRCoder" Version="1.9.0" />
     <!-- Herramientas de migraciones (dotnet ef / Consola del Administrador de paquetes) -->
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.*">
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.15">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.*">
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.15">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>

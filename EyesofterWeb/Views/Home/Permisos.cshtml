@@ -1,79 +1,41 @@
 @{
     ViewData["Title"] = "Permisos por rol";
-    string Si() => "si";
-    var filas = new (string Funcion, string Ruta, string Admin, string Enf, string Doc)[]
+    var filas = new (string Accion, bool Dir, bool Enf, bool Tut, bool Esp, bool Alu)[]
     {
-        ("Consultar casos, alumnos y clínicas", "/Casos, /Alumnos, /Clinicas", "si", "si", "si"),
-        ("Crear y editar casos", "/Casos/Create, /Casos/Edit/{id}", "si", "si", "no"),
-        ("Agregar eventos de seguimiento", "/Eventos/Create?casoId={id}", "si", "si", "no"),
-        ("Cerrar un caso", "/Casos/Cerrar/{id}", "si", "si", "no"),
-        ("Crear y editar alumnos", "/Alumnos/Create, /Alumnos/Edit/{id}", "si", "si", "no"),
-        ("Ver y administrar tutores (datos de contacto)", "/Tutores", "si", "si", "no"),
-        ("Crear, editar y eliminar clínicas", "/Clinicas/Create, /Clinicas/Edit/{id}", "si", "no", "no"),
-        ("Eliminar alumnos, tutores y casos", "/…/Delete/{id}", "si", "no", "no"),
-        ("Editar o eliminar eventos; reabrir casos", "/Eventos/Edit/{id}, /Casos/Reabrir/{id}", "si", "no", "no"),
-        ("Administrar usuarios y asignar roles", "/Usuarios", "si", "no", "no"),
+        ("Dashboard e indicadores, exportar PDF y Excel", true, true, false, false, false),
+        ("Ver y gestionar expedientes y su línea de tiempo", true, true, false, false, false),
+        ("Cerrar un caso (con corrección óptica comprobada)", true, true, false, false, false),
+        ("Reabrir o eliminar un caso", true, false, false, false, false),
+        ("Registrar tutores y alumnos; vincular tutor con alumnos", true, true, false, false, false),
+        ("Validar o rechazar comprobantes", true, true, false, false, false),
+        ("Registrar atención manual (clínica no asociada)", true, true, false, false, false),
+        ("Alta, edición y desactivación de clínicas", true, true, false, false, false),
+        ("Enviar avisos y ver quién los leyó", true, true, false, false, false),
+        ("Crear cuentas, asignar roles, ver la bitácora", true, false, false, false, false),
+        ("Ver el reporte de SUS hijos, el pase o el resumen", false, false, true, false, false),
+        ("Elegir clínica de destino y subir comprobante", false, false, true, false, false),
+        ("Escanear el pase con QR y registrar la atención", false, false, false, true, false),
+        ("Consejos para cuidar la vista", false, false, false, false, true),
     };
 }
-
-<h1 class="h3">Permisos por rol</h1>
-<p class="text-body-secondary">
-    Las restricciones se aplican en el servidor con <code>[Authorize(Roles = "...")]</code> en cada controlador o acción.
-    Ocultar botones es solo una ayuda visual: si un usuario escribe la ruta a mano, la aplicación lo manda a
-    <strong>Acceso denegado</strong> (HTTP 403).
-</p>
-
-<div class="alert alert-info">
-    <i class="bi bi-person-badge me-1"></i>
-    Sesión actual: <strong>@User.Identity?.Name</strong> ·
-    Roles:
-    @foreach (var rol in Roles.Todos.Where(r => User.IsInRole(r)))
-    {
-        <span class="badge text-bg-primary">@rol</span>
-    }
-</div>
-
+<h1 class="h3 mb-3">Permisos por rol</h1>
+<p class="text-body-secondary">Las restricciones se aplican en el servidor (no solo ocultando botones). Un tutor solo puede consultar a los alumnos a su cargo (C-RC-06).</p>
 <div class="table-responsive">
-    <table class="table table-bordered align-middle bg-body">
+    <table class="table table-bordered align-middle text-center">
         <thead class="table-light">
-            <tr>
-                <th>Funcionalidad</th>
-                <th>Ruta para probar</th>
-                <th class="text-center">Administrador</th>
-                <th class="text-center">Enfermería</th>
-                <th class="text-center">Docente</th>
-            </tr>
+            <tr><th scope="col" class="text-start">Acción</th><th scope="col">Dirección</th><th scope="col">Enfermería</th><th scope="col">Tutor</th><th scope="col">Especialista</th><th scope="col">Alumno</th></tr>
         </thead>
         <tbody>
             @foreach (var f in filas)
             {
                 <tr>
-                    <td>@f.Funcion</td>
-                    <td><code>@f.Ruta</code></td>
-                    @foreach (var v in new[] { f.Admin, f.Enf, f.Doc })
+                    <th scope="row" class="text-start fw-normal">@f.Accion</th>
+                    @foreach (var p in new[] { f.Dir, f.Enf, f.Tut, f.Esp, f.Alu })
                     {
-                        <td class="text-center">
-                            @if (v == Si())
-                            {
-                                <span class="text-success"><i class="bi bi-check-circle-fill" aria-hidden="true"></i> Permitido</span>
-                            }
-                            else
-                            {
-                                <span class="text-danger"><i class="bi bi-x-circle-fill" aria-hidden="true"></i> Denegado</span>
-                            }
-                        </td>
+                        <td>@if (p) {<i class="bi bi-check-lg text-success" aria-label="Sí"></i>} else {<i class="bi bi-dash text-body-tertiary" aria-label="No"></i>}</td>
                     }
                 </tr>
             }
         </tbody>
     </table>
-</div>
-
-<h2 class="h5 mt-4">Prueba rápida de acceso denegado</h2>
-<p>Con la cuenta <code>docente@@eyesofter.mx</code>, abre estas direcciones directamente en el navegador:</p>
-<div class="d-flex flex-wrap gap-2">
-    <a class="btn btn-outline-danger btn-sm" href="/Tutores">/Tutores</a>
-    <a class="btn btn-outline-danger btn-sm" href="/Casos/Create">/Casos/Create</a>
-    <a class="btn btn-outline-danger btn-sm" href="/Clinicas/Create">/Clinicas/Create</a>
-    <a class="btn btn-outline-danger btn-sm" href="/Usuarios">/Usuarios</a>
 </div>

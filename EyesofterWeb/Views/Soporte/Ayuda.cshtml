@@ -1,0 +1,18 @@
+@{ ViewData["Title"] = "Ayuda"; }
+<h1 class="h3">Ayuda</h1>
+<div class="accordion" id="ayuda">
+    @foreach (var (i, p, r) in new[] {
+        (1, "Soy tutor, ¿dónde veo el resultado de mi hijo?", "Entra con tu correo y contraseña. En «Mis hijos» aparece el semáforo, qué significa y qué hacer. También lo ves en la app EYESOFTER."),
+        (2, "¿Qué es el pase médico?", "Si eliges una clínica asociada al programa se genera un código QR. Muéstralo en la consulta (en el teléfono o impreso). Si la clínica no es asociada, lleva el resumen del tamizaje."),
+        (3, "¿Cómo subo la receta o el comprobante de lentes?", "En el resultado de tu hijo, sección «Subir receta o comprobante». Acepta fotos o PDF de hasta 10 MB. Enfermería lo revisa y te avisa."),
+        (4, "Olvidé mi contraseña", "En la pantalla de inicio de sesión elige «¿Olvidaste tu contraseña?» y te enviaremos un enlace a tu correo."),
+        (5, "Mi cuenta se bloqueó", "Por seguridad se bloquea 15 minutos tras 3 intentos fallidos. Espera o recupera tu contraseña."),
+        (6, "Soy de una clínica asociada", "Consulta la guía para clínicas: cómo leer el pase y registrar la atención.") })
+    {
+        <div class="accordion-item">
+            <h2 class="accordion-header"><button class="accordion-button @(i > 1 ? "collapsed" : "")" type="button" data-bs-toggle="collapse" data-bs-target="#a@(i)" aria-expanded="@(i == 1 ? "true" : "false")" aria-controls="a@(i)">@p</button></h2>
+            <div id="a@(i)" class="accordion-collapse collapse @(i == 1 ? "show" : "")" data-bs-parent="#ayuda"><div class="accordion-body">@r</div></div>
+        </div>
+    }
+</div>
+<p class="mt-3"><a asp-action="GuiaClinicas">Guía para clínicas</a> · <a asp-action="Reportar">Reportar una falla o duda</a></p>

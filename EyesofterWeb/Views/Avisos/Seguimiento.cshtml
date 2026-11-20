@@ -1,0 +1,39 @@
+@model List<EyesofterWeb.Controllers.AvisosController.FilaSeguimiento>
+@{
+    ViewData["Title"] = "Seguimiento de lectura";
+    bool solo = ViewBag.SoloSinLeer;
+    string tipo = ViewBag.Tipo;
+}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <div>
+        <h1 class="h3 mb-0">Seguimiento de lectura</h1>
+        <p class="text-body-secondary mb-0">Si un tutor no lee su resultado en 3 días, el sistema lo reenvía y avisa a Enfermería.</p>
+    </div>
+    <a asp-action="Index" class="btn btn-marca"><i class="bi bi-megaphone me-1" aria-hidden="true"></i>Nuevo aviso</a>
+</div>
+<ul class="nav nav-pills mb-3">
+    <li class="nav-item"><a class="nav-link @(tipo == "RESULTADO_TAMIZAJE" && solo ? "active" : "")" asp-route-tipo="RESULTADO_TAMIZAJE" asp-route-soloSinLeer="true">Resultados sin leer</a></li>
+    <li class="nav-item"><a class="nav-link @(tipo == "RESULTADO_TAMIZAJE" && !solo ? "active" : "")" asp-route-tipo="RESULTADO_TAMIZAJE" asp-route-soloSinLeer="false">Todos los resultados</a></li>
+    <li class="nav-item"><a class="nav-link @(tipo == "AVISO" ? "active" : "")" asp-route-tipo="AVISO" asp-route-soloSinLeer="false">Avisos</a></li>
+</ul>
+<div class="card shadow-sm">
+    <div class="table-responsive">
+        <table class="table align-middle mb-0">
+            <thead class="table-light"><tr><th scope="col">Enviado</th><th scope="col">Tutor</th><th scope="col">Aviso</th><th scope="col">Leído</th><th scope="col">Recordatorios</th><th scope="col">Entrega</th></tr></thead>
+            <tbody>
+                @foreach (var f in Model)
+                {
+                    <tr>
+                        <td>@f.CreadaEn.ToLocalTime().ToString("dd/MM/yyyy")</td>
+                        <td>@f.Tutor</td>
+                        <td>@f.Titulo</td>
+                        <td>@if (f.LeidaEn is DateTime l) { <span class="badge text-bg-success">@l.ToLocalTime().ToString("dd/MM HH:mm")</span> } else { <span class="badge text-bg-warning">Sin leer</span> }</td>
+                        <td>@f.Recordatorios</td>
+                        <td class="small">@(f.Entregada ? "Push o correo" : "Solo en la app/portal")</td>
+                    </tr>
+                }
+                @if (Model.Count == 0) { <tr><td colspan="6" class="text-center text-body-secondary py-4">Nada pendiente.</td></tr> }
+            </tbody>
+        </table>
+    </div>
+</div>

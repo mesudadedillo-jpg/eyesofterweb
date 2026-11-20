@@ -8,12 +8,27 @@
     <h1 class="h3 mb-0">@Model.NombreCompleto</h1>
     <div class="d-flex gap-2">
         <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-outline-primary"><i class="bi bi-pencil me-1"></i>Editar</a>
+        <a asp-controller="Alumnos" asp-action="Create" asp-route-tutorId="@Model.Id" class="btn btn-outline-primary"><i class="bi bi-person-plus me-1" aria-hidden="true"></i>Vincular alumno</a>
         @if (esAdmin)
         {
-            <a asp-action="Delete" asp-route-id="@Model.Id" class="btn btn-outline-danger"><i class="bi bi-trash me-1"></i>Eliminar</a>
+            @if (!Model.Usuarios.Any())
+            {
+                <a asp-controller="Usuarios" asp-action="Crear" asp-route-tutorId="@Model.Id" class="btn btn-marca"><i class="bi bi-key me-1" aria-hidden="true"></i>Crear cuenta de acceso</a>
+            }
+            <a asp-action="Delete" asp-route-id="@Model.Id" class="btn btn-outline-danger"><i class="bi bi-trash me-1" aria-hidden="true"></i>Eliminar</a>
         }
     </div>
 </div>
+<p class="small mb-3">
+    @if (Model.Usuarios.Any())
+    {
+        <span class="text-success"><i class="bi bi-phone me-1" aria-hidden="true"></i>Tiene cuenta: @string.Join(", ", Model.Usuarios.Select(u => u.Email)) · recibe los avisos en la app y el portal.</span>
+    }
+    else
+    {
+        <span class="text-warning"><i class="bi bi-exclamation-triangle me-1" aria-hidden="true"></i>Sin cuenta de acceso: los avisos no le llegan; hay que llamarle por teléfono.</span>
+    }
+</p>
 
 <div class="row g-3">
     <div class="col-lg-5">

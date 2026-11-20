@@ -51,7 +51,13 @@ namespace EyesofterWeb.Models
 
         public Tutor? Tutor { get; set; }
 
+        /// <summary>Plantel al que pertenece (C-RE-01: cada institución por separado).</summary>
+        [Display(Name = "Plantel")]
+        public int PlantelId { get; set; } = 1;
+        public Plantel? Plantel { get; set; }
+
         public ICollection<Caso> Casos { get; set; } = new List<Caso>();
+        public ICollection<Tamizaje> Tamizajes { get; set; } = new List<Tamizaje>();
 
         [NotMapped]
         [Display(Name = "Alumno")]

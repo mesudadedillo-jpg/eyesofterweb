@@ -11,7 +11,7 @@ namespace EyesofterWeb.Controllers
     /// CRUD de alumnos.
     /// Consultar: todos los roles. Crear/editar: Administrador y Enfermería. Eliminar: Administrador.
     /// </summary>
-    [Authorize]
+    [Authorize(Roles = Roles.AdminOEnfermeria)]
     public class AlumnosController : Controller
     {
         private readonly ApplicationDbContext _context;

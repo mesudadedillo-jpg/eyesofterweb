@@ -1,0 +1,122 @@
+@model Tamizaje
+@{
+    ViewData["Title"] = "Resultado de la revisión";
+    Caso? caso = ViewBag.Caso;
+    var comprobantes = (List<Comprobante>)ViewBag.Comprobantes;
+    var clinicas = (List<Clinica>)ViewBag.Clinicas;
+    var s = Model.Semaforo;
+    var pase = caso?.Pases.Where(p => p.EstaVigente).OrderByDescending(p => p.CreadoEn).FirstOrDefault();
+    var abierto = caso is not null && caso.Estado != EstadoCaso.Cerrado;
+}
+<div class="row g-3">
+    <div class="col-lg-7">
+        <div class="semaforo-grande @TextosSemaforo.Clase(s) mb-3" role="status">
+            <i class="bi @TextosSemaforo.Icono(s)" aria-hidden="true"></i>
+            <h1 class="h2 mt-2 mb-1">@TextosSemaforo.Titulo(s)</h1>
+            <p class="mb-0 fw-semibold">@Model.Alumno?.NombreCompleto</p>
+            <p class="mb-0 small">Revisión del @Model.Fecha.ToString("dd/MM/yyyy") · @Model.Alumno?.GradoGrupo</p>
+        </div>
+        <div class="card shadow-sm mb-3"><div class="card-body">
+            <h2 class="h6 text-marca text-uppercase">¿Qué significa?</h2>
+            <p class="fs-5">@TextosSemaforo.Explicacion(s)</p>
+            @if (!string.IsNullOrWhiteSpace(Model.Observaciones))
+            {
+                <h3 class="h6 text-body-secondary text-uppercase mt-3">Observaciones de Enfermería</h3>
+                <p class="mb-0">@Model.Observaciones</p>
+            }
+        </div></div>
+        <div class="card shadow-sm mb-3"><div class="card-body">
+            <h2 class="h6 text-marca text-uppercase">Qué hacer ahora</h2>
+            <ol class="mb-0">
+                @foreach (var p in TextosSemaforo.Pasos(s)) { <li class="mb-1">@p</li> }
+            </ol>
+        </div></div>
+
+        @if (caso?.Atenciones.Count > 0)
+        {
+            <div class="card shadow-sm mb-3"><div class="card-body">
+                <h2 class="h6 text-marca text-uppercase">Atención recibida</h2>
+                @foreach (var a in caso.Atenciones.OrderBy(x => x.Fecha))
+                {
+                    <p class="mb-1"><strong>@(a.Clinica?.Nombre ?? a.ClinicaNombre)</strong> · @a.Fecha.ToString("dd/MM/yyyy")</p>
+                    @if (!string.IsNullOrWhiteSpace(a.Indicaciones)) { <p class="mb-2">Indicaciones: @a.Indicaciones</p> }
+                }
+            </div></div>
+        }
+        <p class="small text-body-secondary">Este reporte es preventivo y no sustituye la consulta con un especialista.</p>
+    </div>
+
+    <div class="col-lg-5">
+        @if (caso is not null)
+        {
+            <div class="card shadow-sm mb-3">
+                <div class="card-header bg-body"><h2 class="h6 mb-0">Pase médico o resumen</h2></div>
+                <div class="card-body">
+                    @if (pase is not null)
+                    {
+                        <p class="mb-2">Para <strong>@pase.Clinica?.Nombre</strong> (clínica asociada). Muéstralo en la consulta:</p>
+                        <div class="text-center">
+                            <img src="@Url.Action("QrPase", new { id = Model.Id })" alt="Código QR del pase médico" class="qr-pase mb-2" />
+                            <div class="codigo-pase">@EyesofterWeb.Servicios.Documentos.CodigoLegible(pase.Codigo)</div>
+                            <div class="small text-body-secondary mb-2">Vence el @pase.ExpiraEn.ToLocalTime().ToString("dd/MM/yyyy") · un solo uso</div>
+                            <a asp-action="PasePdf" asp-route-id="@Model.Id" class="btn btn-outline-secondary btn-sm"><i class="bi bi-printer me-1" aria-hidden="true"></i>Descargar para imprimir</a>
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="mb-2">@(caso.ClinicaId is null && caso.ClinicaDestinoManual is null ? "Elige abajo a qué clínica llevarás a tu hijo." : "La clínica elegida no está asociada al programa: lleva el resumen del tamizaje a la consulta.")</p>
+                        <a asp-action="ResumenPdf" asp-route-id="@Model.Id" class="btn btn-outline-secondary btn-sm"><i class="bi bi-printer me-1" aria-hidden="true"></i>Resumen del tamizaje (PDF)</a>
+                    }
+                </div>
+            </div>
+
+            @if (abierto)
+            {
+                <form asp-action="Destino" asp-route-id="@Model.Id" method="post" class="card card-body shadow-sm mb-3">
+                    <h2 class="h6">¿A qué clínica irán?</h2>
+                    <label for="clinicaId" class="form-label small">Del directorio (las asociadas aparecen primero)</label>
+                    <select id="clinicaId" name="clinicaId" class="form-select mb-2">
+                        <option value="">-- Elige --</option>
+                        @foreach (var c in clinicas) { <option value="@c.Id" selected="@(caso.ClinicaId == c.Id)">@c.Nombre@(c.EsAsociada ? " ✓ asociada" : "") · @c.Ciudad</option> }
+                    </select>
+                    <label for="nombreManual" class="form-label small">¿No está en la lista? Escribe el nombre</label>
+                    <input id="nombreManual" name="nombreManual" class="form-control mb-2" maxlength="160" value="@caso.ClinicaDestinoManual" />
+                    <button type="submit" class="btn btn-marca">Guardar</button>
+                </form>
+
+                <form asp-action="Cita" asp-route-id="@Model.Id" method="post" class="card card-body shadow-sm mb-3">
+                    <h2 class="h6">Solicitar cita</h2>
+                    <label for="clinicaCita" class="form-label small">Clínica</label>
+                    <select id="clinicaCita" name="clinicaId" class="form-select mb-2" required>
+                        @foreach (var c in clinicas) { <option value="@c.Id" selected="@(caso.ClinicaId == c.Id)">@c.Nombre</option> }
+                    </select>
+                    <div class="row g-2 mb-2">
+                        <div class="col-7"><label for="fechaPreferida" class="form-label small">Fecha preferida</label><input id="fechaPreferida" name="fechaPreferida" type="date" class="form-control" min="@DateTime.Today.ToString("yyyy-MM-dd")" required /></div>
+                        <div class="col-5"><label for="horario" class="form-label small">Horario</label><select id="horario" name="horario" class="form-select"><option>Mañana</option><option>Tarde</option></select></div>
+                    </div>
+                    <label for="comentario" class="form-label small">Comentario (opcional)</label>
+                    <input id="comentario" name="comentario" class="form-control mb-2" maxlength="300" />
+                    <button type="submit" class="btn btn-outline-primary">Enviar solicitud</button>
+                </form>
+
+                <form asp-action="Comprobante" asp-route-id="@Model.Id" method="post" enctype="multipart/form-data" class="card card-body shadow-sm mb-3">
+                    <h2 class="h6">Subir receta o comprobante de lentes</h2>
+                    @foreach (var c in comprobantes)
+                    {
+                        <div class="small mb-1">@c.Tipo.Texto() · @c.SubidoEn.ToLocalTime().ToString("dd/MM/yyyy") <partial name="_EstadoComprobante" model="c.Estado" />
+                            @if (c.MotivoRechazo is not null) { <span class="d-block text-danger">Motivo: @c.MotivoRechazo</span> }</div>
+                    }
+                    <label for="tipo" class="form-label small mt-2">¿Qué es?</label>
+                    <select id="tipo" name="tipo" class="form-select mb-2">
+                        <option value="Receta">Receta</option>
+                        <option value="ComprobanteLentes">Compra de lentes</option>
+                    </select>
+                    <label for="archivo" class="form-label small">Foto o PDF (máximo 10 MB)</label>
+                    <input id="archivo" name="archivo" type="file" class="form-control mb-2" accept="image/jpeg,image/png,image/webp,application/pdf" capture="environment" required />
+                    <button type="submit" class="btn btn-outline-primary">Enviar a Enfermería</button>
+                </form>
+            }
+        }
+        <a asp-action="Index" class="btn btn-link px-0"><i class="bi bi-arrow-left" aria-hidden="true"></i> Mis hijos</a>
+    </div>
+</div>
