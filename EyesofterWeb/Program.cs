@@ -166,7 +166,8 @@ else
     app.UseExceptionHandler("/Home/Error");
     // C-RC-03: el navegador solo habla con el portal por HTTPS (TLS 1.2+ lo pone Railway).
     app.UseHsts();
-    app.UseHttpsRedirection();
+    // El healthcheck de Railway llega por HTTP desde la red interna: /salud no se redirige.
+    app.UseWhen(ctx => !ctx.Request.Path.StartsWithSegments("/salud"), rama => rama.UseHttpsRedirection());
 }
 app.UseStatusCodePagesWithReExecute("/Home/Estado/{0}");
 
