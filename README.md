@@ -66,6 +66,19 @@ Una sola instalación atiende a varias escuelas y **cada una solo ve a sus alumn
   recibe ningún dato por tener convenio: solo ve el caso cuando la familia la elige y llega con su pase.
 - La matrícula es única **dentro de cada escuela**.
 
+## Seguridad
+
+- **Verificación en dos pasos (TOTP)** con cualquier app autenticadora. **Obligatoria para Dirección y
+  Enfermería**: al entrar por primera vez se les pide activarla (código QR + 10 códigos de respaldo) y no
+  ven ningún dato antes. El servidor de la app pide el mismo código. Si alguien pierde su teléfono,
+  Dirección usa *Usuarios → Restablecer 2 pasos*. `Eyesofter__Exigir2FAPersonal=false` la vuelve opcional.
+  En el modo demo también se pide: escanea el QR con tu app autenticadora.
+- Las páginas con sesión se envían con `Cache-Control: no-store` (computadoras compartidas).
+- El login no revela si un correo existe o si la cuenta está desactivada (solo a quien sabe la contraseña).
+- Las exportaciones de casos (Excel/PDF) quedan en la bitácora.
+- Página pública **Tu información está segura** (`/Privacidad/Seguridad`) y `/.well-known/security.txt`
+  para reportar vulnerabilidades.
+
 ## Desplegar en Railway
 
 El repositorio trae `Dockerfile` y `railway.json` (healthcheck en `/salud`).
@@ -78,6 +91,7 @@ El repositorio trae `Dockerfile` y `railway.json` (healthcheck en `/salud`).
 | `DATABASE_URL` | `${{Postgres.DATABASE_URL}}` |
 | `EYESOFTER_CLAVE_DATOS` | **La misma** que tiene el servidor de la app |
 | `ADMIN_CORREO` / `ADMIN_PASSWORD` | Cuenta inicial de Dirección (mín. 8 caracteres, con mayúscula, minúscula y número) |
+| `Eyesofter__Exigir2FAPersonal` | (Opcional) `false` para que la verificación en dos pasos del personal sea opcional. No recomendado |
 | `ADMIN_GLOBAL_CORREO` | (Opcional) Correo de la cuenta de Dirección que será administrador global si todavía no hay ninguno. Si no se define, se usa `ADMIN_CORREO` |
 | `Eyesofter__UrlWeb` | URL pública de este portal (va en los correos) |
 | `Eyesofter__UrlApi` | URL pública del servidor de la app |

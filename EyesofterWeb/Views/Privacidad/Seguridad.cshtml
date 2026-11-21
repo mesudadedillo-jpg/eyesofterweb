@@ -1,0 +1,66 @@
+@{ ViewData["Title"] = "Tu información está segura"; }
+<div class="row justify-content-center">
+    <div class="col-lg-9">
+        <div class="d-flex align-items-center gap-3 mb-3">
+            <i class="bi bi-shield-check text-success display-5" aria-hidden="true"></i>
+            <div>
+                <h1 class="h2 mb-0">Tu información está segura</h1>
+                <p class="text-body-secondary mb-0">Los resultados de la vista de tus hijos son datos de salud de menores. Así los cuidamos.</p>
+            </div>
+        </div>
+
+        <section class="card shadow-sm mb-3" aria-labelledby="quien">
+            <div class="card-body">
+                <h2 id="quien" class="h5"><i class="bi bi-people me-1" aria-hidden="true"></i>¿Quién puede ver los datos de tu hijo?</h2>
+                <ul class="mb-0">
+                    <li><strong>Tú</strong>, con tu cuenta, en el portal y en la app.</li>
+                    <li><strong>La Enfermería y la Dirección de su escuela</strong>, para darle seguimiento. El personal de otras escuelas no puede verlos.</li>
+                    <li><strong>La clínica que tú elijas</strong>, solo cuando llevas el pase médico y solo lo de esa consulta. Que una clínica tenga convenio con la escuela no le da acceso a ningún dato.</li>
+                    <li><strong>Nadie más.</strong> No vendemos ni compartimos la información con empresas ni para publicidad.</li>
+                </ul>
+            </div>
+        </section>
+
+        <section class="card shadow-sm mb-3" aria-labelledby="como">
+            <div class="card-body">
+                <h2 id="como" class="h5"><i class="bi bi-lock me-1" aria-hidden="true"></i>¿Cómo la protegemos?</h2>
+                <div class="row row-cols-1 row-cols-md-2 g-3">
+                    <div class="col"><h3 class="h6 mb-1">Conexión cifrada</h3><p class="small mb-0">El portal y la app solo se comunican por HTTPS: nadie en la red puede leer lo que viaja.</p></div>
+                    <div class="col"><h3 class="h6 mb-1">Datos de salud cifrados</h3><p class="small mb-0">Resultados de agudeza visual, observaciones, valoraciones de la clínica, recetas y comprobantes se guardan cifrados (AES-256). Ni con una copia de la base se pueden leer sin la llave.</p></div>
+                    <div class="col"><h3 class="h6 mb-1">Contraseñas que nadie conoce</h3><p class="small mb-0">No guardamos tu contraseña, solo una huella que no se puede revertir. Ni el personal de la escuela puede verla. Tú la creas con un enlace que te llega al correo.</p></div>
+                    <div class="col"><h3 class="h6 mb-1">Bloqueo contra adivinanzas</h3><p class="small mb-0">Tras 3 intentos fallidos la cuenta se bloquea 15 minutos.</p></div>
+                    <div class="col"><h3 class="h6 mb-1">Verificación en dos pasos para el personal</h3><p class="small mb-0">Dirección y Enfermería necesitan, además de su contraseña, un código de su teléfono. Si alguien roba una contraseña, no le sirve. Tú también puedes activarla en tu cuenta.</p></div>
+                    <div class="col"><h3 class="h6 mb-1">Sesiones que se cierran solas</h3><p class="small mb-0">El portal se cierra tras 15 minutos sin actividad y no guarda las páginas en el navegador: útil en computadoras compartidas.</p></div>
+                    <div class="col"><h3 class="h6 mb-1">Registro de cada consulta</h3><p class="small mb-0">Queda registrado quién consultó o cambió cada expediente y cuándo. La Dirección puede revisarlo, y los intentos de ver datos ajenos quedan marcados.</p></div>
+                    <div class="col"><h3 class="h6 mb-1">Pase médico de un solo uso</h3><p class="small mb-0">El código QR solo lo puede leer la clínica que elegiste, sirve una vez y vence.</p></div>
+                    <div class="col"><h3 class="h6 mb-1">En tu teléfono</h3><p class="small mb-0">La app no copia los resultados a la nube ni a otro teléfono, y los borra al cerrar sesión.</p></div>
+                    <div class="col"><h3 class="h6 mb-1">Respaldos cifrados</h3><p class="small mb-0">La información se respalda todos los días y los respaldos también van cifrados.</p></div>
+                </div>
+            </div>
+        </section>
+
+        <section class="card shadow-sm mb-3" aria-labelledby="tu">
+            <div class="card-body">
+                <h2 id="tu" class="h5"><i class="bi bi-person-check me-1" aria-hidden="true"></i>Lo que tú puedes hacer</h2>
+                <ul class="mb-0">
+                    <li>No compartas tu contraseña. <strong>La escuela nunca te la pedirá</strong> por teléfono, WhatsApp ni correo.</li>
+                    <li>Desconfía de mensajes con enlaces que piden tus datos. Entra siempre escribiendo la dirección del portal o desde la app oficial.</li>
+                    <li>Cierra sesión si usas una computadora que no es tuya.</li>
+                    <li>Activa la verificación en dos pasos en el menú de tu cuenta.</li>
+                </ul>
+            </div>
+        </section>
+
+        <section class="card shadow-sm mb-3" aria-labelledby="derechos">
+            <div class="card-body">
+                <h2 id="derechos" class="h5"><i class="bi bi-file-earmark-text me-1" aria-hidden="true"></i>Tus derechos</h2>
+                <p class="mb-0">Puedes pedir acceder, corregir o cancelar los datos de tu hijo, u oponerte a su uso (derechos ARCO). Consulta cómo en el <a asp-action="Aviso">aviso de privacidad</a>.</p>
+            </div>
+        </section>
+
+        <div class="alert alert-warning d-flex gap-2" role="note">
+            <i class="bi bi-exclamation-triangle fs-5" aria-hidden="true"></i>
+            <div><strong>¿Viste algo raro?</strong> Un acceso que no reconoces, un mensaje sospechoso o una falla de seguridad: <a asp-controller="Soporte" asp-action="Reportar">repórtalo aquí</a>. Lo atiende el equipo que administra EYESOFTER.</div>
+        </div>
+    </div>
+</div>

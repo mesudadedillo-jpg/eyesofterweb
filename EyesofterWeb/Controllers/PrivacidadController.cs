@@ -38,6 +38,10 @@ namespace EyesofterWeb.Controllers
         [AllowAnonymous]
         public IActionResult Terminos() => View();
 
+        /// <summary>"Tu información está segura": qué hacemos para proteger los datos, en palabras sencillas.</summary>
+        [AllowAnonymous]
+        public IActionResult Seguridad() => View();
+
         [Authorize(Roles = Roles.Tutor)]
         public IActionResult Aceptar(string? returnUrl)
         {

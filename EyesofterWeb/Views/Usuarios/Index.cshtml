@@ -28,10 +28,12 @@
                         @if (!u.Activo) { <span class="badge text-bg-secondary">Desactivada</span> }
                         else if (u.Bloqueado) { <span class="badge text-bg-danger">Bloqueada</span> }
                         else { <span class="badge text-bg-success">Activa</span> }
+                        @if (u.DosPasos) { <span class="badge text-bg-light border" title="Verificación en dos pasos activa"><i class="bi bi-shield-check" aria-hidden="true"></i> 2 pasos</span> }
                     </td>
                     <td class="text-end text-nowrap">
                         <a asp-action="Editar" asp-route-id="@u.Id" class="btn btn-sm btn-outline-primary">Editar</a>
                         <form asp-action="EnviarEnlace" asp-route-id="@u.Id" method="post" class="d-inline"><button class="btn btn-sm btn-outline-secondary" title="Enviar enlace para crear o cambiar contraseña">Contraseña</button></form>
+                        @if (u.DosPasos) { <form asp-action="RestablecerDosPasos" asp-route-id="@u.Id" method="post" class="d-inline" data-confirmar="¿Restablecer la verificación en dos pasos? Úsalo solo si la persona perdió su teléfono y sus códigos de respaldo."><button class="btn btn-sm btn-outline-secondary" title="Perdió su teléfono">Restablecer 2 pasos</button></form> }
                         @if (u.Bloqueado) { <form asp-action="Desbloquear" asp-route-id="@u.Id" method="post" class="d-inline"><button class="btn btn-sm btn-outline-warning">Desbloquear</button></form> }
                         <form asp-action="CambiarActivo" asp-route-id="@u.Id" method="post" class="d-inline" data-confirmar="@(u.Activo ? "¿Desactivar esta cuenta? No podrá entrar ni en la web ni en la app." : "¿Reactivar esta cuenta?")">
                             <button class="btn btn-sm @(u.Activo ? "btn-outline-danger" : "btn-outline-success")">@(u.Activo ? "Desactivar" : "Activar")</button>

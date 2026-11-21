@@ -39,6 +39,12 @@ namespace EyesofterWeb.Controllers
         public async Task<IActionResult> Index([FromQuery] FiltroCasos filtro, string? formato)
         {
             var casos = await Filtrar(filtro).ToListAsync();
+            if (formato is "excel" or "pdf")
+            {
+                // Una lista de muchos alumnos que sale del sistema: queda en la bitácora quién y cuándo.
+                _auditoria.Registrar("EXPORTAR_CASOS", "Caso", null, $"{formato}: {casos.Count} caso(s). {filtro.Descripcion()}");
+                await _db.SaveChangesAsync();
+            }
             if (formato == "excel")
                 return File(_documentos.ExcelCasos(casos), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"casos-{DateTime.Today:yyyyMMdd}.xlsx");
             if (formato == "pdf")

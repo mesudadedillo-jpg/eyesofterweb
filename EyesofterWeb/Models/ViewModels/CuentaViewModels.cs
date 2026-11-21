@@ -17,6 +17,28 @@ namespace EyesofterWeb.Models.ViewModels
         public string? ReturnUrl { get; set; }
     }
 
+    public class LoginDosPasosViewModel
+    {
+        [Required(ErrorMessage = "Escribe el código.")]
+        [StringLength(20)]
+        [Display(Name = "Código de verificación")]
+        public string Codigo { get; set; } = string.Empty;
+
+        /// <summary>true = es uno de los códigos de respaldo (si perdiste el teléfono).</summary>
+        public bool EsCodigoDeRespaldo { get; set; }
+
+        public string? ReturnUrl { get; set; }
+    }
+
+    public class DosPasosViewModel
+    {
+        [Display(Name = "Código de 6 dígitos de tu app")]
+        public string? Codigo { get; set; }
+        public string ClaveLegible { get; set; } = string.Empty;
+        public string QrDataUri { get; set; } = string.Empty;
+        public bool Obligatoria { get; set; }
+    }
+
     public class OlvideViewModel
     {
         [Required(ErrorMessage = "El correo es obligatorio.")]
@@ -70,6 +92,8 @@ namespace EyesofterWeb.Models.ViewModels
         public string Correo { get; set; } = string.Empty;
         public IList<string> Roles { get; set; } = new List<string>();
         public bool Bloqueado { get; set; }
+        /// <summary>Tiene activa la verificación en dos pasos.</summary>
+        public bool DosPasos { get; set; }
         public bool Activo { get; set; }
         public string? Vinculo { get; set; }
         /// <summary>Escuelas del personal escolar ("Todas" para el administrador global).</summary>

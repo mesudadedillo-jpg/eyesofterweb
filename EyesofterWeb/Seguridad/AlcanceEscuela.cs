@@ -25,6 +25,8 @@ namespace EyesofterWeb.Seguridad
     {
         public const string ClaimPlantel = "eyesofter:plantel";
         public const string ClaimGlobal = "eyesofter:global";
+        /// <summary>"true" si la cuenta ya activó la verificación en dos pasos.</summary>
+        public const string ClaimDosPasos = "eyesofter:2fa";
 
         private readonly IHttpContextAccessor _http;
         public AlcanceEscuela(IHttpContextAccessor http) => _http = http;
@@ -60,6 +62,7 @@ namespace EyesofterWeb.Seguridad
         {
             var identidad = await base.GenerateClaimsAsync(user);
             if (user.AdministradorGlobal) identidad.AddClaim(new Claim(AlcanceEscuela.ClaimGlobal, "true"));
+            if (user.TwoFactorEnabled) identidad.AddClaim(new Claim(AlcanceEscuela.ClaimDosPasos, "true"));
             var planteles = _db.UsuarioPlanteles.Where(x => x.UsuarioId == user.Id).Select(x => x.PlantelId).ToList();
             foreach (var p in planteles) identidad.AddClaim(new Claim(AlcanceEscuela.ClaimPlantel, p.ToString()));
             return identidad;

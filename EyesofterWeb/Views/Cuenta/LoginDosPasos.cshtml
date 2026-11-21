@@ -1,0 +1,29 @@
+@model LoginDosPasosViewModel
+@{ ViewData["Title"] = "Verificación en dos pasos"; }
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-5">
+        <div class="card shadow-sm">
+            <div class="card-body p-4">
+                <h1 class="h4 mb-1"><i class="bi bi-shield-lock text-marca me-1" aria-hidden="true"></i>Verificación en dos pasos</h1>
+                <p class="text-body-secondary small mb-4">Abre tu app autenticadora (Google Authenticator, Microsoft Authenticator…) y escribe el código de 6 dígitos de EYESOFTER.</p>
+                <form asp-action="LoginDosPasos" method="post" novalidate>
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2" role="alert"></div>
+                    <input type="hidden" asp-for="ReturnUrl" />
+                    <div class="mb-3">
+                        <label asp-for="Codigo" class="form-label"></label>
+                        <input asp-for="Codigo" class="form-control form-control-lg text-center" autocomplete="one-time-code" inputmode="numeric" autofocus />
+                        <span asp-validation-for="Codigo" class="text-danger small"></span>
+                    </div>
+                    <div class="form-check mb-3">
+                        <input asp-for="EsCodigoDeRespaldo" class="form-check-input" />
+                        <label asp-for="EsCodigoDeRespaldo" class="form-check-label">Perdí mi teléfono: voy a usar un código de respaldo</label>
+                    </div>
+                    <button type="submit" class="btn btn-marca w-100">Verificar</button>
+                </form>
+                <hr />
+                <p class="small mb-0 text-body-secondary">¿Sin teléfono ni códigos de respaldo? Pide a la Dirección de tu escuela que restablezca tu verificación en dos pasos.</p>
+            </div>
+        </div>
+    </div>
+</div>
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

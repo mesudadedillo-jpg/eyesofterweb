@@ -1,0 +1,13 @@
+@model int
+@{ ViewData["Title"] = "Verificación en dos pasos"; }
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <h1 class="h3 mb-3"><i class="bi bi-shield-check text-success me-1" aria-hidden="true"></i>Verificación en dos pasos activa</h1>
+        <div class="card shadow-sm"><div class="card-body">
+            <p>Cada vez que entres al portal o a la app te pediremos el código de tu app autenticadora.</p>
+            <p class="mb-3">Te quedan <strong>@Model</strong> código(s) de respaldo. Si se te acaban o los perdiste, genera nuevos (los anteriores dejan de servir).</p>
+            <form asp-action="NuevosCodigos" method="post"><button class="btn btn-outline-primary">Generar nuevos códigos de respaldo</button></form>
+            <p class="small text-body-secondary mt-3 mb-0">¿Cambiaste de teléfono? Pide a la Dirección que restablezca tu verificación y vuelve a configurarla.</p>
+        </div></div>
+    </div>
+</div>

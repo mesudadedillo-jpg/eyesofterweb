@@ -153,6 +153,8 @@ builder.Services.AddControllersWithViews(options =>
     m.SetNonPropertyValueMustBeANumberAccessor(() => "El campo debe ser un número.");
     // C-RC-08: el tutor acepta el aviso de privacidad antes de ver datos de sus hijos.
     options.Filters.Add<FiltroConsentimiento>();
+    // Dirección y Enfermería deben activar la verificación en dos pasos antes de ver datos.
+    options.Filters.Add<FiltroDosPasos>();
 });
 
 var app = builder.Build();
@@ -194,6 +196,17 @@ app.UseAuthorization();
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
+
+// security.txt (RFC 9116): cómo reportar una vulnerabilidad de forma responsable.
+app.MapGet("/.well-known/security.txt", (Microsoft.Extensions.Options.IOptions<OpcionesEyesofter> o) =>
+{
+    var web = o.Value.UrlWeb.TrimEnd('/');
+    return Results.Text(
+        $"Contact: {web}/Soporte/Reportar\n" +
+        $"Expires: {DateTime.UtcNow.AddYears(1):yyyy-MM-ddT00:00:00Z}\n" +
+        "Preferred-Languages: es, en\n" +
+        $"Policy: {web}/Privacidad/Seguridad\n", "text/plain; charset=utf-8");
+});
 
 // Healthcheck para Railway (no toca la base para no reiniciar el servicio si la base tarda).
 app.MapGet("/salud", () => Results.Ok(new { status = "ok" }));

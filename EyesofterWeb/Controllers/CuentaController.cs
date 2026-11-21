@@ -20,10 +20,12 @@ namespace EyesofterWeb.Controllers
         private readonly Auditoria _auditoria;
         private readonly ICorreo _correo;
         private readonly ILogger<CuentaController> _logger;
+        private readonly Documentos _documentos;
 
         public CuentaController(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager,
-                                Auditoria auditoria, ICorreo correo, ILogger<CuentaController> logger)
+                                Auditoria auditoria, ICorreo correo, ILogger<CuentaController> logger, Documentos documentos)
         {
+            _documentos = documentos;
             _userManager = userManager;
             _signInManager = signInManager;
             _auditoria = auditoria;
@@ -50,9 +52,14 @@ namespace EyesofterWeb.Controllers
             var usuario = await _userManager.FindByEmailAsync(modelo.Correo);
             if (usuario is not null && !usuario.Activo)
             {
+                // Solo se dice "desactivada" a quien sabe la contraseña: si no, cualquiera podría
+                // averiguar qué correos tienen cuenta en la escuela.
+                var correcta = await _signInManager.CheckPasswordSignInAsync(usuario, modelo.Password, lockoutOnFailure: true);
                 _auditoria.Registrar("LOGIN_CUENTA_DESACTIVADA", "Usuario", usuario.Id, modelo.Correo, exito: false);
                 await GuardarAuditoriaAsync();
-                ModelState.AddModelError(string.Empty, "Tu cuenta está desactivada. Comunícate con la Dirección de la escuela.");
+                ModelState.AddModelError(string.Empty, correcta.Succeeded
+                    ? "Tu cuenta está desactivada. Comunícate con la Dirección de la escuela."
+                    : "Correo o contraseña incorrectos.");
                 return View(modelo);
             }
 
@@ -66,6 +73,9 @@ namespace EyesofterWeb.Controllers
                 if (!string.IsNullOrEmpty(modelo.ReturnUrl) && Url.IsLocalUrl(modelo.ReturnUrl)) return LocalRedirect(modelo.ReturnUrl);
                 return RedirectToAction("Index", "Home");
             }
+            // Contraseña correcta, falta el código de la app autenticadora (paso 2).
+            if (resultado.RequiresTwoFactor)
+                return RedirectToAction(nameof(LoginDosPasos), new { returnUrl = modelo.ReturnUrl });
 
             _auditoria.Registrar(resultado.IsLockedOut ? "LOGIN_BLOQUEADO" : "LOGIN_FALLIDO", "Usuario", usuario?.Id, modelo.Correo, exito: false);
             await GuardarAuditoriaAsync();
@@ -174,6 +184,118 @@ namespace EyesofterWeb.Controllers
             await GuardarAuditoriaAsync();
             TempData["Exito"] = "Tu contraseña se cambió.";
             return RedirectToAction("Index", "Home");
+        }
+
+        // ---------- Verificación en dos pasos (TOTP) ----------
+        // Obligatoria para Dirección y Enfermería (ven datos de salud de muchos menores): una
+        // contraseña robada ya no basta. Funciona con Google Authenticator, Microsoft Authenticator,
+        // Authy o cualquier app TOTP. El servidor de la app móvil pide el mismo código.
+
+        [AllowAnonymous]
+        public async Task<IActionResult> LoginDosPasos(string? returnUrl = null)
+        {
+            if (await _signInManager.GetTwoFactorAuthenticationUserAsync() is null) return RedirectToAction(nameof(Login));
+            return View(new LoginDosPasosViewModel { ReturnUrl = returnUrl });
+        }
+
+        [HttpPost]
+        [AllowAnonymous]
+        [ValidateAntiForgeryToken]
+        [EnableRateLimiting("acceso")]
+        public async Task<IActionResult> LoginDosPasos(LoginDosPasosViewModel modelo)
+        {
+            var usuario = await _signInManager.GetTwoFactorAuthenticationUserAsync();
+            if (usuario is null) return RedirectToAction(nameof(Login));
+            if (!ModelState.IsValid) return View(modelo);
+
+            // El código de la app son 6 dígitos; los de respaldo llevan guion (XXXXX-XXXXX) y se conservan.
+            var codigo = modelo.EsCodigoDeRespaldo
+                ? new string(modelo.Codigo.Where(c => char.IsLetterOrDigit(c) || c == '-').ToArray()).ToUpperInvariant()
+                : new string(modelo.Codigo.Where(char.IsDigit).ToArray());
+            var resultado = modelo.EsCodigoDeRespaldo
+                ? await _signInManager.TwoFactorRecoveryCodeSignInAsync(codigo)
+                : await _signInManager.TwoFactorAuthenticatorSignInAsync(codigo, isPersistent: false, rememberClient: false);
+            if (resultado.Succeeded)
+            {
+                _auditoria.Registrar(modelo.EsCodigoDeRespaldo ? "LOGIN_CODIGO_RESPALDO" : "LOGIN", "Usuario", usuario.Id, usuario.Email);
+                await GuardarAuditoriaAsync();
+                if (modelo.EsCodigoDeRespaldo)
+                    TempData["Error"] = "Usaste un código de respaldo (ya no sirve de nuevo). Si perdiste tu teléfono, vuelve a configurar la verificación en dos pasos.";
+                if (!string.IsNullOrEmpty(modelo.ReturnUrl) && Url.IsLocalUrl(modelo.ReturnUrl)) return LocalRedirect(modelo.ReturnUrl);
+                return RedirectToAction("Index", "Home");
+            }
+            _auditoria.Registrar(resultado.IsLockedOut ? "LOGIN_BLOQUEADO" : "LOGIN_2FA_FALLIDO", "Usuario", usuario.Id, usuario.Email, exito: false);
+            await GuardarAuditoriaAsync();
+            ModelState.AddModelError(string.Empty, resultado.IsLockedOut
+                ? "Tu cuenta quedó bloqueada 15 minutos por intentos fallidos."
+                : "El código no es correcto o ya venció. Escribe el que aparece ahora en tu app.");
+            return View(modelo);
+        }
+
+        /// <summary>Activar (o ver el estado de) la verificación en dos pasos.</summary>
+        [Authorize]
+        public async Task<IActionResult> DosPasos()
+        {
+            var usuario = await _userManager.GetUserAsync(User);
+            if (usuario is null) return Challenge();
+            if (await _userManager.GetTwoFactorEnabledAsync(usuario)) return View("DosPasosActiva", await _userManager.CountRecoveryCodesAsync(usuario));
+            return View(await ModeloDosPasosAsync(usuario));
+        }
+
+        [HttpPost]
+        [Authorize]
+        [ValidateAntiForgeryToken]
+        [EnableRateLimiting("acceso")]
+        public async Task<IActionResult> DosPasos(DosPasosViewModel modelo)
+        {
+            var usuario = await _userManager.GetUserAsync(User);
+            if (usuario is null) return Challenge();
+            var codigo = new string((modelo.Codigo ?? "").Where(char.IsDigit).ToArray());
+            var valido = codigo.Length == 6 && await _userManager.VerifyTwoFactorTokenAsync(usuario, _userManager.Options.Tokens.AuthenticatorTokenProvider, codigo);
+            if (!valido)
+            {
+                ModelState.AddModelError(nameof(modelo.Codigo), "El código no coincide. Revisa que la hora de tu teléfono sea automática y escribe el código que aparece ahora.");
+                return View(await ModeloDosPasosAsync(usuario));
+            }
+            await _userManager.SetTwoFactorEnabledAsync(usuario, true);
+            var codigos = (await _userManager.GenerateNewTwoFactorRecoveryCodesAsync(usuario, 10) ?? Enumerable.Empty<string>()).ToList();
+            _auditoria.Registrar("ACTIVAR_2FA", "Usuario", usuario.Id, usuario.Email);
+            await GuardarAuditoriaAsync();
+            await _signInManager.RefreshSignInAsync(usuario);
+            return View("CodigosRespaldo", codigos);
+        }
+
+        /// <summary>Nuevos códigos de respaldo (los anteriores dejan de servir).</summary>
+        [HttpPost]
+        [Authorize]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> NuevosCodigos()
+        {
+            var usuario = await _userManager.GetUserAsync(User);
+            if (usuario is null || !await _userManager.GetTwoFactorEnabledAsync(usuario)) return RedirectToAction(nameof(DosPasos));
+            var codigos = (await _userManager.GenerateNewTwoFactorRecoveryCodesAsync(usuario, 10) ?? Enumerable.Empty<string>()).ToList();
+            _auditoria.Registrar("NUEVOS_CODIGOS_2FA", "Usuario", usuario.Id, usuario.Email);
+            await GuardarAuditoriaAsync();
+            return View("CodigosRespaldo", codigos);
+        }
+
+        private async Task<DosPasosViewModel> ModeloDosPasosAsync(ApplicationUser usuario)
+        {
+            var clave = await _userManager.GetAuthenticatorKeyAsync(usuario);
+            if (string.IsNullOrEmpty(clave))
+            {
+                await _userManager.ResetAuthenticatorKeyAsync(usuario);
+                clave = await _userManager.GetAuthenticatorKeyAsync(usuario);
+                // Generar la clave cambia el sello de seguridad: sin esto la sesión actual se cerraría.
+                await _signInManager.RefreshSignInAsync(usuario);
+            }
+            var uri = $"otpauth://totp/{Uri.EscapeDataString("EYESOFTER:" + usuario.Email)}?secret={clave}&issuer=EYESOFTER&digits=6";
+            return new DosPasosViewModel
+            {
+                ClaveLegible = string.Join(" ", Enumerable.Range(0, (clave!.Length + 3) / 4).Select(i => clave.Substring(i * 4, Math.Min(4, clave.Length - i * 4)))).ToLowerInvariant(),
+                QrDataUri = "data:image/png;base64," + Convert.ToBase64String(_documentos.QrPng(uri, 6)),
+                Obligatoria = User.IsInRole(Roles.Administrador) || User.IsInRole(Roles.Enfermeria)
+            };
         }
 
         [AllowAnonymous]

@@ -1,0 +1,15 @@
+@model List<string>
+@{ ViewData["Title"] = "Códigos de respaldo"; }
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="alert alert-success" role="status"><i class="bi bi-shield-check me-1" aria-hidden="true"></i>La verificación en dos pasos está activa.</div>
+        <h1 class="h4">Guarda tus códigos de respaldo</h1>
+        <p>Si pierdes tu teléfono, cada uno de estos códigos sirve <strong>una sola vez</strong> para entrar. Guárdalos en un lugar seguro (impresos o en tu gestor de contraseñas). <strong>No los volveremos a mostrar.</strong></p>
+        <div class="card shadow-sm mb-3"><div class="card-body">
+            <ul class="list-unstyled row row-cols-2 font-monospace fs-5 mb-0">
+                @foreach (var c in Model) { <li class="col mb-1">@c</li> }
+            </ul>
+        </div></div>
+        <a asp-controller="Home" asp-action="Index" class="btn btn-marca">Ya los guardé, continuar</a>
+    </div>
+</div>

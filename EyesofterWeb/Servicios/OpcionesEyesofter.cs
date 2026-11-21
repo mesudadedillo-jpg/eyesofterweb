@@ -14,5 +14,11 @@ namespace EyesofterWeb.Servicios
 
         public int DiasVigenciaPase { get; set; } = 60;
         public int MinutosInactividad { get; set; } = 15;
+
+        /// <summary>
+        /// Dirección y Enfermería deben activar la verificación en dos pasos antes de ver datos
+        /// (ven información de salud de muchos menores). Eyesofter__Exigir2FAPersonal=false la vuelve opcional.
+        /// </summary>
+        public bool Exigir2FAPersonal { get; set; } = true;
     }
 }

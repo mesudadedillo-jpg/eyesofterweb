@@ -81,6 +81,7 @@ namespace EyesofterWeb.Controllers
                     Id = u.Id, NombreCompleto = u.NombreCompleto, Correo = u.Email ?? string.Empty,
                     Roles = await _userManager.GetRolesAsync(u),
                     Bloqueado = u.LockoutEnd.HasValue && u.LockoutEnd.Value > DateTimeOffset.UtcNow,
+                    DosPasos = u.TwoFactorEnabled,
                     Activo = u.Activo,
                     Vinculo = u.Tutor?.NombreCompleto ?? u.Alumno?.NombreCompleto ?? u.Clinica?.Nombre,
                     Escuelas = u.AdministradorGlobal ? "Todas (administrador global)"
@@ -215,6 +216,25 @@ namespace EyesofterWeb.Controllers
             _auditoria.Registrar("DESBLOQUEAR_USUARIO", "Usuario", u.Id, u.Email);
             await _db.SaveChangesAsync();
             TempData["Exito"] = $"Se desbloqueó la cuenta de {u.Email}.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        /// <summary>
+        /// La persona perdió su teléfono y sus códigos de respaldo: se borra su app autenticadora
+        /// y se cierran sus sesiones. Al volver a entrar tendrá que configurarla de nuevo.
+        /// </summary>
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RestablecerDosPasos(string id)
+        {
+            var u = await VisibleAsync(id);
+            if (u is null) return NotFound();
+            await _userManager.SetTwoFactorEnabledAsync(u, false);
+            await _userManager.ResetAuthenticatorKeyAsync(u);
+            await _userManager.UpdateSecurityStampAsync(u);
+            _auditoria.Registrar("RESTABLECER_2FA", "Usuario", u.Id, u.Email);
+            await _db.SaveChangesAsync();
+            TempData["Exito"] = $"Se restableció la verificación en dos pasos de {u.Email}. Al entrar la configurará de nuevo.";
             return RedirectToAction(nameof(Index));
         }
 
