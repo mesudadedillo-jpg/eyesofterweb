@@ -1,4 +1,5 @@
 # C-RC-13: respaldo automático diario de la base de datos (ver docs/RESPALDO.md).
+# Solo corre en un repositorio PRIVADO (ver el job "visibilidad").
 # Secretos del repositorio (Settings → Secrets and variables → Actions):
 #   DATABASE_PUBLIC_URL  URL pública de PostgreSQL en Railway (variable DATABASE_PUBLIC_URL del servicio Postgres)
 #   RESPALDO_CLAVE       contraseña con la que se cifra el respaldo (guárdala fuera de GitHub)
@@ -13,7 +14,26 @@ permissions:
   contents: read
 
 jobs:
+  # En un repositorio PÚBLICO cualquier cuenta de GitHub puede descargar los artefactos, así que
+  # el respaldo solo corre si el repositorio es privado. Para tenerlo con el portal público, copia
+  # este archivo a un repositorio privado (ver docs/RESPALDO.md, sección 0).
+  # (Se consulta la API: en las ejecuciones programadas el evento no trae "repository".)
+  visibilidad:
+    runs-on: ubuntu-latest
+    outputs:
+      privado: ${{ steps.consulta.outputs.privado }}
+    steps:
+      - id: consulta
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          privado=$(gh api "repos/${GITHUB_REPOSITORY}" --jq .private)
+          echo "privado=${privado}" >> "$GITHUB_OUTPUT"
+          [ "$privado" = "true" ] || echo "::notice::Repositorio público: el respaldo no se ejecuta aquí (ver docs/RESPALDO.md)."
+
   respaldo:
+    needs: visibilidad
+    if: ${{ needs.visibilidad.outputs.privado == 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:

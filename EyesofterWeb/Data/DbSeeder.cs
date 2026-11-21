@@ -80,8 +80,33 @@ namespace EyesofterWeb.Data
                 }
             }
 
+            // El repositorio es público y el README publica las cuentas demo con su contraseña.
+            // En producción, cualquier cuenta demo que todavía la tenga se desactiva: si no,
+            // cualquiera que lea el README podría entrar.
+            if (!demo) await DesactivarCuentasDemoAsync(userManager, logger);
+
             if (!demo || await db.Tutores.AnyAsync()) return;
             await SembrarDemoAsync(db, userManager, logger);
+        }
+
+        private static readonly string[] CorreosDemo =
+        {
+            "admin@eyesofter.mx", "enfermeria@eyesofter.mx", "enfermeria2@eyesofter.mx",
+            "tutor@eyesofter.mx", "alumno@eyesofter.mx", "especialista@eyesofter.mx"
+        };
+
+        private static async Task DesactivarCuentasDemoAsync(UserManager<ApplicationUser> userManager, ILogger logger)
+        {
+            foreach (var correo in CorreosDemo)
+            {
+                var u = await userManager.FindByEmailAsync(correo);
+                if (u is null || !u.Activo || !await userManager.CheckPasswordAsync(u, PasswordDemo)) continue;
+                u.Activo = false;
+                await userManager.UpdateAsync(u);
+                await userManager.UpdateSecurityStampAsync(u);
+                logger.LogCritical("La cuenta demo {Correo} tenía la contraseña pública del README y se DESACTIVÓ. " +
+                                   "Si la necesitas, cámbiale la contraseña y reactívala en Usuarios.", correo);
+            }
         }
 
         private static async Task SembrarDemoAsync(ApplicationDbContext db, UserManager<ApplicationUser> userManager, ILogger logger)

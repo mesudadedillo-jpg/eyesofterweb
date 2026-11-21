@@ -13,11 +13,29 @@ se cifra completo con AES-256. Para usar un respaldo hacen falta **dos secretos*
 respaldo (`RESPALDO_CLAVE`) y la llave de datos (`EYESOFTER_CLAVE_DATOS`). Guárdalas fuera de
 GitHub, por ejemplo en un gestor de contraseñas, con acceso de Dirección y del responsable técnico.
 
+## 0. Dónde vive el respaldo: un repositorio PRIVADO
+
+Este repositorio es público (portafolio). En un repositorio público **cualquier cuenta de GitHub puede
+descargar los artefactos** de los workflows, así que el respaldo diario **no corre aquí**: el workflow
+primero pregunta a GitHub si el repositorio es privado y, si no lo es, no hace nada.
+
+Para respaldar la base de producción:
+
+1. GitHub → *New repository* → nombre `eyesofter-respaldos`, **Private**, sin README.
+2. Copia ahí `.github/workflows/respaldo.yml` (mismo contenido, misma ruta).
+3. En **ese** repositorio privado agrega los secretos `DATABASE_PUBLIC_URL` y `RESPALDO_CLAVE` (paso 1 de abajo).
+   Si los habías puesto en este repositorio público, **bórralos de aquí**.
+4. *Actions → Respaldo diario de la base → Run workflow* para probarlo.
+
+La URL pública de PostgreSQL deja la base accesible desde internet con usuario y contraseña. Usa una
+contraseña larga (la genera Railway) y, si no vas a usar el respaldo automático, desactiva el acceso
+público (*TCP Proxy*) del servicio Postgres en Railway.
+
 ## 1. Activar el respaldo automático (una sola vez)
 
 1. Railway → servicio **Postgres** → *Variables* → copia `DATABASE_PUBLIC_URL` (la URL pública;
    la interna `*.railway.internal` no es accesible desde GitHub).
-2. GitHub → repositorio `eyesofterweb` → *Settings → Secrets and variables → Actions → New repository secret*:
+2. GitHub → repositorio **privado** `eyesofter-respaldos` → *Settings → Secrets and variables → Actions → New repository secret*:
    - `DATABASE_PUBLIC_URL` = la URL del paso 1
    - `RESPALDO_CLAVE` = una contraseña larga (por ejemplo, la salida de `openssl rand -base64 24`)
 3. *Actions → Respaldo diario de la base → Run workflow* para probarlo. Debe terminar en verde y
