@@ -15,6 +15,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.WebEncoders;
 
 var builder = WebApplication.CreateBuilder(args);
+// No anunciar la tecnología del servidor en las respuestas (cabecera "Server: Kestrel").
+builder.WebHost.ConfigureKestrel(k => k.AddServerHeader = false);
 
 // Railway asigna el puerto en la variable PORT.
 var puerto = Environment.GetEnvironmentVariable("PORT");

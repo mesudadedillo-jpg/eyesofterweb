@@ -20,7 +20,7 @@
 }
 <h1 class="h3 mb-3">Permisos por rol</h1>
 <p class="text-body-secondary">Las restricciones se aplican en el servidor (no solo ocultando botones). Un tutor solo puede consultar a los alumnos a su cargo (C-RC-06).</p>
-<div class="table-responsive">
+<div class="table-responsive" tabindex="0" role="region" aria-label="Tabla de permisos por rol">
     <table class="table table-bordered align-middle text-center">
         <thead class="table-light">
             <tr><th scope="col" class="text-start">Acción</th><th scope="col">Dirección</th><th scope="col">Enfermería</th><th scope="col">Tutor</th><th scope="col">Especialista</th><th scope="col">Alumno</th></tr>
@@ -32,7 +32,7 @@
                     <th scope="row" class="text-start fw-normal">@f.Accion</th>
                     @foreach (var p in new[] { f.Dir, f.Enf, f.Tut, f.Esp, f.Alu })
                     {
-                        <td>@if (p) {<i class="bi bi-check-lg text-success" aria-label="Sí"></i>} else {<i class="bi bi-dash text-body-tertiary" aria-label="No"></i>}</td>
+                        <td>@if (p) {<i class="bi bi-check-lg text-success" role="img" aria-label="Sí"></i>} else {<i class="bi bi-dash text-body-tertiary" role="img" aria-label="No"></i>}</td>
                     }
                 </tr>
             }

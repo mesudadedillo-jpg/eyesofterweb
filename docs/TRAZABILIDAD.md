@@ -8,6 +8,7 @@ implementación en los tres repositorios:
 | **WEB** | `eyesofterweb` | Portal web ASP.NET Core 10 (dueño de la base y de las cuentas) |
 | **API** | `eyesofterandroid` | Servidor Ktor de la app móvil y del escritorio, despachador de notificaciones |
 | **APP** | `eyesofterandroidfront` | App móvil Kotlin Multiplatform (Android; iOS preparado) |
+| **ESC** | `Eyesofter` | Sistema de escritorio JavaFX: examen de agudeza y color, y envío del resultado a la API |
 
 Estado: ✅ cumplido y probado · 🟡 cumplido, pero depende de una configuración o de otro sistema ·
 📄 se cumple con un documento o un proceso del equipo · ⚠️ difiere de lo pedido (ver nota).
@@ -42,13 +43,13 @@ cabeceras) más la integración WEB↔API sobre la misma base.
 | W-RFNN-02 | ✅ | Rechazo con motivo obligatorio; el tutor recibe aviso para reenviar |
 | W-RFNN-03 | ✅ | Pase inválido, vencido, cancelado o usado: mensaje claro (`Expedientes.ValidarPaseAsync`) |
 | W-RFNN-04 | ✅ | Solo especialistas de una clínica asociada y activa, y solo para pases de SU clínica |
-| W-RI-01 | ✅ | Bootstrap responsivo; revisado sin desplazamiento horizontal en ancho de teléfono |
+| W-RI-01 | ✅ | Bootstrap responsivo; recorrido automatizado a 375, 820 y 1440 px en 23 pantallas: sin desplazamiento horizontal |
 | W-RI-02 | ✅ | Cámara del navegador (html5-qrcode) o captura manual del código |
 | W-RI-03 | ✅ | Tablero y casos en PDF (QuestPDF) y Excel (ClosedXML) |
 | W-RI-04 | ✅ | PDF del pase con QR y del resumen |
 | W-RC-01 | ✅ | Indicadores en consultas agregadas; medido en local < 1 s con los datos demo |
 | W-RC-02 | ✅ | Inicio de Enfermería → "Casos abiertos" (1 clic) |
-| W-RC-03 | 🟡 | Contraste AA, foco visible, enlace "saltar al contenido", etiquetas en formularios. Falta una auditoría formal con lector de pantalla |
+| W-RC-03 | ✅ | Auditoría automática axe-core (WCAG 2.0/2.1 A y AA) el 21/11/2026 sobre 23 pantallas de los 5 roles: **0 infracciones** (se corrigieron contraste del menú y pie, tablas desplazables con foco y roles de íconos). Sigue siendo recomendable una prueba manual con lector de pantalla |
 | W-RC-04 | 🟡 | HTML/CSS/JS estándar sin APIs experimentales; probado en Chromium. Falta probar en Safari |
 | W-RE-01 | ✅ | Ya existen el rol Especialista, `citas` y `atenciones` por clínica: el portal de clínicas se agrega sobre ellos |
 | W-RE-02 | ✅ | Alumnos y grupos con matrícula única: una importación se conecta por matrícula. El escritorio ya consulta `GET /api/escritorio/alumnos` |
@@ -97,7 +98,7 @@ cabeceras) más la integración WEB↔API sobre la misma base.
 | ID | Estado | Dónde / cómo |
 |---|---|---|
 | C-RFN-01 | ✅ | Roles Dirección, Enfermería, Tutor, Alumno y Especialista (Identity), los mismos en la web y la app |
-| C-RFN-02 | 🟡 | `POST /api/escritorio/tamizajes` (API §13). El sistema de escritorio debe adoptar ese contrato |
+| C-RFN-02 | ✅ | `POST /api/escritorio/tamizajes` (API §13). El escritorio (`Eyesofter/…/sincronizacion`) envía cada tamizaje terminado con la matrícula del alumno; probado de punta a punta contra la API y visible en *Mis hijos* del tutor |
 | C-RFN-03 | ✅ | Tabla `clinicas` con asociada/no asociada y activa |
 | C-RFN-04 | ✅ | Se verifica la asociación antes de crear el pase (WEB y API) |
 | C-RFN-05 | ✅ | Código de 128 bits único por caso, un solo uso, 60 días |
@@ -106,7 +107,7 @@ cabeceras) más la integración WEB↔API sobre la misma base.
 | C-RFN-08 | ✅ | Recordatorio de aviso sin leer y de caso sin atender (`Recordatorios.kt`) |
 | C-RFNN-01 | ✅ | 3 intentos → 15 min, compartido entre WEB y APP (columnas de Identity) |
 | C-RFNN-02 | 🟡 | Enlace por correo de 2 h (`Cuenta/Olvide`); requiere `RESEND_API_KEY` |
-| C-RFNN-03 | 🟡 | La API es idempotente por folio y alerta a Enfermería con `/api/escritorio/incidencias`; los reintentos los hace el escritorio |
+| C-RFNN-03 | ✅ | El escritorio guarda una cola en SQLite y reintenta con espera creciente (30 s → 30 min); tras 30 min de falla avisa a Enfermería con `/api/escritorio/incidencias`. El folio es idempotente: reenviar no duplica (probado) |
 | C-RFNN-04 | ✅ | A los 3 días: reenvío al tutor y alerta a Enfermería |
 | C-RFNN-05 | ✅ | Solo JPG, PNG, WEBP o PDF (por contenido) y hasta 10 MB, con el motivo |
 | C-RFNN-06 | ✅ | 404 y registro `ACCESO_DENEGADO` en la bitácora (WEB y API) |

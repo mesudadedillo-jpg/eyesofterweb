@@ -79,3 +79,13 @@ main:focus { outline: none; }
 .barra > span { display: block; height: 100%; background: var(--marca); }
 .barra-verde > span { background: #1f7a3a; } .barra-amarilla > span { background: #f2c94c; } .barra-roja > span { background: #b42318; }
 @media print { header, footer, .no-imprimir { display: none !important; } }
+
+/* ---------- Accesibilidad WCAG 2.1 AA (W-RC-03): contraste mínimo 4.5:1 ---------- */
+/* Bootstrap pinta los enlaces del menú oscuro al 55 % de opacidad (3.7:1): se suben a 4.5:1 o más. */
+.navbar-dark .navbar-nav .nav-link { color: rgba(255, 255, 255, .9); }
+.navbar-dark .navbar-nav .nav-link:hover, .navbar-dark .navbar-nav .nav-link:focus { color: #fff; }
+/* Enlaces azules y texto secundario sobre fondos claros. */
+a { color: #0a58ca; }
+.text-muted, .link-secondary, footer .text-body-secondary, footer a { color: #565e64 !important; }
+/* Las tablas con desplazamiento reciben foco para poder recorrerlas con el teclado. */
+.table-responsive:focus-visible { outline: 3px solid #0a58ca; outline-offset: 2px; }

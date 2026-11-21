@@ -23,6 +23,8 @@ namespace EyesofterWeb.Controllers
             _notificador = notificador;
         }
 
+        /// <summary>/Soporte lleva a la ayuda (antes respondía 404).</summary>
+        [AllowAnonymous] public IActionResult Index() => RedirectToAction(nameof(Ayuda));
         [AllowAnonymous] public IActionResult Ayuda() => View();
         [AllowAnonymous] public IActionResult GuiaClinicas() => View();
 
