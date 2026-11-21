@@ -89,3 +89,6 @@ a { color: #0a58ca; }
 .text-muted, .link-secondary, footer .text-body-secondary, footer a { color: #565e64 !important; }
 /* Las tablas con desplazamiento reciben foco para poder recorrerlas con el teclado. */
 .table-responsive:focus-visible { outline: 3px solid #0a58ca; outline-offset: 2px; }
+
+/* El resumen de validación sin errores no debe pintarse como un recuadro rojo vacío. */
+.validation-summary-valid { display: none !important; }
