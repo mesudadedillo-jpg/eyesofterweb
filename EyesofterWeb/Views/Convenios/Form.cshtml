@@ -1,0 +1,35 @@
+@model Convenio
+@using Microsoft.AspNetCore.Mvc.Rendering
+@{
+    ViewData["Title"] = Model.Id == 0 ? "Nuevo convenio" : "Editar convenio";
+    var clinicas = ViewData["ClinicaId"] as SelectList;
+}
+<h1 class="h3">@ViewData["Title"]</h1>
+<form asp-action="@(Model.Id == 0 ? "Create" : "Edit")" method="post" class="card card-body shadow-sm">
+    <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2" role="alert"></div>
+    <input type="hidden" asp-for="Id" />
+    <div class="row g-3">
+        @if (Model.Id == 0)
+        {
+            if (ViewData["PlantelId"] is SelectList escuelas && escuelas.Count() > 1)
+            {
+                <div class="col-md-6"><label asp-for="PlantelId" class="form-label requerido"></label><select asp-for="PlantelId" asp-items="escuelas" class="form-select"></select><span asp-validation-for="PlantelId" class="text-danger small"></span></div>
+            }
+            else
+            {
+                <input type="hidden" asp-for="PlantelId" /><span asp-validation-for="PlantelId" class="text-danger small"></span>
+            }
+            <div class="col-md-6"><label asp-for="ClinicaId" class="form-label requerido"></label><select asp-for="ClinicaId" asp-items="clinicas" class="form-select"><option value="">Elige una clínica…</option></select><span asp-validation-for="ClinicaId" class="text-danger small"></span></div>
+        }
+        else
+        {
+            <div class="col-12"><p class="mb-0"><strong>@Model.Clinica?.Nombre</strong> · @Model.Plantel?.Nombre</p></div>
+        }
+        <div class="col-md-3"><label asp-for="Descuento" class="form-label"></label><input asp-for="Descuento" class="form-control" min="0" max="100" /><span asp-validation-for="Descuento" class="text-danger small"></span></div>
+        <div class="col-md-9"><label asp-for="Beneficio" class="form-label requerido"></label><input asp-for="Beneficio" class="form-control" placeholder="Ej. Examen de la vista sin costo y 20 % en armazones" /><span asp-validation-for="Beneficio" class="text-danger small"></span></div>
+        <div class="col-md-4"><label asp-for="VigenteHasta" class="form-label"></label><input asp-for="VigenteHasta" class="form-control" /><span asp-validation-for="VigenteHasta" class="text-danger small"></span></div>
+        <div class="col-md-8 d-flex align-items-end"><div class="form-check"><input asp-for="Activo" class="form-check-input" /><label asp-for="Activo" class="form-check-label"></label></div></div>
+    </div>
+    <div class="d-flex gap-2 mt-3"><button class="btn btn-marca">Guardar</button><a asp-action="Index" class="btn btn-outline-secondary">Cancelar</a></div>
+</form>
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

@@ -41,7 +41,9 @@ namespace EyesofterWeb.Servicios
         public async Task<string> GenerarFolioAsync()
         {
             var prefijo = $"EYS-{DateTime.Today.Year}-";
-            var folios = await _db.Casos.Where(c => c.Folio.StartsWith(prefijo)).Select(c => c.Folio).ToListAsync();
+            // Sin filtro por escuela: el folio es único en TODO el sistema (índice único) y el
+            // servidor de la app usa la misma numeración.
+            var folios = await _db.Casos.IgnoreQueryFilters().Where(c => c.Folio.StartsWith(prefijo)).Select(c => c.Folio).ToListAsync();
             var siguiente = folios.Select(f => int.TryParse(f[prefijo.Length..], out var n) ? n : 0).DefaultIfEmpty(0).Max() + 1;
             return $"{prefijo}{siguiente:D4}";
         }
@@ -57,6 +59,30 @@ namespace EyesofterWeb.Servicios
             return atencion || comprobante
                 ? (true, null)
                 : (false, "Para cerrar el caso debe existir una atención registrada o un comprobante validado (corrección óptica comprobada).");
+        }
+
+        /// <summary>
+        /// Convenio vigente entre la escuela del alumno y la clínica (beneficio para el alumno).
+        /// Sin filtro por escuela: lo consultan el tutor y el especialista, que no tienen escuela.
+        /// </summary>
+        public async Task<Convenio?> ConvenioVigenteAsync(int alumnoId, int clinicaId)
+        {
+            var hoy = DateTime.Today;
+            var plantelId = await _db.Alumnos.IgnoreQueryFilters().Where(a => a.Id == alumnoId).Select(a => (int?)a.PlantelId).FirstOrDefaultAsync();
+            if (plantelId is null) return null;
+            return await _db.Convenios.IgnoreQueryFilters().AsNoTracking()
+                .FirstOrDefaultAsync(c => c.PlantelId == plantelId && c.ClinicaId == clinicaId && c.Activo && (c.VigenteHasta == null || c.VigenteHasta >= hoy));
+        }
+
+        /// <summary>Convenios vigentes de las escuelas de los hijos de un tutor, por clínica (para el directorio).</summary>
+        public async Task<Dictionary<int, Convenio>> ConveniosDelTutorAsync(int tutorId)
+        {
+            var hoy = DateTime.Today;
+            var planteles = _db.Alumnos.IgnoreQueryFilters().Where(a => a.TutorId == tutorId).Select(a => a.PlantelId);
+            var lista = await _db.Convenios.IgnoreQueryFilters().AsNoTracking().Include(c => c.Plantel)
+                .Where(c => planteles.Contains(c.PlantelId) && c.Activo && (c.VigenteHasta == null || c.VigenteHasta >= hoy))
+                .OrderByDescending(c => c.Descuento).ToListAsync();
+            return lista.GroupBy(c => c.ClinicaId).ToDictionary(g => g.Key, g => g.First());
         }
 
         public static string NuevoCodigoPase()

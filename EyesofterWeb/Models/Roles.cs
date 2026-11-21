@@ -21,6 +21,12 @@ namespace EyesofterWeb.Models
 
         public static readonly string[] Todos = { Administrador, Enfermeria, Tutor, Alumno, Especialista };
 
+        /// <summary>
+        /// Política: Dirección con la marca de administrador global (equipo del proyecto).
+        /// Da de alta escuelas, ve todas y atiende los reportes de fallas.
+        /// </summary>
+        public const string PoliticaGlobal = "AdministradorGlobal";
+
         public static string NombreVisible(string rol) => rol switch
         {
             Administrador => "Dirección",

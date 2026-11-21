@@ -43,19 +43,19 @@ namespace EyesofterWeb.Controllers
             r.Correo ??= User.Identity?.IsAuthenticated == true ? (await _usuarios.GetUserAsync(User))?.Email : null;
             r.Plataforma = "web";
             _db.ReportesFalla.Add(r);
-            await _notificador.ARolAsync(Roles.Administrador, "AVISO", $"Nuevo reporte: {r.Tipo}", r.Mensaje.Length > 120 ? r.Mensaje[..120] + "…" : r.Mensaje);
+            await _notificador.AAdministracionDelSistemaAsync("AVISO", $"Nuevo reporte: {r.Tipo}", r.Mensaje.Length > 120 ? r.Mensaje[..120] + "…" : r.Mensaje);
             await _db.SaveChangesAsync();
             TempData["Exito"] = "Gracias. Recibimos tu reporte y lo atenderemos durante el piloto.";
             return RedirectToAction("Index", "Home");
         }
 
-        [Authorize(Roles = Roles.Administrador)]
+        [Authorize(Policy = Roles.PoliticaGlobal)]
         public async Task<IActionResult> Reportes(EstadoReporte? estado) =>
             View(await _db.ReportesFalla.AsNoTracking().Where(x => estado == null || x.Estado == estado).OrderByDescending(x => x.CreadoEn).Take(200).ToListAsync());
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = Roles.Administrador)]
+        [Authorize(Policy = Roles.PoliticaGlobal)]
         public async Task<IActionResult> Atender(int id, EstadoReporte estado, string? respuesta)
         {
             var r = await _db.ReportesFalla.FindAsync(id);

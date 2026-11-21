@@ -38,9 +38,12 @@ Nombres en `snake_case` (EFCore.NamingConventions). Las tablas de Identity son `
 
 | Tabla | Qué guarda | Campos cifrados |
 |---|---|---|
-| `planteles`, `campanas` | Escuela y campañas de tamizaje (ciclo escolar, fechas) | — |
-| `tutores`, `alumnos` | Familias y alumnos (matrícula única, grado, grupo, nivel) | — |
-| `asp_net_users` (+ roles) | Cuentas: `tutor_id`, `alumno_id`, `clinica_id`, `activo` | — |
+| `planteles`, `campanas` | Escuelas y campañas de tamizaje (ciclo escolar, fechas, escuela) | — |
+| `usuario_planteles` | Escuelas de cada cuenta de Dirección o Enfermería (C-RE-01) | — |
+| `convenios` | Beneficio de una clínica para los alumnos de una escuela (único por escuela y clínica) | — |
+| `tutores`, `alumnos` | Familias (con la escuela que las registró) y alumnos (matrícula única **por escuela**, grado, grupo, nivel) | — |
+| `asp_net_users` (+ roles) | Cuentas: `tutor_id`, `alumno_id`, `clinica_id`, `activo`, `administrador_global` | — |
+| `vinculaciones_escritorio` | Solicitudes para vincular un equipo de escritorio (huella del secreto, código, 10 min) | — |
 | `clinicas` | Directorio: asociada, activa, coordenadas, horario | — |
 | `tamizajes` | Resultado recibido (folio único, semáforo, origen) | agudezas, observaciones |
 | `casos` | Expediente vivo (folio `EYS-AAAA-NNNN`, estado, destino) | agudezas, observaciones |
@@ -52,7 +55,7 @@ Nombres en `snake_case` (EFCore.NamingConventions). Las tablas de Identity son `
 | `notificaciones`, `entregas_notificacion` | Bandeja compartida e historial de entregas | — |
 | `dispositivos` | Tokens de push por cuenta | — |
 | `consentimientos` | Aceptación del aviso (versión, fecha, medio, IP) | — |
-| `auditoria` | Bitácora de accesos y cambios (origen web/app/escritorio) | — |
+| `auditoria` | Bitácora de accesos y cambios (origen web/app/escritorio, escuela) | — |
 | `reportes_falla` | Fallas y dudas de los usuarios | — |
 | `data_protection_keys` | Llaves de las cookies del portal | — |
 
@@ -60,7 +63,12 @@ Relaciones principales: `tutores 1─N alumnos 1─N tamizajes`, `alumnos 1─N 
 `casos 1─N eventos_caso | pases | atenciones | comprobantes | citas`,
 `clinicas 1─N pases | atenciones | citas`.
 
-El diagrama completo sale de `EyesofterWeb/Migrations/*_Inicial.cs`. El servidor Ktor tiene una
+**Filtro por escuela:** `ApplicationDbContext` aplica un filtro global (`HasQueryFilter`) a alumnos, tutores,
+campañas, convenios, tamizajes, casos, eventos, pases, atenciones, comprobantes y citas, según
+`Seguridad/AlcanceEscuela.cs`. Para saltarlo a propósito (unicidad de matrícula, folios) se usa
+`IgnoreQueryFilters()` con un comentario de por qué. El servidor Ktor aplica la misma regla (`Usuario.alcance`).
+
+El diagrama completo sale de `EyesofterWeb/Migrations/*_Inicial.cs` y `*_Multiescuela.cs`. El servidor Ktor tiene una
 copia del esquema para sus pruebas en `src/main/resources/esquema.sql`.
 
 ## 3. Instalación local

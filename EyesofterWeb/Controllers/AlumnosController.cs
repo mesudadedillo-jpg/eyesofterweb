@@ -1,5 +1,6 @@
 using EyesofterWeb.Data;
 using EyesofterWeb.Models;
+using EyesofterWeb.Servicios;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -15,10 +16,12 @@ namespace EyesofterWeb.Controllers
     public class AlumnosController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly Escuelas _escuelas;
 
-        public AlumnosController(ApplicationDbContext context)
+        public AlumnosController(ApplicationDbContext context, Escuelas escuelas)
         {
             _context = context;
+            _escuelas = escuelas;
         }
 
         // GET: Alumnos
@@ -61,19 +64,23 @@ namespace EyesofterWeb.Controllers
         public async Task<IActionResult> Create(int? tutorId)
         {
             await CargarTutoresAsync(tutorId);
-            return View(new Alumno { TutorId = tutorId ?? 0 });
+            var plantel = await _escuelas.PorDefectoAsync();
+            if (plantel is null) return View("~/Views/Home/SinEscuela.cshtml");
+            await CargarEscuelasAsync(plantel);
+            return View(new Alumno { TutorId = tutorId ?? 0, PlantelId = plantel.Value });
         }
 
         // POST: Alumnos/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = Roles.AdminOEnfermeria)]
-        public async Task<IActionResult> Create([Bind("Matricula,Nombre,Apellidos,FechaNacimiento,Nivel,Grado,Grupo,UsaLentes,TutorId")] Alumno alumno)
+        public async Task<IActionResult> Create([Bind("Matricula,Nombre,Apellidos,FechaNacimiento,Nivel,Grado,Grupo,UsaLentes,TutorId,PlantelId")] Alumno alumno)
         {
             await ValidarReglasAsync(alumno);
             if (!ModelState.IsValid)
             {
                 await CargarTutoresAsync(alumno.TutorId);
+                await CargarEscuelasAsync(alumno.PlantelId);
                 return View(alumno);
             }
 
@@ -92,6 +99,7 @@ namespace EyesofterWeb.Controllers
             if (alumno is null) return NotFound();
 
             await CargarTutoresAsync(alumno.TutorId);
+            await CargarEscuelasAsync(alumno.PlantelId);
             return View(alumno);
         }
 
@@ -99,14 +107,17 @@ namespace EyesofterWeb.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = Roles.AdminOEnfermeria)]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Matricula,Nombre,Apellidos,FechaNacimiento,Nivel,Grado,Grupo,UsaLentes,TutorId")] Alumno alumno)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,Matricula,Nombre,Apellidos,FechaNacimiento,Nivel,Grado,Grupo,UsaLentes,TutorId,PlantelId")] Alumno alumno)
         {
             if (id != alumno.Id) return NotFound();
+            // El alumno debe existir en las escuelas visibles: no se edita "a ciegas" un id de otra escuela.
+            if (!await _context.Alumnos.AnyAsync(a => a.Id == id)) return NotFound();
 
             await ValidarReglasAsync(alumno);
             if (!ModelState.IsValid)
             {
                 await CargarTutoresAsync(alumno.TutorId);
+                await CargarEscuelasAsync(alumno.PlantelId);
                 return View(alumno);
             }
 
@@ -163,10 +174,15 @@ namespace EyesofterWeb.Controllers
 
         private async Task ValidarReglasAsync(Alumno alumno)
         {
-            if (!string.IsNullOrWhiteSpace(alumno.Matricula) &&
-                await _context.Alumnos.AnyAsync(a => a.Matricula == alumno.Matricula && a.Id != alumno.Id))
+            if (!await _escuelas.PuedeUsarAsync(alumno.PlantelId))
             {
-                ModelState.AddModelError(nameof(Alumno.Matricula), "Ya existe un alumno con esa matrícula.");
+                ModelState.AddModelError(nameof(Alumno.PlantelId), "Elige una de tus escuelas.");
+            }
+            // La matrícula es única dentro de la escuela. Se busca sin filtro para no chocar con el índice único.
+            else if (!string.IsNullOrWhiteSpace(alumno.Matricula) &&
+                await _context.Alumnos.IgnoreQueryFilters().AnyAsync(a => a.Matricula == alumno.Matricula && a.PlantelId == alumno.PlantelId && a.Id != alumno.Id))
+            {
+                ModelState.AddModelError(nameof(Alumno.Matricula), "Ya existe un alumno con esa matrícula en esta escuela.");
             }
 
             if (alumno.TutorId <= 0)
@@ -182,6 +198,8 @@ namespace EyesofterWeb.Controllers
                 ModelState.AddModelError(nameof(Alumno.TutorId), "El tutor seleccionado no existe.");
             }
         }
+
+        private async Task CargarEscuelasAsync(int? seleccionado) => ViewData["PlantelId"] = await _escuelas.ListaAsync(seleccionado);
 
         private async Task CargarTutoresAsync(int? seleccionado)
         {

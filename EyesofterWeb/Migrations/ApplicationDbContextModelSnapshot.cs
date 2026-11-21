@@ -85,14 +85,14 @@ namespace EyesofterWeb.Migrations
                         .HasName("pk_alumnos");
 
                     b.HasIndex("Matricula")
-                        .IsUnique()
                         .HasDatabaseName("ix_alumnos_matricula");
-
-                    b.HasIndex("PlantelId")
-                        .HasDatabaseName("ix_alumnos_plantel_id");
 
                     b.HasIndex("TutorId")
                         .HasDatabaseName("ix_alumnos_tutor_id");
+
+                    b.HasIndex("PlantelId", "Matricula")
+                        .IsUnique()
+                        .HasDatabaseName("ix_alumnos_plantel_id_matricula");
 
                     b.HasIndex("Nivel", "Grado", "Grupo")
                         .HasDatabaseName("ix_alumnos_nivel_grado_grupo");
@@ -113,6 +113,10 @@ namespace EyesofterWeb.Migrations
                     b.Property<bool>("Activo")
                         .HasColumnType("boolean")
                         .HasColumnName("activo");
+
+                    b.Property<bool>("AdministradorGlobal")
+                        .HasColumnType("boolean")
+                        .HasColumnName("administrador_global");
 
                     b.Property<int?>("AlumnoId")
                         .HasColumnType("integer")
@@ -684,6 +688,54 @@ namespace EyesofterWeb.Migrations
                     b.ToTable("consentimientos", (string)null);
                 });
 
+            modelBuilder.Entity("EyesofterWeb.Models.Convenio", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("Activo")
+                        .HasColumnType("boolean")
+                        .HasColumnName("activo");
+
+                    b.Property<string>("Beneficio")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("beneficio");
+
+                    b.Property<int>("ClinicaId")
+                        .HasColumnType("integer")
+                        .HasColumnName("clinica_id");
+
+                    b.Property<int>("Descuento")
+                        .HasColumnType("integer")
+                        .HasColumnName("descuento");
+
+                    b.Property<int>("PlantelId")
+                        .HasColumnType("integer")
+                        .HasColumnName("plantel_id");
+
+                    b.Property<DateTime?>("VigenteHasta")
+                        .HasColumnType("date")
+                        .HasColumnName("vigente_hasta");
+
+                    b.HasKey("Id")
+                        .HasName("pk_convenios");
+
+                    b.HasIndex("ClinicaId")
+                        .HasDatabaseName("ix_convenios_clinica_id");
+
+                    b.HasIndex("PlantelId", "ClinicaId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_convenios_plantel_id_clinica_id");
+
+                    b.ToTable("convenios", (string)null);
+                });
+
             modelBuilder.Entity("EyesofterWeb.Models.Dispositivo", b =>
                 {
                     b.Property<string>("Token")
@@ -961,6 +1013,10 @@ namespace EyesofterWeb.Migrations
                     b.HasKey("Id")
                         .HasName("pk_planteles");
 
+                    b.HasIndex("Clave")
+                        .IsUnique()
+                        .HasDatabaseName("ix_planteles_clave");
+
                     b.ToTable("planteles", (string)null);
 
                     b.HasData(
@@ -1021,6 +1077,10 @@ namespace EyesofterWeb.Migrations
                         .HasColumnType("character varying(12)")
                         .HasColumnName("origen");
 
+                    b.Property<int?>("PlantelId")
+                        .HasColumnType("integer")
+                        .HasColumnName("plantel_id");
+
                     b.Property<string>("Usuario")
                         .HasMaxLength(256)
                         .HasColumnType("character varying(256)")
@@ -1031,6 +1091,9 @@ namespace EyesofterWeb.Migrations
 
                     b.HasIndex("Fecha")
                         .HasDatabaseName("ix_auditoria_fecha");
+
+                    b.HasIndex("PlantelId")
+                        .HasDatabaseName("ix_auditoria_plantel_id");
 
                     b.HasIndex("Entidad", "EntidadId")
                         .HasDatabaseName("ix_auditoria_entidad_entidad_id");
@@ -1199,6 +1262,12 @@ namespace EyesofterWeb.Migrations
                         .HasColumnType("character varying(30)")
                         .HasColumnName("parentesco");
 
+                    b.Property<int>("PlantelId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1)
+                        .HasColumnName("plantel_id");
+
                     b.Property<string>("Telefono")
                         .IsRequired()
                         .HasMaxLength(10)
@@ -1208,10 +1277,78 @@ namespace EyesofterWeb.Migrations
                     b.HasKey("Id")
                         .HasName("pk_tutores");
 
+                    b.HasIndex("PlantelId")
+                        .HasDatabaseName("ix_tutores_plantel_id");
+
                     b.HasIndex("Telefono")
                         .HasDatabaseName("ix_tutores_telefono");
 
                     b.ToTable("tutores", (string)null);
+                });
+
+            modelBuilder.Entity("EyesofterWeb.Models.UsuarioPlantel", b =>
+                {
+                    b.Property<string>("UsuarioId")
+                        .HasMaxLength(450)
+                        .HasColumnType("character varying(450)")
+                        .HasColumnName("usuario_id");
+
+                    b.Property<int>("PlantelId")
+                        .HasColumnType("integer")
+                        .HasColumnName("plantel_id");
+
+                    b.HasKey("UsuarioId", "PlantelId")
+                        .HasName("pk_usuario_planteles");
+
+                    b.HasIndex("PlantelId")
+                        .HasDatabaseName("ix_usuario_planteles_plantel_id");
+
+                    b.ToTable("usuario_planteles", (string)null);
+                });
+
+            modelBuilder.Entity("EyesofterWeb.Models.VinculacionEscritorio", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("id");
+
+                    b.Property<string>("AprobadaPor")
+                        .HasMaxLength(450)
+                        .HasColumnType("character varying(450)")
+                        .HasColumnName("aprobada_por");
+
+                    b.Property<string>("Codigo")
+                        .IsRequired()
+                        .HasMaxLength(9)
+                        .HasColumnType("character varying(9)")
+                        .HasColumnName("codigo");
+
+                    b.Property<DateTime>("CreadaEn")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("creada_en");
+
+                    b.Property<string>("Equipo")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)")
+                        .HasColumnName("equipo");
+
+                    b.Property<DateTime>("ExpiraEn")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("expira_en");
+
+                    b.HasKey("Id")
+                        .HasName("pk_vinculaciones_escritorio");
+
+                    b.HasIndex("Codigo")
+                        .IsUnique()
+                        .HasDatabaseName("ix_vinculaciones_escritorio_codigo");
+
+                    b.HasIndex("ExpiraEn")
+                        .HasDatabaseName("ix_vinculaciones_escritorio_expira_en");
+
+                    b.ToTable("vinculaciones_escritorio", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.DataProtection.EntityFrameworkCore.DataProtectionKey", b =>
@@ -1557,6 +1694,27 @@ namespace EyesofterWeb.Migrations
                     b.Navigation("Caso");
                 });
 
+            modelBuilder.Entity("EyesofterWeb.Models.Convenio", b =>
+                {
+                    b.HasOne("EyesofterWeb.Models.Clinica", "Clinica")
+                        .WithMany()
+                        .HasForeignKey("ClinicaId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_convenios_clinicas_clinica_id");
+
+                    b.HasOne("EyesofterWeb.Models.Plantel", "Plantel")
+                        .WithMany()
+                        .HasForeignKey("PlantelId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_convenios_planteles_plantel_id");
+
+                    b.Navigation("Clinica");
+
+                    b.Navigation("Plantel");
+                });
+
             modelBuilder.Entity("EyesofterWeb.Models.EntregaNotificacion", b =>
                 {
                     b.HasOne("EyesofterWeb.Models.Notificacion", "Notificacion")
@@ -1622,6 +1780,39 @@ namespace EyesofterWeb.Migrations
                     b.Navigation("Campana");
                 });
 
+            modelBuilder.Entity("EyesofterWeb.Models.Tutor", b =>
+                {
+                    b.HasOne("EyesofterWeb.Models.Plantel", "Plantel")
+                        .WithMany()
+                        .HasForeignKey("PlantelId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_tutores_planteles_plantel_id");
+
+                    b.Navigation("Plantel");
+                });
+
+            modelBuilder.Entity("EyesofterWeb.Models.UsuarioPlantel", b =>
+                {
+                    b.HasOne("EyesofterWeb.Models.Plantel", "Plantel")
+                        .WithMany()
+                        .HasForeignKey("PlantelId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_usuario_planteles_planteles_plantel_id");
+
+                    b.HasOne("EyesofterWeb.Models.ApplicationUser", "Usuario")
+                        .WithMany("Planteles")
+                        .HasForeignKey("UsuarioId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_usuario_planteles_users_usuario_id");
+
+                    b.Navigation("Plantel");
+
+                    b.Navigation("Usuario");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
@@ -1684,6 +1875,11 @@ namespace EyesofterWeb.Migrations
                     b.Navigation("Casos");
 
                     b.Navigation("Tamizajes");
+                });
+
+            modelBuilder.Entity("EyesofterWeb.Models.ApplicationUser", b =>
+                {
+                    b.Navigation("Planteles");
                 });
 
             modelBuilder.Entity("EyesofterWeb.Models.Campana", b =>

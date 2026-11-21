@@ -72,6 +72,8 @@ namespace EyesofterWeb.Models.ViewModels
         public bool Bloqueado { get; set; }
         public bool Activo { get; set; }
         public string? Vinculo { get; set; }
+        /// <summary>Escuelas del personal escolar ("Todas" para el administrador global).</summary>
+        public string? Escuelas { get; set; }
     }
 
     /// <summary>Alta y edición de cuentas (solo Dirección). La contraseña la define el usuario con el enlace de correo.</summary>
@@ -101,5 +103,13 @@ namespace EyesofterWeb.Models.ViewModels
 
         [Display(Name = "Clínica donde trabaja")]
         public int? ClinicaId { get; set; }
+
+        /// <summary>Dirección y Enfermería: a qué escuelas pertenece (al menos una).</summary>
+        [Display(Name = "Escuelas")]
+        public List<int> PlantelIds { get; set; } = new();
+
+        /// <summary>Solo lo puede marcar otro administrador global.</summary>
+        [Display(Name = "Administrador global (todas las escuelas)")]
+        public bool AdministradorGlobal { get; set; }
     }
 }

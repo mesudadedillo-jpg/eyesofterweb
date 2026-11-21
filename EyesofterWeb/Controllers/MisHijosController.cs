@@ -101,7 +101,7 @@ namespace EyesofterWeb.Controllers
                 return RedirectToAction(nameof(Reporte), new { id });
             }
             var pase = await _expedientes.AsignarDestinoAsync(caso, clinicaId, nombreManual?.Trim(), User.Identity?.Name);
-            await _notificador.ARolAsync(Roles.Enfermeria, "CASO_ACTUALIZADO", "Clínica de destino elegida",
+            await _notificador.APersonalDelAlumnoAsync(Roles.Enfermeria, caso.AlumnoId, "CASO_ACTUALIZADO", "Clínica de destino elegida",
                 $"El tutor de {caso.Alumno!.NombreCompleto} indicó a dónde acudirá.", new Dictionary<string, string> { ["ruta"] = "seguimiento", ["casoId"] = caso.Id.ToString() });
             await _db.SaveChangesAsync();
             TempData["Exito"] = pase is null
@@ -129,7 +129,7 @@ namespace EyesofterWeb.Controllers
                 Comentario = comentario?.Trim() is { Length: > 0 } c ? c[..Math.Min(c.Length, 300)] : null, SolicitadaPorId = _usuarios.GetUserId(User)!
             });
             _expedientes.Evento(caso.Id, TipoEvento.Cita, $"El tutor solicitó cita en {clinica.Nombre} para el {fechaPreferida:dd/MM/yyyy}.", User.Identity?.Name);
-            await _notificador.ARolAsync(Roles.Enfermeria, "CITA", "Nueva solicitud de cita",
+            await _notificador.APersonalDelAlumnoAsync(Roles.Enfermeria, caso.AlumnoId, "CITA", "Nueva solicitud de cita",
                 $"Cita solicitada para {caso.Alumno!.NombreCompleto} en {clinica.Nombre}.", new Dictionary<string, string> { ["ruta"] = "seguimiento", ["casoId"] = caso.Id.ToString() });
             await _db.SaveChangesAsync();
             TempData["Exito"] = $"Solicitud enviada. Llama a {clinica.Nombre} al {clinica.Telefono} si necesitas confirmarla antes.";
@@ -156,7 +156,7 @@ namespace EyesofterWeb.Controllers
             var comprobante = new Comprobante { CasoId = caso.Id, SubidoPorId = _usuarios.GetUserId(User)!, Tipo = tipo, ContentType = tipoReal, TamanoBytes = bytes.Length, Contenido = bytes };
             _db.Comprobantes.Add(comprobante);
             _expedientes.Evento(caso.Id, TipoEvento.Comprobante, $"El tutor subió {(tipo == TipoComprobante.Receta ? "la receta" : "el comprobante de lentes")} desde el portal.", User.Identity?.Name);
-            await _notificador.ARolAsync(Roles.Enfermeria, "COMPROBANTE_RECIBIDO", "Nuevo comprobante por revisar",
+            await _notificador.APersonalDelAlumnoAsync(Roles.Enfermeria, caso.AlumnoId, "COMPROBANTE_RECIBIDO", "Nuevo comprobante por revisar",
                 $"El tutor de {caso.Alumno!.NombreCompleto} subió {(tipo == TipoComprobante.Receta ? "una receta" : "un comprobante de lentes")}.",
                 new Dictionary<string, string> { ["ruta"] = "comprobantes", ["comprobanteId"] = comprobante.Id.ToString() });
             _auditoria.Registrar("SUBIR_COMPROBANTE", "Caso", caso.Id, comprobante.Id.ToString());
@@ -171,7 +171,8 @@ namespace EyesofterWeb.Controllers
             var caso = t is null ? null : await CasoDeAsync(id);
             var pase = caso?.Pases.Where(p => p.EstaVigente).OrderByDescending(p => p.CreadoEn).FirstOrDefault();
             if (pase is null) return NotFound();
-            return File(_documentos.PdfPase(pase, caso!), "application/pdf", $"pase-{caso!.Folio}.pdf");
+            var convenio = await _expedientes.ConvenioVigenteAsync(caso!.AlumnoId, pase.ClinicaId);
+            return File(_documentos.PdfPase(pase, caso!, convenio), "application/pdf", $"pase-{caso!.Folio}.pdf");
         }
 
         public async Task<IActionResult> QrPase(int id)
@@ -199,7 +200,12 @@ namespace EyesofterWeb.Controllers
             if (!string.IsNullOrWhiteSpace(buscar))
                 q = q.Where(c => c.Nombre.Contains(buscar) || c.Ciudad.Contains(buscar) || c.Direccion.Contains(buscar) || (c.CodigoPostal != null && c.CodigoPostal.Contains(buscar)));
             ViewBag.Buscar = buscar;
-            return View(await q.OrderByDescending(c => c.EsAsociada).ThenBy(c => c.Nombre).ToListAsync());
+            // Convenios de las escuelas de SUS hijos: primero las clínicas con beneficio para ellos.
+            var tutorId = await TutorIdAsync();
+            var convenios = tutorId is null ? new Dictionary<int, Convenio>() : await _expedientes.ConveniosDelTutorAsync(tutorId.Value);
+            ViewBag.Convenios = convenios;
+            var lista = await q.ToListAsync();
+            return View(lista.OrderByDescending(c => convenios.ContainsKey(c.Id)).ThenByDescending(c => c.EsAsociada).ThenBy(c => c.Nombre).ToList());
         }
     }
 }

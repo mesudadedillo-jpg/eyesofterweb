@@ -9,6 +9,8 @@ namespace EyesofterWeb.Data
     ///  1. Aplica las migraciones pendientes (MIGRAR_AL_INICIAR=false para desactivarlo).
     ///  2. Crea los 5 roles del documento.
     ///  3. Crea la cuenta inicial de Dirección con ADMIN_CORREO / ADMIN_PASSWORD si todavía no hay ninguna.
+    ///     Si nadie es administrador global, marca como tal la cuenta ADMIN_GLOBAL_CORREO (o
+    ///     ADMIN_CORREO): es quien da de alta escuelas.
     ///  4. SOLO en desarrollo (o con SEMBRAR_DEMO=true): usuarios y datos ficticios de ejemplo.
     ///     En producción NO se crean cuentas con contraseñas conocidas.
     /// </summary>
@@ -59,6 +61,23 @@ namespace EyesofterWeb.Data
                     logger.LogWarning("No hay ninguna cuenta de Dirección. Define ADMIN_CORREO y ADMIN_PASSWORD y reinicia.");
                 else
                     await CrearUsuarioAsync(userManager, logger, correo, "Dirección General", clave, Roles.Administrador);
+            }
+
+            // Multiescuela: alguien debe poder dar de alta escuelas y ver todas.
+            if (!await db.Users.AnyAsync(u => u.AdministradorGlobal))
+            {
+                var correoGlobal = config["ADMIN_GLOBAL_CORREO"] ?? config["ADMIN_CORREO"] ?? (demo ? "admin@eyesofter.mx" : null);
+                var global = correoGlobal is null ? null : await userManager.FindByEmailAsync(correoGlobal);
+                if (global is not null && await userManager.IsInRoleAsync(global, Roles.Administrador))
+                {
+                    global.AdministradorGlobal = true;
+                    await userManager.UpdateAsync(global);
+                    logger.LogInformation("{Correo} es administrador global (todas las escuelas).", correoGlobal);
+                }
+                else
+                {
+                    logger.LogWarning("No hay administrador global. Define ADMIN_GLOBAL_CORREO con el correo de una cuenta de Dirección y reinicia.");
+                }
             }
 
             if (!demo || await db.Tutores.AnyAsync()) return;
@@ -156,10 +175,26 @@ namespace EyesofterWeb.Data
             );
             await db.SaveChangesAsync();
 
-            await CrearUsuarioAsync(userManager, logger, "enfermeria@eyesofter.mx", "Laura Méndez (Enfermería)", PasswordDemo, Roles.Enfermeria);
+            await CrearUsuarioAsync(userManager, logger, "enfermeria@eyesofter.mx", "Laura Méndez (Enfermería)", PasswordDemo, Roles.Enfermeria,
+                u => u.Planteles.Add(new UsuarioPlantel { UsuarioId = u.Id, PlantelId = 1 }));
             await CrearUsuarioAsync(userManager, logger, "tutor@eyesofter.mx", "María López Hernández", PasswordDemo, Roles.Tutor, u => u.TutorId = tutores[0].Id);
             await CrearUsuarioAsync(userManager, logger, "alumno@eyesofter.mx", "Diego López Ramírez", PasswordDemo, Roles.Alumno, u => u.AlumnoId = alumnos[1].Id);
             await CrearUsuarioAsync(userManager, logger, "especialista@eyesofter.mx", "Dra. Elena Ruiz (Óptica Tulancingo Centro)", PasswordDemo, Roles.Especialista, u => u.ClinicaId = clinicas[0].Id);
+
+            // Una segunda escuela con su propia enfermera, para ver que ninguna ve a los alumnos de la otra.
+            var otra = new Plantel { Nombre = "Escuela Secundaria Técnica 5 (demo)", Clave = "13DST0005Z", Activo = true };
+            db.Planteles.Add(otra);
+            await db.SaveChangesAsync();
+            var tutorOtra = new Tutor { Nombre = "Rosa", Apellidos = "Vargas Díaz", Telefono = "7751112233", Parentesco = "Madre", PlantelId = otra.Id };
+            db.Tutores.Add(tutorOtra);
+            db.Campanas.Add(new Campana { Nombre = "Campaña de otoño", CicloEscolar = actual.CicloEscolar, FechaInicio = hoy.AddDays(-30), PlantelId = otra.Id });
+            await db.SaveChangesAsync();
+            // Misma matrícula que un alumno de METANOIA: es válido, la matrícula es única por escuela.
+            db.Alumnos.Add(new Alumno { Matricula = "SEC2026001", Nombre = "Andrés", Apellidos = "Vargas Díaz", FechaNacimiento = new DateTime(2012, 2, 11), Nivel = NivelEducativo.Secundaria, Grado = 2, Grupo = "B", TutorId = tutorOtra.Id, PlantelId = otra.Id });
+            db.Convenios.Add(new Convenio { PlantelId = 1, ClinicaId = clinicas[0].Id, Descuento = 20, Beneficio = "Examen de la vista sin costo y 20 % de descuento en armazones para alumnos de METANOIA.", Activo = true });
+            await db.SaveChangesAsync();
+            await CrearUsuarioAsync(userManager, logger, "enfermeria2@eyesofter.mx", "Jorge Salas (Enfermería, Secundaria Técnica 5)", PasswordDemo, Roles.Enfermeria,
+                u => u.Planteles.Add(new UsuarioPlantel { UsuarioId = u.Id, PlantelId = otra.Id }));
 
             logger.LogInformation("Datos de ejemplo creados. Contraseña de las cuentas demo: {Clave}", PasswordDemo);
         }

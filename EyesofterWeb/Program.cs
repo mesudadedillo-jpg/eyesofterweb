@@ -27,6 +27,10 @@ using var logInicio = LoggerFactory.Create(l => l.AddConsole());
 var cifrado = CifradoDatos.DesdeConfiguracion(builder.Configuration, builder.Environment, logInicio.CreateLogger("Inicio"));
 builder.Services.AddSingleton(cifrado);
 
+// ---------- Filtro por escuela (C-RE-01): lo usa el DbContext en cada consulta ----------
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<AlcanceEscuela>();
+
 // ---------- EF Core + PostgreSQL (base compartida con el servidor de la app móvil) ----------
 var cadena = BaseDeDatos.CadenaConexion(builder.Configuration);
 builder.Services.AddDbContext<ApplicationDbContext>(o => BaseDeDatos.Configurar(o, cadena));
@@ -59,8 +63,13 @@ builder.Services
         options.Lockout.AllowedForNewUsers = true;
     })
     .AddEntityFrameworkStores<ApplicationDbContext>()
+    // Las escuelas de la cuenta viajan como claims y se recalculan en cada petición.
+    .AddClaimsPrincipalFactory<FabricaClaimsEyesofter>()
     .AddErrorDescriber<IdentityErroresEspanol>()
     .AddDefaultTokenProviders();
+
+builder.Services.AddAuthorization(o => o.AddPolicy(Roles.PoliticaGlobal,
+    p => p.RequireRole(Roles.Administrador).RequireClaim(AlcanceEscuela.ClaimGlobal, "true")));
 
 // Los enlaces de recuperación de contraseña caducan en 2 horas.
 builder.Services.Configure<DataProtectionTokenProviderOptions>(o => o.TokenLifespan = TimeSpan.FromHours(2));
@@ -116,10 +125,10 @@ builder.Services.Configure<WebEncoderOptions>(options =>
 });
 
 // ---------- Servicios propios ----------
-builder.Services.AddHttpContextAccessor();
 builder.Services.AddHttpClient();
 builder.Services.Configure<OpcionesEyesofter>(builder.Configuration.GetSection("Eyesofter"));
 builder.Services.AddScoped<Auditoria>();
+builder.Services.AddScoped<Escuelas>();
 builder.Services.AddScoped<Notificador>();
 builder.Services.AddScoped<Expedientes>();
 builder.Services.AddScoped<Indicadores>();

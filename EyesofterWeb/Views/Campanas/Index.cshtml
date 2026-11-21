@@ -6,14 +6,14 @@
 </div>
 <div class="table-responsive card shadow-sm">
     <table class="table align-middle mb-0">
-        <thead class="table-light"><tr><th scope="col">Campaña</th><th scope="col">Ciclo</th><th scope="col">Periodo</th><th scope="col" class="text-end">Tamizajes</th><th scope="col"></th></tr></thead>
+        <thead class="table-light"><tr><th scope="col">Campaña</th><th scope="col">Escuela</th><th scope="col">Ciclo</th><th scope="col">Periodo</th><th scope="col" class="text-end">Tamizajes</th><th scope="col"></th></tr></thead>
         <tbody>
             @foreach (var c in Model)
             {
-                <tr><td>@c.Nombre</td><td>@c.CicloEscolar</td><td>@c.FechaInicio.ToString("dd/MM/yyyy") – @(c.FechaFin?.ToString("dd/MM/yyyy") ?? "vigente")</td><td class="text-end">@c.Tamizajes.Count</td>
+                <tr><td>@c.Nombre</td><td>@c.Plantel?.Nombre</td><td>@c.CicloEscolar</td><td>@c.FechaInicio.ToString("dd/MM/yyyy") – @(c.FechaFin?.ToString("dd/MM/yyyy") ?? "vigente")</td><td class="text-end">@c.Tamizajes.Count</td>
                     <td class="text-end"><a asp-action="Edit" asp-route-id="@c.Id" class="btn btn-sm btn-outline-primary">Editar</a> <a asp-controller="Home" asp-action="Index" asp-route-campanaId="@c.Id" class="btn btn-sm btn-outline-secondary">Indicadores</a></td></tr>
             }
-            @if (Model.Count == 0) { <tr><td colspan="5" class="text-center text-body-secondary py-4">Crea la primera campaña del ciclo escolar.</td></tr> }
+            @if (Model.Count == 0) { <tr><td colspan="6" class="text-center text-body-secondary py-4">Crea la primera campaña del ciclo escolar.</td></tr> }
         </tbody>
     </table>
 </div>

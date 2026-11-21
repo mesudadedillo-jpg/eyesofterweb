@@ -53,7 +53,8 @@ namespace EyesofterWeb.Data
                 .Build();
             var opciones = new DbContextOptionsBuilder<ApplicationDbContext>();
             BaseDeDatos.Configurar(opciones, BaseDeDatos.CadenaConexion(config));
-            return new ApplicationDbContext(opciones.Options, new CifradoDatos(CifradoDatos.ClaveDesarrollo));
+            // Sin petición web: sin filtro por escuela (solo se generan migraciones).
+            return new ApplicationDbContext(opciones.Options, new CifradoDatos(CifradoDatos.ClaveDesarrollo), new AlcanceEscuela(new HttpContextAccessor()));
         }
     }
 }

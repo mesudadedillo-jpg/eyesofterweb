@@ -65,7 +65,9 @@ namespace EyesofterWeb.Controllers
 
         public async Task<IActionResult> Seguimiento(bool soloSinLeer = true, string tipo = "RESULTADO_TAMIZAJE")
         {
-            var tutores = _db.Users.Where(u => u.TutorId != null);
+            // Solo cuentas de tutores visibles para quien consulta (filtro por escuela de Tutores).
+            var tutoresVisibles = _db.Tutores.Select(t => t.Id);
+            var tutores = _db.Users.Where(u => u.TutorId != null && tutoresVisibles.Contains(u.TutorId.Value));
             var filas = await _db.Notificaciones.AsNoTracking()
                 .Where(n => n.Tipo == tipo && (!soloSinLeer || n.LeidaEn == null))
                 .Join(tutores, n => n.UsuarioId, u => u.Id, (n, u) => new { n, u })

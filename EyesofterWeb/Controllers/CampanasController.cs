@@ -1,5 +1,6 @@
 using EyesofterWeb.Data;
 using EyesofterWeb.Models;
+using EyesofterWeb.Servicios;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -11,19 +12,32 @@ namespace EyesofterWeb.Controllers
     public class CampanasController : Controller
     {
         private readonly ApplicationDbContext _db;
-        public CampanasController(ApplicationDbContext db) => _db = db;
+        private readonly Escuelas _escuelas;
+
+        public CampanasController(ApplicationDbContext db, Escuelas escuelas)
+        {
+            _db = db;
+            _escuelas = escuelas;
+        }
 
         public async Task<IActionResult> Index() =>
-            View(await _db.Campanas.AsNoTracking().Include(c => c.Tamizajes).OrderByDescending(c => c.FechaInicio).ToListAsync());
+            View(await _db.Campanas.AsNoTracking().Include(c => c.Tamizajes).Include(c => c.Plantel).OrderByDescending(c => c.FechaInicio).ToListAsync());
 
-        public IActionResult Create() => View("Form", new Campana { CicloEscolar = $"{DateTime.Today.Year}-{DateTime.Today.Year + 1}" });
+        public async Task<IActionResult> Create()
+        {
+            var plantel = await _escuelas.PorDefectoAsync();
+            if (plantel is null) return View("~/Views/Home/SinEscuela.cshtml");
+            ViewData["PlantelId"] = await _escuelas.ListaAsync(plantel);
+            return View("Form", new Campana { CicloEscolar = $"{DateTime.Today.Year}-{DateTime.Today.Year + 1}", PlantelId = plantel.Value });
+        }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Nombre,CicloEscolar,FechaInicio,FechaFin")] Campana c)
+        public async Task<IActionResult> Create([Bind("Nombre,CicloEscolar,FechaInicio,FechaFin,PlantelId")] Campana c)
         {
             Validar(c);
-            if (!ModelState.IsValid) return View("Form", c);
+            if (!await _escuelas.PuedeUsarAsync(c.PlantelId)) ModelState.AddModelError(nameof(Campana.PlantelId), "Elige una de tus escuelas.");
+            if (!ModelState.IsValid) { ViewData["PlantelId"] = await _escuelas.ListaAsync(c.PlantelId); return View("Form", c); }
             c.FechaInicio = c.FechaInicio.Date;
             c.FechaFin = c.FechaFin?.Date;
             _db.Campanas.Add(c);

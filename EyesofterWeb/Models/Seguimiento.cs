@@ -3,19 +3,80 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace EyesofterWeb.Models
 {
-    /// <summary>Institución (C-RE-01). El piloto tiene un solo plantel: METANOIA.</summary>
+    /// <summary>
+    /// Escuela (C-RE-01: cada institución por separado). Todo lo de un alumno (tamizajes,
+    /// casos, comprobantes, citas) pertenece a la escuela del alumno, y el personal escolar
+    /// solo ve las escuelas que tiene asignadas (<see cref="UsuarioPlantel"/>).
+    /// </summary>
     public class Plantel
     {
         public int Id { get; set; }
 
-        [Required, StringLength(120)]
+        [Required(ErrorMessage = "El nombre es obligatorio.")]
+        [StringLength(120, MinimumLength = 3, ErrorMessage = "El nombre debe tener entre {2} y {1} caracteres.")]
         public string Nombre { get; set; } = string.Empty;
 
         [StringLength(20)]
+        [RegularExpression(@"^[0-9A-Z]{5,20}$", ErrorMessage = "La clave debe tener de 5 a 20 letras mayúsculas o números.")]
         [Display(Name = "Clave del centro de trabajo")]
         public string? Clave { get; set; }
 
+        [Display(Name = "Activa")]
         public bool Activo { get; set; } = true;
+    }
+
+    /// <summary>Qué escuelas puede ver una cuenta de Dirección o Enfermería. Una persona puede cubrir varias.</summary>
+    public class UsuarioPlantel
+    {
+        [Required, StringLength(450)]
+        public string UsuarioId { get; set; } = string.Empty;
+        public ApplicationUser? Usuario { get; set; }
+
+        public int PlantelId { get; set; }
+        public Plantel? Plantel { get; set; }
+    }
+
+    /// <summary>
+    /// Convenio de una escuela con una clínica: el beneficio (p. ej. descuento) que la clínica da
+    /// a los alumnos de ESA escuela. Se muestra en el pase médico y en el directorio de la app;
+    /// el pase con QR comprueba que el alumno es de la escuela. No se comparte ningún dato del
+    /// alumno ni del tutor con la clínica por tener convenio.
+    /// </summary>
+    public class Convenio : IValidatableObject
+    {
+        public int Id { get; set; }
+
+        [Display(Name = "Escuela")]
+        public int PlantelId { get; set; }
+        public Plantel? Plantel { get; set; }
+
+        [Display(Name = "Clínica")]
+        public int ClinicaId { get; set; }
+        public Clinica? Clinica { get; set; }
+
+        [Range(0, 100, ErrorMessage = "El descuento debe estar entre {1} y {2} %.")]
+        [Display(Name = "Descuento (%)")]
+        public int Descuento { get; set; }
+
+        [Required(ErrorMessage = "Describe el beneficio.")]
+        [StringLength(200, MinimumLength = 5, ErrorMessage = "Escribe entre {2} y {1} caracteres.")]
+        [Display(Name = "Beneficio para los alumnos")]
+        public string Beneficio { get; set; } = string.Empty;
+
+        [DataType(DataType.Date)]
+        [Display(Name = "Vigente hasta")]
+        public DateTime? VigenteHasta { get; set; }
+
+        public bool Activo { get; set; } = true;
+
+        [NotMapped]
+        public bool Vigente => Activo && (VigenteHasta is null || VigenteHasta.Value.Date >= DateTime.Today);
+
+        public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+        {
+            if (VigenteHasta is not null && VigenteHasta.Value.Date < DateTime.Today && Activo)
+                yield return new ValidationResult("La fecha de vigencia ya pasó. Cámbiala o desactiva el convenio.", new[] { nameof(VigenteHasta) });
+        }
     }
 
     /// <summary>Campaña de tamizaje dentro de un ciclo escolar (W-RFN-16: comparar entre ciclos y campañas).</summary>

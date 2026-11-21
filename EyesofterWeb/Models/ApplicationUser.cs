@@ -28,5 +28,16 @@ namespace EyesofterWeb.Models
 
         /// <summary>false = cuenta desactivada (no puede entrar ni en la web ni en la app).</summary>
         public bool Activo { get; set; } = true;
+
+        /// <summary>
+        /// Solo para Dirección: administra TODO el sistema (todas las escuelas, altas de escuelas).
+        /// Es para el equipo del proyecto, no para el director de una escuela. Una cuenta de
+        /// Dirección o Enfermería sin esta marca solo ve las escuelas de <see cref="Planteles"/>.
+        /// </summary>
+        [Display(Name = "Administrador global (todas las escuelas)")]
+        public bool AdministradorGlobal { get; set; }
+
+        /// <summary>Escuelas a las que pertenece el personal escolar (Dirección y Enfermería).</summary>
+        public ICollection<UsuarioPlantel> Planteles { get; set; } = new List<UsuarioPlantel>();
     }
 }

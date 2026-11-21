@@ -132,6 +132,9 @@ namespace EyesofterWeb.Models
         [StringLength(12)]
         public string Origen { get; set; } = "web";
 
+        /// <summary>Escuela a la que se refiere el registro. null = del sistema (lo ve solo el administrador global).</summary>
+        public int? PlantelId { get; set; }
+
         public bool Exito { get; set; } = true;
     }
 
@@ -167,6 +170,32 @@ namespace EyesofterWeb.Models
 
         [StringLength(1000)]
         public string? Respuesta { get; set; }
+    }
+
+    /// <summary>
+    /// Solicitud para vincular un equipo de escritorio (la usa el servidor Ktor). Va en la base y
+    /// no en memoria para que funcione con varias instancias del servidor. Se guarda el SHA-256
+    /// del secreto de la solicitud, nunca el secreto ni el token.
+    /// </summary>
+    public class VinculacionEscritorio
+    {
+        /// <summary>SHA-256 (hex) del secreto que solo conoce el escritorio.</summary>
+        [Key, StringLength(64)]
+        public string Id { get; set; } = string.Empty;
+
+        /// <summary>Código que se muestra en pantalla, p. ej. "K7QM-3RTA".</summary>
+        [Required, StringLength(9)]
+        public string Codigo { get; set; } = string.Empty;
+
+        [Required, StringLength(60)]
+        public string Equipo { get; set; } = string.Empty;
+
+        public DateTime CreadaEn { get; set; } = DateTime.UtcNow;
+        public DateTime ExpiraEn { get; set; }
+
+        /// <summary>Cuenta de Dirección o Enfermería que la aprobó. null = pendiente.</summary>
+        [StringLength(450)]
+        public string? AprobadaPor { get; set; }
     }
 
     /// <summary>Marca una propiedad para que se guarde cifrada con AES-256-GCM (C-RC-04).</summary>

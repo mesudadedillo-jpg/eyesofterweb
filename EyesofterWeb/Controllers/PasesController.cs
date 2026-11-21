@@ -55,6 +55,7 @@ namespace EyesofterWeb.Controllers
             _auditoria.Registrar("VALIDAR_PASE", "Caso", r.Pase!.CasoId, r.Pase.Clinica?.Nombre);
             await _db.SaveChangesAsync();
             ViewBag.Pase = r.Pase;
+            ViewBag.Convenio = await _expedientes.ConvenioVigenteAsync(r.Pase.Caso!.AlumnoId, r.Pase.ClinicaId);
             return View(new AtencionQrViewModel { Codigo = r.Pase.Codigo });
         }
 

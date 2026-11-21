@@ -11,6 +11,27 @@
         <div class="col-md-6"><label asp-for="TutorId" class="form-label"></label><select asp-for="TutorId" asp-items="ViewBag.Tutores" class="form-select"><option value="">— (solo para Tutor)</option></select><span asp-validation-for="TutorId" class="text-danger small"></span></div>
         <div class="col-md-6"><label asp-for="AlumnoId" class="form-label"></label><select asp-for="AlumnoId" asp-items="ViewBag.Alumnos" class="form-select"><option value="">— (solo para Alumno)</option></select><span asp-validation-for="AlumnoId" class="text-danger small"></span></div>
         <div class="col-md-6"><label asp-for="ClinicaId" class="form-label"></label><select asp-for="ClinicaId" asp-items="ViewBag.Clinicas" class="form-select"><option value="">— (solo para Especialista)</option></select><span asp-validation-for="ClinicaId" class="text-danger small"></span></div>
+        <fieldset class="col-12">
+            <legend class="form-label fs-6 mb-1">Escuelas <span class="text-body-secondary small">(solo para Dirección y Enfermería: solo verá alumnos de estas escuelas)</span></legend>
+            @foreach (var p in (List<Plantel>)ViewBag.Planteles)
+            {
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="checkbox" name="PlantelIds" value="@p.Id" id="plantel-@p.Id" @(Model.PlantelIds.Contains(p.Id) ? "checked" : "") />
+                    <label class="form-check-label" for="plantel-@p.Id">@p.Nombre</label>
+                </div>
+            }
+            <span asp-validation-for="PlantelIds" class="text-danger small d-block"></span>
+        </fieldset>
+        @if (ViewBag.PuedeMarcarGlobal == true)
+        {
+            <div class="col-12">
+                <div class="form-check">
+                    <input class="form-check-input" asp-for="AdministradorGlobal" />
+                    <label class="form-check-label" asp-for="AdministradorGlobal"></label>
+                    <div class="form-text">Solo para el equipo que administra EYESOFTER: ve todas las escuelas, da de alta escuelas y atiende los reportes de fallas. No se lo des al director de una escuela.</div>
+                </div>
+            </div>
+        }
     </div>
     @if (Model.UsuarioId is null) { <p class="small text-body-secondary mt-3 mb-0">La persona recibirá por correo un enlace para crear su contraseña. Nadie más la conoce.</p> }
     <div class="d-flex gap-2 mt-3"><button class="btn btn-marca">Guardar</button><a asp-action="Index" class="btn btn-outline-secondary">Cancelar</a></div>

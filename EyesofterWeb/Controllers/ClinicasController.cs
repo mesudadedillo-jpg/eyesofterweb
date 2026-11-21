@@ -106,13 +106,15 @@ namespace EyesofterWeb.Controllers
         }
 
         // GET: Clinicas/Delete/5
-        [Authorize(Roles = Roles.Administrador)]
+        // El directorio de clínicas lo comparten todas las escuelas: solo el administrador global lo borra.
+        [Authorize(Policy = Roles.PoliticaGlobal)]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id is null) return NotFound();
 
             var clinica = await _context.Clinicas
                 .Include(c => c.Casos)
+                .IgnoreQueryFilters() // cuenta los casos de todas las escuelas
                 .FirstOrDefaultAsync(m => m.Id == id);
             if (clinica is null) return NotFound();
 
@@ -122,10 +124,10 @@ namespace EyesofterWeb.Controllers
         // POST: Clinicas/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = Roles.Administrador)]
+        [Authorize(Policy = Roles.PoliticaGlobal)]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var clinica = await _context.Clinicas.Include(c => c.Casos).FirstOrDefaultAsync(c => c.Id == id);
+            var clinica = await _context.Clinicas.Include(c => c.Casos).IgnoreQueryFilters().FirstOrDefaultAsync(c => c.Id == id);
             if (clinica is null) return RedirectToAction(nameof(Index));
 
             if (clinica.Casos.Any())

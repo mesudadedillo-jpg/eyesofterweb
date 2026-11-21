@@ -16,6 +16,10 @@
                     <h2 class="h6 mb-1">@c.Nombre</h2>
                     @if (c.EsAsociada) { <span class="badge text-bg-success mb-2"><i class="bi bi-patch-check me-1" aria-hidden="true"></i>Asociada al programa</span> }
                     else { <span class="badge text-bg-light mb-2">No asociada</span> }
+                    @if (ViewBag.Convenios is Dictionary<int, Convenio> convenios && convenios.TryGetValue(c.Id, out var convenio))
+                    {
+                        <p class="small mb-2 text-success-emphasis"><i class="bi bi-tag me-1" aria-hidden="true"></i><strong>Convenio con tu escuela:</strong> @convenio.Beneficio</p>
+                    }
                     <p class="small mb-1">@c.Direccion, @c.Ciudad @c.CodigoPostal</p>
                     @if (c.Horario is not null) { <p class="small mb-1 text-body-secondary">@c.Horario</p> }
                     <div class="d-flex gap-2 mt-2">

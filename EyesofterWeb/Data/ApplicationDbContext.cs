@@ -20,14 +20,26 @@ namespace EyesofterWeb.Data
     public class ApplicationDbContext : IdentityDbContext<ApplicationUser>, IDataProtectionKeyContext
     {
         private readonly CifradoDatos _cifrado;
+        private readonly AlcanceEscuela _alcance;
 
-        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options, CifradoDatos cifrado)
+        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options, CifradoDatos cifrado, AlcanceEscuela alcance)
             : base(options)
         {
             _cifrado = cifrado;
+            _alcance = alcance;
         }
 
+        // Los filtros globales leen estas dos propiedades en CADA consulta (EF Core las vuelve
+        // parámetros), así que el mismo contexto respeta a quien hace la petición.
+        /// <summary>true = no se filtra por escuela (ver <see cref="AlcanceEscuela"/>).</summary>
+        public bool FiltroEscuelaInactivo => _alcance.SinRestriccion;
+        /// <summary>Escuelas que puede ver el personal escolar de esta petición.</summary>
+        public int[] PlantelesPermitidos => _alcance.Planteles;
+
         public DbSet<Plantel> Planteles => Set<Plantel>();
+        public DbSet<UsuarioPlantel> UsuarioPlanteles => Set<UsuarioPlantel>();
+        public DbSet<Convenio> Convenios => Set<Convenio>();
+        public DbSet<VinculacionEscritorio> VinculacionesEscritorio => Set<VinculacionEscritorio>();
         public DbSet<Campana> Campanas => Set<Campana>();
         public DbSet<Tutor> Tutores => Set<Tutor>();
         public DbSet<Alumno> Alumnos => Set<Alumno>();
@@ -71,7 +83,33 @@ namespace EyesofterWeb.Data
             builder.Entity<Plantel>(e =>
             {
                 e.ToTable("planteles");
+                e.HasIndex(p => p.Clave).IsUnique();
                 e.HasData(new Plantel { Id = 1, Nombre = "Escuela Primaria-Secundaria METANOIA", Activo = true });
+            });
+
+            builder.Entity<UsuarioPlantel>(e =>
+            {
+                e.ToTable("usuario_planteles");
+                e.HasKey(x => new { x.UsuarioId, x.PlantelId });
+                e.HasIndex(x => x.PlantelId);
+                e.HasOne(x => x.Usuario).WithMany(u => u.Planteles).HasForeignKey(x => x.UsuarioId).OnDelete(DeleteBehavior.Cascade);
+                e.HasOne(x => x.Plantel).WithMany().HasForeignKey(x => x.PlantelId).OnDelete(DeleteBehavior.Restrict);
+            });
+
+            builder.Entity<Convenio>(e =>
+            {
+                e.ToTable("convenios");
+                e.HasIndex(c => new { c.PlantelId, c.ClinicaId }).IsUnique();
+                e.Property(c => c.VigenteHasta).HasColumnType("date");
+                e.HasOne(c => c.Plantel).WithMany().HasForeignKey(c => c.PlantelId).OnDelete(DeleteBehavior.Restrict);
+                e.HasOne(c => c.Clinica).WithMany().HasForeignKey(c => c.ClinicaId).OnDelete(DeleteBehavior.Cascade);
+            });
+
+            builder.Entity<VinculacionEscritorio>(e =>
+            {
+                e.ToTable("vinculaciones_escritorio");
+                e.HasIndex(v => v.Codigo).IsUnique();
+                e.HasIndex(v => v.ExpiraEn);
             });
 
             builder.Entity<Campana>(e =>
@@ -86,12 +124,17 @@ namespace EyesofterWeb.Data
             {
                 e.ToTable("tutores");
                 e.HasIndex(t => t.Telefono);
+                e.HasIndex(t => t.PlantelId);
+                e.Property(t => t.PlantelId).HasDefaultValue(1);
+                e.HasOne(t => t.Plantel).WithMany().HasForeignKey(t => t.PlantelId).OnDelete(DeleteBehavior.Restrict);
             });
 
             builder.Entity<Alumno>(e =>
             {
                 e.ToTable("alumnos");
-                e.HasIndex(a => a.Matricula).IsUnique();
+                // La matrícula es única DENTRO de cada escuela: dos escuelas pueden usar el mismo formato.
+                e.HasIndex(a => new { a.PlantelId, a.Matricula }).IsUnique();
+                e.HasIndex(a => a.Matricula);
                 e.HasIndex(a => new { a.Nivel, a.Grado, a.Grupo });
                 e.Property(a => a.Nivel).HasConversion<string>().HasMaxLength(20);
                 e.Property(a => a.FechaNacimiento).HasColumnType("date");
@@ -213,6 +256,7 @@ namespace EyesofterWeb.Data
                 e.ToTable("auditoria");
                 e.HasIndex(a => a.Fecha);
                 e.HasIndex(a => new { a.Entidad, a.EntidadId });
+                e.HasIndex(a => a.PlantelId);
             });
 
             builder.Entity<ReporteFalla>(e =>
@@ -223,7 +267,29 @@ namespace EyesofterWeb.Data
 
             builder.Entity<DataProtectionKey>(e => e.ToTable("data_protection_keys"));
 
+            AplicarFiltroEscuela(builder);
             AplicarCifrado(builder);
+        }
+
+        /// <summary>
+        /// Filtro por escuela (C-RE-01) para el personal escolar: todo lo que cuelga de un alumno
+        /// se filtra por la escuela del alumno. Para saltarlo a propósito (folios, unicidad) usa
+        /// IgnoreQueryFilters() y deja un comentario de por qué.
+        /// </summary>
+        private void AplicarFiltroEscuela(ModelBuilder builder)
+        {
+            builder.Entity<Alumno>().HasQueryFilter(a => FiltroEscuelaInactivo || PlantelesPermitidos.Contains(a.PlantelId));
+            builder.Entity<Tutor>().HasQueryFilter(t => FiltroEscuelaInactivo || PlantelesPermitidos.Contains(t.PlantelId)
+                                                        || t.Alumnos.Any(a => PlantelesPermitidos.Contains(a.PlantelId)));
+            builder.Entity<Campana>().HasQueryFilter(c => FiltroEscuelaInactivo || PlantelesPermitidos.Contains(c.PlantelId));
+            builder.Entity<Convenio>().HasQueryFilter(c => FiltroEscuelaInactivo || PlantelesPermitidos.Contains(c.PlantelId));
+            builder.Entity<Tamizaje>().HasQueryFilter(t => FiltroEscuelaInactivo || PlantelesPermitidos.Contains(t.Alumno!.PlantelId));
+            builder.Entity<Caso>().HasQueryFilter(c => FiltroEscuelaInactivo || PlantelesPermitidos.Contains(c.Alumno!.PlantelId));
+            builder.Entity<EventoCaso>().HasQueryFilter(x => FiltroEscuelaInactivo || PlantelesPermitidos.Contains(x.Caso!.Alumno!.PlantelId));
+            builder.Entity<Pase>().HasQueryFilter(x => FiltroEscuelaInactivo || PlantelesPermitidos.Contains(x.Caso!.Alumno!.PlantelId));
+            builder.Entity<Atencion>().HasQueryFilter(x => FiltroEscuelaInactivo || PlantelesPermitidos.Contains(x.Caso!.Alumno!.PlantelId));
+            builder.Entity<Comprobante>().HasQueryFilter(x => FiltroEscuelaInactivo || PlantelesPermitidos.Contains(x.Caso!.Alumno!.PlantelId));
+            builder.Entity<Cita>().HasQueryFilter(x => FiltroEscuelaInactivo || PlantelesPermitidos.Contains(x.Caso!.Alumno!.PlantelId));
         }
 
         /// <summary>

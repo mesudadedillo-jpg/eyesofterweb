@@ -36,7 +36,7 @@ namespace EyesofterWeb.Servicios
         public static string CodigoLegible(string codigo) =>
             string.Join("-", Enumerable.Range(0, (codigo.Length + 3) / 4).Select(i => codigo.Substring(i * 4, Math.Min(4, codigo.Length - i * 4))));
 
-        public byte[] PdfPase(Pase pase, Caso caso)
+        public byte[] PdfPase(Pase pase, Caso caso, Convenio? convenio = null)
         {
             var qr = QrPng(UrlPase(pase.Codigo), 12);
             var alumno = caso.Alumno!;
@@ -60,6 +60,7 @@ namespace EyesofterWeb.Servicios
                             Dato(d, "Clínica asociada", pase.Clinica?.Nombre ?? "");
                             Dato(d, "Dirección", pase.Clinica?.Direccion ?? "");
                             Dato(d, "Válido hasta", pase.ExpiraEn.ToLocalTime().ToString("dd/MM/yyyy"));
+                            if (convenio is not null) Dato(d, "Convenio con la escuela", convenio.Beneficio);
                         });
                         r.ConstantItem(170).Column(q =>
                         {
@@ -249,7 +250,7 @@ namespace EyesofterWeb.Servicios
             p.DefaultTextStyle(x => x.FontSize(11).FontColor(Marino));
             p.Footer().AlignCenter().Text(t =>
             {
-                t.Span("EYESOFTER Suite · Escuela Primaria-Secundaria METANOIA · ").FontSize(8).FontColor(Colors.Grey.Darken1);
+                t.Span("EYESOFTER Suite · Programa de salud visual escolar · ").FontSize(8).FontColor(Colors.Grey.Darken1);
                 t.Span(DateTime.Now.ToString("dd/MM/yyyy HH:mm")).FontSize(8).FontColor(Colors.Grey.Darken1);
             });
         }

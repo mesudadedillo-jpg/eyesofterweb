@@ -272,7 +272,8 @@ namespace EyesofterWeb.Controllers
             var pase = await _db.Pases.Include(p => p.Clinica).Include(p => p.Caso).ThenInclude(c => c!.Alumno)
                 .Where(p => p.CasoId == id && p.Estado == EstadoPase.Vigente).OrderByDescending(p => p.CreadoEn).FirstOrDefaultAsync();
             if (pase is null) return NotFound();
-            return File(_documentos.PdfPase(pase, pase.Caso!), "application/pdf", $"pase-{pase.Caso!.Folio}.pdf");
+            var convenio = await _expedientes.ConvenioVigenteAsync(pase.Caso!.AlumnoId, pase.ClinicaId);
+            return File(_documentos.PdfPase(pase, pase.Caso!, convenio), "application/pdf", $"pase-{pase.Caso!.Folio}.pdf");
         }
 
         public async Task<IActionResult> ResumenPdf(int id)

@@ -1,5 +1,6 @@
 using EyesofterWeb.Data;
 using EyesofterWeb.Models;
+using EyesofterWeb.Servicios;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -14,10 +15,12 @@ namespace EyesofterWeb.Controllers
     public class TutoresController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly Escuelas _escuelas;
 
-        public TutoresController(ApplicationDbContext context)
+        public TutoresController(ApplicationDbContext context, Escuelas escuelas)
         {
             _context = context;
+            _escuelas = escuelas;
         }
 
         // GET: Tutores
@@ -47,17 +50,21 @@ namespace EyesofterWeb.Controllers
         }
 
         // GET: Tutores/Create
-        public IActionResult Create()
+        public async Task<IActionResult> Create()
         {
-            return View(new Tutor());
+            var plantel = await _escuelas.PorDefectoAsync();
+            if (plantel is null) return View("~/Views/Home/SinEscuela.cshtml");
+            ViewData["PlantelId"] = await _escuelas.ListaAsync(plantel);
+            return View(new Tutor { PlantelId = plantel.Value });
         }
 
         // POST: Tutores/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Nombre,Apellidos,Telefono,Correo,Parentesco")] Tutor tutor)
+        public async Task<IActionResult> Create([Bind("Nombre,Apellidos,Telefono,Correo,Parentesco,PlantelId")] Tutor tutor)
         {
-            if (!ModelState.IsValid) return View(tutor);
+            if (!await _escuelas.PuedeUsarAsync(tutor.PlantelId)) ModelState.AddModelError(nameof(Tutor.PlantelId), "Elige una de tus escuelas.");
+            if (!ModelState.IsValid) { ViewData["PlantelId"] = await _escuelas.ListaAsync(tutor.PlantelId); return View(tutor); }
 
             _context.Add(tutor);
             await _context.SaveChangesAsync();
@@ -82,16 +89,16 @@ namespace EyesofterWeb.Controllers
             if (id != tutor.Id) return NotFound();
             if (!ModelState.IsValid) return View(tutor);
 
-            try
-            {
-                _context.Update(tutor);
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!await _context.Tutores.AnyAsync(e => e.Id == tutor.Id)) return NotFound();
-                throw;
-            }
+            // Se carga con el filtro por escuela: no se edita "a ciegas" un tutor de otra escuela.
+            // La escuela que lo registró no cambia al editar.
+            var actual = await _context.Tutores.FirstOrDefaultAsync(t => t.Id == id);
+            if (actual is null) return NotFound();
+            actual.Nombre = tutor.Nombre;
+            actual.Apellidos = tutor.Apellidos;
+            actual.Telefono = tutor.Telefono;
+            actual.Correo = tutor.Correo;
+            actual.Parentesco = tutor.Parentesco;
+            await _context.SaveChangesAsync();
             TempData["Exito"] = "Tutor actualizado.";
             return RedirectToAction(nameof(Index));
         }

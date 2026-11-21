@@ -98,7 +98,9 @@ namespace EyesofterWeb.Servicios
             t.PromedioDiasAtencion = dias.Count == 0 ? null : Math.Round(dias.Average(), 1);
 
             t.ComprobantesPendientes = await _db.Comprobantes.CountAsync(c => c.Estado == EstadoComprobante.Pendiente);
-            t.AvisosSinLeer = await _db.Notificaciones.CountAsync(n => n.Tipo == "RESULTADO_TAMIZAJE" && n.LeidaEn == null);
+            var tutoresVisibles = _db.Tutores.Select(x => x.Id);
+            var cuentasTutores = _db.Users.Where(u => u.TutorId != null && tutoresVisibles.Contains(u.TutorId.Value)).Select(u => u.Id);
+            t.AvisosSinLeer = await _db.Notificaciones.CountAsync(n => n.Tipo == "RESULTADO_TAMIZAJE" && n.LeidaEn == null && cuentasTutores.Contains(n.UsuarioId));
 
             t.Comparativo = await ComparativoAsync();
             return t;

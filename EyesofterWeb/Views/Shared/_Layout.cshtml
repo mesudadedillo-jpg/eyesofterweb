@@ -6,6 +6,7 @@
     var esTutor = User.IsInRole(Roles.Tutor);
     var esEspecialista = User.IsInRole(Roles.Especialista);
     var esAlumno = User.IsInRole(Roles.Alumno);
+    var esGlobal = esAdmin && User.HasClaim(EyesofterWeb.Seguridad.AlcanceEscuela.ClaimGlobal, "true");
     var rolActual = Roles.Todos.Where(r => User.IsInRole(r)).Select(Roles.NombreVisible).FirstOrDefault() ?? "Sin rol";
     string Activo(string controlador) => string.Equals(ViewContext.RouteData.Values["controller"]?.ToString(), controlador, StringComparison.OrdinalIgnoreCase) ? " active" : "";
 }
@@ -47,12 +48,14 @@
                                     <ul class="dropdown-menu">
                                         <li><a class="dropdown-item" asp-controller="Avisos" asp-action="Index"><i class="bi bi-megaphone me-1" aria-hidden="true"></i>Avisos y seguimiento de lectura</a></li>
                                         <li><a class="dropdown-item" asp-controller="Campanas" asp-action="Index"><i class="bi bi-calendar-range me-1" aria-hidden="true"></i>Campañas de tamizaje</a></li>
+                                        <li><a class="dropdown-item" asp-controller="Convenios" asp-action="Index"><i class="bi bi-hand-thumbs-up me-1" aria-hidden="true"></i>Convenios con clínicas</a></li>
                                         @if (esAdmin)
                                         {
                                             <li><hr class="dropdown-divider" /></li>
                                             <li><a class="dropdown-item" asp-controller="Usuarios" asp-action="Index"><i class="bi bi-shield-lock me-1" aria-hidden="true"></i>Usuarios</a></li>
+                                            @if (esGlobal) { <li><a class="dropdown-item" asp-controller="Planteles" asp-action="Index"><i class="bi bi-buildings me-1" aria-hidden="true"></i>Escuelas</a></li> }
                                             <li><a class="dropdown-item" asp-controller="Auditoria" asp-action="Index"><i class="bi bi-journal-text me-1" aria-hidden="true"></i>Bitácora de auditoría</a></li>
-                                            <li><a class="dropdown-item" asp-controller="Soporte" asp-action="Reportes"><i class="bi bi-bug me-1" aria-hidden="true"></i>Reportes de fallas</a></li>
+                                            @if (esGlobal) { <li><a class="dropdown-item" asp-controller="Soporte" asp-action="Reportes"><i class="bi bi-bug me-1" aria-hidden="true"></i>Reportes de fallas</a></li> }
                                         }
                                         <li><a class="dropdown-item" asp-controller="Home" asp-action="Permisos"><i class="bi bi-diagram-3 me-1" aria-hidden="true"></i>Permisos por rol</a></li>
                                     </ul>
@@ -121,7 +124,7 @@
 
     <footer class="border-top py-3 bg-body-tertiary">
         <div class="container small text-body-secondary d-flex flex-wrap justify-content-between gap-2">
-            <span>&copy; @DateTime.Today.Year EYESOFTER Suite · Escuela Primaria-Secundaria METANOIA</span>
+            <span>&copy; @DateTime.Today.Year EYESOFTER Suite · Programa de salud visual escolar</span>
             <nav aria-label="Enlaces legales" class="d-flex flex-wrap gap-3">
                 <a class="link-secondary" asp-controller="Privacidad" asp-action="Aviso">Aviso de privacidad</a>
                 <a class="link-secondary" asp-controller="Privacidad" asp-action="Terminos">Términos de uso</a>

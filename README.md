@@ -39,14 +39,32 @@ La cadena de conexión local está en `appsettings.json` (usuario y contraseña 
 
 | Rol | Correo | Contraseña |
 |---|---|---|
-| Dirección | admin@eyesofter.mx | Eyesofter123! |
-| Enfermería | enfermeria@eyesofter.mx | Eyesofter123! |
+| Dirección (administrador global: todas las escuelas) | admin@eyesofter.mx | Eyesofter123! |
+| Enfermería (METANOIA) | enfermeria@eyesofter.mx | Eyesofter123! |
+| Enfermería (Secundaria Técnica 5, escuela demo) | enfermeria2@eyesofter.mx | Eyesofter123! |
 | Tutor | tutor@eyesofter.mx | Eyesofter123! |
 | Alumno | alumno@eyesofter.mx | Eyesofter123! |
 | Especialista (clínica asociada) | especialista@eyesofter.mx | Eyesofter123! |
 
 En producción **no** se crean datos de ejemplo: la primera cuenta de Dirección sale de `ADMIN_CORREO`
 y `ADMIN_PASSWORD`.
+
+## Varias escuelas (C-RE-01)
+
+Una sola instalación atiende a varias escuelas y **cada una solo ve a sus alumnos**:
+
+- Dirección y Enfermería ven únicamente las escuelas que tienen asignadas (Usuarios → casillas *Escuelas*).
+  El filtro vive en un solo lugar (`Seguridad/AlcanceEscuela.cs`, aplicado como filtro global de EF Core),
+  así que una pantalla nueva no puede mostrar por error alumnos de otra escuela.
+- El **administrador global** (marca en una cuenta de Dirección; la primera es `ADMIN_GLOBAL_CORREO` o, si no
+  se define, `ADMIN_CORREO`) ve todas, da de alta escuelas (Más → Escuelas) y atiende los reportes de fallas.
+  Es para el equipo que administra EYESOFTER, no para el director de una escuela.
+- **Sumar una escuela:** el administrador global la crea en *Escuelas* y le da de alta su Dirección en
+  *Usuarios* (marcando esa escuela). Desde ahí, esa Dirección crea a su Enfermería, alumnos y tutores.
+- **Convenios** (Más → Convenios): cada escuela registra el beneficio que una clínica da a sus alumnos.
+  Las familias lo ven en el directorio y en el pase; el especialista, al validar el QR. La clínica no
+  recibe ningún dato por tener convenio: solo ve el caso cuando la familia la elige y llega con su pase.
+- La matrícula es única **dentro de cada escuela**.
 
 ## Desplegar en Railway
 
@@ -60,6 +78,7 @@ El repositorio trae `Dockerfile` y `railway.json` (healthcheck en `/salud`).
 | `DATABASE_URL` | `${{Postgres.DATABASE_URL}}` |
 | `EYESOFTER_CLAVE_DATOS` | **La misma** que tiene el servidor de la app |
 | `ADMIN_CORREO` / `ADMIN_PASSWORD` | Cuenta inicial de Dirección (mín. 8 caracteres, con mayúscula, minúscula y número) |
+| `ADMIN_GLOBAL_CORREO` | (Opcional) Correo de la cuenta de Dirección que será administrador global si todavía no hay ninguno. Si no se define, se usa `ADMIN_CORREO` |
 | `Eyesofter__UrlWeb` | URL pública de este portal (va en los correos) |
 | `Eyesofter__UrlApi` | URL pública del servidor de la app |
 | `RESEND_API_KEY` / `CORREO_REMITENTE` | Correo para recuperar contraseñas (opcional al principio) |

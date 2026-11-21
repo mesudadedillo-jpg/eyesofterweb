@@ -1,6 +1,23 @@
 @model Tutor
 <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2" role="alert"></div>
 <div class="row g-3">
+@if (ViewData["PlantelId"] is Microsoft.AspNetCore.Mvc.Rendering.SelectList escuelas)
+    {
+        @* Solo se pregunta la escuela si la persona tiene más de una; si no, va la suya. *@
+        if (escuelas.Count() > 1)
+        {
+            <div class="col-md-6">
+                <label asp-for="PlantelId" class="form-label requerido">Escuela</label>
+                <select asp-for="PlantelId" asp-items="escuelas" class="form-select"></select>
+                <span asp-validation-for="PlantelId" class="text-danger small"></span>
+            </div>
+        }
+        else
+        {
+            <input type="hidden" asp-for="PlantelId" />
+            <span asp-validation-for="PlantelId" class="text-danger small"></span>
+        }
+    }
     <div class="col-md-6">
         <label asp-for="Nombre" class="form-label requerido"></label>
         <input asp-for="Nombre" class="form-control" />
