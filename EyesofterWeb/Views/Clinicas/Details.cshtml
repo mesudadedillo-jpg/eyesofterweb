@@ -1,7 +1,7 @@
 @model Clinica
 @{
     ViewData["Title"] = "Clínica";
-    var esAdmin = User.IsInRole(Roles.Administrador);
+    var esAdmin = User.IsInRole(Roles.Administrador) && User.HasClaim(EyesofterWeb.Seguridad.AlcanceEscuela.ClaimGlobal, "true");
 }
 
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">

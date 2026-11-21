@@ -30,7 +30,13 @@ namespace EyesofterWeb.Controllers
             if (_alcance.SinRestriccion) return q;
             var planteles = _alcance.Planteles;
             var personal = _db.UsuarioPlanteles.Where(x => planteles.Contains(x.PlantelId)).Select(x => x.Usuario!.Email);
-            return q.Where(a => (a.PlantelId != null && planteles.Contains(a.PlantelId.Value)) || (a.PlantelId == null && personal.Contains(a.Usuario)));
+            // Sin escuela solo se muestran los movimientos de la propia cuenta del personal (accesos,
+            // contraseña, dos pasos, accesos denegados): lo de un expediente lleva siempre su escuela,
+            // así una persona con dos escuelas no filtra lo de una a la Dirección de la otra.
+            return q.Where(a => (a.PlantelId != null && planteles.Contains(a.PlantelId.Value))
+                                || (a.PlantelId == null && personal.Contains(a.Usuario)
+                                    && (a.Accion.StartsWith("LOGIN") || a.Accion == "LOGOUT" || a.Accion.StartsWith("PASSWORD")
+                                        || a.Accion == "RECUPERAR_PASSWORD" || a.Accion.Contains("2FA") || a.Accion == "ACCESO_DENEGADO")));
         }
 
         public async Task<IActionResult> Index(string? usuario, string? accion, bool soloDenegados = false, int pagina = 1)

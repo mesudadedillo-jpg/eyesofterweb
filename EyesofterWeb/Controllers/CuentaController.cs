@@ -2,6 +2,7 @@ using System.Text.Encodings.Web;
 using EyesofterWeb.Models;
 using EyesofterWeb.Models.ViewModels;
 using EyesofterWeb.Servicios;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -55,7 +56,7 @@ namespace EyesofterWeb.Controllers
                 // Solo se dice "desactivada" a quien sabe la contraseña: si no, cualquiera podría
                 // averiguar qué correos tienen cuenta en la escuela.
                 var correcta = await _signInManager.CheckPasswordSignInAsync(usuario, modelo.Password, lockoutOnFailure: true);
-                _auditoria.Registrar("LOGIN_CUENTA_DESACTIVADA", "Usuario", usuario.Id, modelo.Correo, exito: false);
+                _auditoria.Registrar("LOGIN_CUENTA_DESACTIVADA", "Usuario", usuario.Id, modelo.Correo, exito: false, usuario: usuario.Email);
                 await GuardarAuditoriaAsync();
                 ModelState.AddModelError(string.Empty, correcta.Succeeded
                     ? "Tu cuenta está desactivada. Comunícate con la Dirección de la escuela."
@@ -68,7 +69,7 @@ namespace EyesofterWeb.Controllers
 
             if (resultado.Succeeded)
             {
-                _auditoria.Registrar("LOGIN", "Usuario", usuario?.Id, modelo.Correo);
+                _auditoria.Registrar("LOGIN", "Usuario", usuario?.Id, modelo.Correo, usuario: usuario?.Email);
                 await GuardarAuditoriaAsync();
                 if (!string.IsNullOrEmpty(modelo.ReturnUrl) && Url.IsLocalUrl(modelo.ReturnUrl)) return LocalRedirect(modelo.ReturnUrl);
                 return RedirectToAction("Index", "Home");
@@ -77,7 +78,7 @@ namespace EyesofterWeb.Controllers
             if (resultado.RequiresTwoFactor)
                 return RedirectToAction(nameof(LoginDosPasos), new { returnUrl = modelo.ReturnUrl });
 
-            _auditoria.Registrar(resultado.IsLockedOut ? "LOGIN_BLOQUEADO" : "LOGIN_FALLIDO", "Usuario", usuario?.Id, modelo.Correo, exito: false);
+            _auditoria.Registrar(resultado.IsLockedOut ? "LOGIN_BLOQUEADO" : "LOGIN_FALLIDO", "Usuario", usuario?.Id, modelo.Correo, exito: false, usuario: usuario?.Email);
             await GuardarAuditoriaAsync();
             ModelState.AddModelError(string.Empty, resultado.IsLockedOut
                 ? "Tu cuenta quedó bloqueada 15 minutos por 3 intentos fallidos. Puedes esperar o recuperar tu contraseña."
@@ -120,7 +121,7 @@ namespace EyesofterWeb.Controllers
                     $"<p>Para crear una contraseña nueva entra a este enlace (vence en 2 horas):</p>" +
                     $"<p><a href=\"{HtmlEncoder.Default.Encode(enlace)}\">Restablecer mi contraseña</a></p>" +
                     "<p>Si no lo pediste, ignora este correo: tu contraseña no cambia.</p>");
-                _auditoria.Registrar("RECUPERAR_PASSWORD", "Usuario", usuario.Id, modelo.Correo);
+                _auditoria.Registrar("RECUPERAR_PASSWORD", "Usuario", usuario.Id, modelo.Correo, usuario: usuario.Email);
                 await GuardarAuditoriaAsync();
             }
             // Mismo mensaje exista o no la cuenta: así no se puede averiguar quién está registrado.
@@ -156,7 +157,7 @@ namespace EyesofterWeb.Controllers
             }
             await _userManager.SetLockoutEndDateAsync(usuario, null);
             await _userManager.ResetAccessFailedCountAsync(usuario);
-            _auditoria.Registrar("PASSWORD_RESTABLECIDA", "Usuario", usuario.Id);
+            _auditoria.Registrar("PASSWORD_RESTABLECIDA", "Usuario", usuario.Id, usuario: usuario.Email);
             await GuardarAuditoriaAsync();
             TempData["Exito"] = "Listo. Ya puedes entrar con tu nueva contraseña (también en la app).";
             return RedirectToAction(nameof(Login));
@@ -206,6 +207,15 @@ namespace EyesofterWeb.Controllers
         {
             var usuario = await _signInManager.GetTwoFactorAuthenticationUserAsync();
             if (usuario is null) return RedirectToAction(nameof(Login));
+            // La cuenta pudo desactivarse entre el paso 1 y el 2.
+            if (!usuario.Activo)
+            {
+                await HttpContext.SignOutAsync(IdentityConstants.TwoFactorUserIdScheme);
+                _auditoria.Registrar("LOGIN_CUENTA_DESACTIVADA", "Usuario", usuario.Id, usuario.Email, exito: false, usuario: usuario.Email);
+                await GuardarAuditoriaAsync();
+                TempData["Error"] = "Tu cuenta está desactivada. Comunícate con la Dirección de la escuela.";
+                return RedirectToAction(nameof(Login));
+            }
             if (!ModelState.IsValid) return View(modelo);
 
             // El código de la app son 6 dígitos; los de respaldo llevan guion (XXXXX-XXXXX) y se conservan.
@@ -217,14 +227,14 @@ namespace EyesofterWeb.Controllers
                 : await _signInManager.TwoFactorAuthenticatorSignInAsync(codigo, isPersistent: false, rememberClient: false);
             if (resultado.Succeeded)
             {
-                _auditoria.Registrar(modelo.EsCodigoDeRespaldo ? "LOGIN_CODIGO_RESPALDO" : "LOGIN", "Usuario", usuario.Id, usuario.Email);
+                _auditoria.Registrar(modelo.EsCodigoDeRespaldo ? "LOGIN_CODIGO_RESPALDO" : "LOGIN", "Usuario", usuario.Id, usuario.Email, usuario: usuario.Email);
                 await GuardarAuditoriaAsync();
                 if (modelo.EsCodigoDeRespaldo)
                     TempData["Error"] = "Usaste un código de respaldo (ya no sirve de nuevo). Si perdiste tu teléfono, vuelve a configurar la verificación en dos pasos.";
                 if (!string.IsNullOrEmpty(modelo.ReturnUrl) && Url.IsLocalUrl(modelo.ReturnUrl)) return LocalRedirect(modelo.ReturnUrl);
                 return RedirectToAction("Index", "Home");
             }
-            _auditoria.Registrar(resultado.IsLockedOut ? "LOGIN_BLOQUEADO" : "LOGIN_2FA_FALLIDO", "Usuario", usuario.Id, usuario.Email, exito: false);
+            _auditoria.Registrar(resultado.IsLockedOut ? "LOGIN_BLOQUEADO" : "LOGIN_2FA_FALLIDO", "Usuario", usuario.Id, usuario.Email, exito: false, usuario: usuario.Email);
             await GuardarAuditoriaAsync();
             ModelState.AddModelError(string.Empty, resultado.IsLockedOut
                 ? "Tu cuenta quedó bloqueada 15 minutos por intentos fallidos."

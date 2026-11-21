@@ -140,6 +140,13 @@ namespace EyesofterWeb.Controllers
             if (caso.Semaforo == Semaforo.Verde)
                 ModelState.AddModelError(nameof(Caso.Semaforo), "Un resultado verde no abre expediente: no hay indicios que seguir.");
             await ValidarClinicaAsync(caso.ClinicaId);
+            // La campaña debe ser de la escuela del alumno (Campanas viene filtrado por escuela).
+            if (campanaId is not null && caso.AlumnoId > 0)
+            {
+                var plantelAlumno = await _db.Alumnos.Where(a => a.Id == caso.AlumnoId).Select(a => (int?)a.PlantelId).FirstOrDefaultAsync();
+                if (!await _db.Campanas.AnyAsync(c => c.Id == campanaId && c.PlantelId == plantelAlumno))
+                    ModelState.AddModelError(string.Empty, "La campaña elegida no es de la escuela del alumno.");
+            }
 
             if (!ModelState.IsValid)
             {
@@ -147,6 +154,7 @@ namespace EyesofterWeb.Controllers
                 return View(caso);
             }
 
+            await using var transaccion = await _db.Database.BeginTransactionAsync();
             caso.Folio = await _expedientes.GenerarFolioAsync();
             caso.Estado = caso.ClinicaId.HasValue ? EstadoCaso.EnSeguimiento : EstadoCaso.Abierto;
             caso.RegistradoPor = Usuario;
@@ -174,6 +182,7 @@ namespace EyesofterWeb.Controllers
                 avisados > 0 ? "Se notificó el resultado al tutor por la app y el portal." : "El tutor no tiene cuenta: avísale por teléfono.", "sistema");
             _auditoria.Registrar("CREAR_CASO", "Caso", caso.Id, caso.Folio);
             await _db.SaveChangesAsync();
+            await transaccion.CommitAsync();
 
             TempData["Exito"] = $"Caso {caso.Folio} creado." + (avisados > 0 ? " Se avisó al tutor." : " El tutor no tiene cuenta en el sistema: avísale por teléfono.");
             return RedirectToAction(nameof(Details), new { id = caso.Id });

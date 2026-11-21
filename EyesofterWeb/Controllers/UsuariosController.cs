@@ -68,6 +68,40 @@ namespace EyesofterWeb.Controllers
             return u;
         }
 
+        /// <summary>
+        /// ¿La cuenta es SOLO de las escuelas de quien administra? Si también pertenece a otra escuela
+        /// (personal en dos escuelas, tutor con hijos en otra, especialista de una clínica con convenio
+        /// con otra), cambiar su correo, contraseña o dos pasos le daría acceso a datos de esa otra
+        /// escuela: eso solo lo hace el administrador global.
+        /// </summary>
+        private async Task<bool> EsSoloDeMisEscuelasAsync(ApplicationUser u)
+        {
+            if (_alcance.SinRestriccion) return true;
+            var mias = _alcance.Planteles;
+            if (u.Planteles.Any(p => !mias.Contains(p.PlantelId))) return false;
+            if (u.TutorId is int tutor)
+            {
+                if (await _db.Alumnos.IgnoreQueryFilters().AnyAsync(a => a.TutorId == tutor && !mias.Contains(a.PlantelId))) return false;
+                if (await _db.Tutores.IgnoreQueryFilters().AnyAsync(t => t.Id == tutor && !mias.Contains(t.PlantelId))) return false;
+            }
+            if (u.AlumnoId is int alumno && await _db.Alumnos.IgnoreQueryFilters().AnyAsync(a => a.Id == alumno && !mias.Contains(a.PlantelId))) return false;
+            if (u.ClinicaId is int clinica && await _db.Convenios.IgnoreQueryFilters().AnyAsync(c => c.ClinicaId == clinica && !mias.Contains(c.PlantelId))) return false;
+            return true;
+        }
+
+        /// <summary>La cuenta, solo si es visible Y es solo de mis escuelas (para modificarla).</summary>
+        private async Task<ApplicationUser?> AdministrableAsync(string? id)
+        {
+            var u = await VisibleAsync(id);
+            if (u is null) return null;
+            if (!await EsSoloDeMisEscuelasAsync(u))
+            {
+                TempData["Error"] = $"{u.Email} también pertenece a otra escuela. Por seguridad, solo el administrador global puede modificar esa cuenta.";
+                return null;
+            }
+            return u;
+        }
+
         public async Task<IActionResult> Index(string? buscar)
         {
             var q = Visibles().Include(u => u.Tutor).Include(u => u.Alumno).Include(u => u.Clinica).Include(u => u.Planteles).ThenInclude(p => p.Plantel).AsQueryable();
@@ -139,8 +173,8 @@ namespace EyesofterWeb.Controllers
 
         public async Task<IActionResult> Editar(string id)
         {
-            var u = await VisibleAsync(id);
-            if (u is null) return NotFound();
+            var u = await AdministrableAsync(id);
+            if (u is null) return TempData.ContainsKey("Error") ? RedirectToAction(nameof(Index)) : NotFound();
             await CargarListasAsync();
             return View("Form", new UsuarioFormViewModel
             {
@@ -155,8 +189,8 @@ namespace EyesofterWeb.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Editar(UsuarioFormViewModel m)
         {
-            var u = await VisibleAsync(m.UsuarioId);
-            if (u is null) return NotFound();
+            var u = await AdministrableAsync(m.UsuarioId);
+            if (u is null) return TempData.ContainsKey("Error") ? RedirectToAction(nameof(Index)) : NotFound();
             await ValidarAsync(m);
             var otro = await _userManager.FindByEmailAsync(m.Correo);
             if (otro is not null && otro.Id != u.Id) ModelState.AddModelError(nameof(m.Correo), "Ya existe otra cuenta con ese correo.");
@@ -192,8 +226,8 @@ namespace EyesofterWeb.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> CambiarActivo(string id)
         {
-            var u = await VisibleAsync(id);
-            if (u is null) return NotFound();
+            var u = await AdministrableAsync(id);
+            if (u is null) return TempData.ContainsKey("Error") ? RedirectToAction(nameof(Index)) : NotFound();
             if (u.Id == _userManager.GetUserId(User)) { TempData["Error"] = "No puedes desactivar tu propia cuenta."; return RedirectToAction(nameof(Index)); }
             u.Activo = !u.Activo;
             await _userManager.UpdateAsync(u);
@@ -227,8 +261,8 @@ namespace EyesofterWeb.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> RestablecerDosPasos(string id)
         {
-            var u = await VisibleAsync(id);
-            if (u is null) return NotFound();
+            var u = await AdministrableAsync(id);
+            if (u is null) return TempData.ContainsKey("Error") ? RedirectToAction(nameof(Index)) : NotFound();
             await _userManager.SetTwoFactorEnabledAsync(u, false);
             await _userManager.ResetAuthenticatorKeyAsync(u);
             await _userManager.UpdateSecurityStampAsync(u);
@@ -242,8 +276,8 @@ namespace EyesofterWeb.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> EnviarEnlace(string id)
         {
-            var u = await VisibleAsync(id);
-            if (u is null) return NotFound();
+            var u = await AdministrableAsync(id);
+            if (u is null) return TempData.ContainsKey("Error") ? RedirectToAction(nameof(Index)) : NotFound();
             var enlace = await EnlaceContrasenaAsync(u);
             var enviado = await _correo.EnviarAsync(u.Email!, "EYESOFTER: crea tu contraseña",
                 $"<p>Para crear o cambiar tu contraseña entra aquí (vence en 2 horas):</p><p><a href=\"{HtmlEncoder.Default.Encode(enlace)}\">Crear mi contraseña</a></p>");
@@ -302,6 +336,18 @@ namespace EyesofterWeb.Controllers
             // (Convenios viene filtrado por escuela). El administrador global, de cualquiera.
             else if (m.Rol == Roles.Especialista && !_alcance.SinRestriccion && !await _db.Convenios.AnyAsync(c => c.ClinicaId == m.ClinicaId))
                 ModelState.AddModelError(nameof(m.ClinicaId), "Tu escuela no tiene convenio con esa clínica. Regístralo primero en Convenios.");
+            // El vínculo (tutor, alumno o clínica) no debe alcanzar datos de otra escuela.
+            if (ModelState.IsValid && !_alcance.SinRestriccion)
+            {
+                var vinculo = new ApplicationUser
+                {
+                    TutorId = m.Rol == Roles.Tutor ? m.TutorId : null,
+                    AlumnoId = m.Rol == Roles.Alumno ? m.AlumnoId : null,
+                    ClinicaId = m.Rol == Roles.Especialista ? m.ClinicaId : null
+                };
+                if (!await EsSoloDeMisEscuelasAsync(vinculo))
+                    ModelState.AddModelError(string.Empty, "Ese tutor, alumno o clínica también está ligado a otra escuela. Por seguridad, esa cuenta la crea el administrador global.");
+            }
             if (EsRolDePersonal(m.Rol))
             {
                 var permitidas = (await _escuelas.VisiblesAsync()).Select(p => p.Id).ToHashSet();

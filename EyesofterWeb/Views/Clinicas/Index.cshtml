@@ -1,8 +1,9 @@
 @model IEnumerable<Clinica>
 @{
     ViewData["Title"] = "Clínicas";
-    var esAdmin = User.IsInRole(Roles.Administrador);
-    var puedeEditar = esAdmin || User.IsInRole(Roles.Enfermeria);
+    // El directorio lo comparten todas las escuelas: lo mantiene el administrador global.
+    var esAdmin = User.IsInRole(Roles.Administrador) && User.HasClaim(EyesofterWeb.Seguridad.AlcanceEscuela.ClaimGlobal, "true");
+    var puedeEditar = esAdmin;
 }
 
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">

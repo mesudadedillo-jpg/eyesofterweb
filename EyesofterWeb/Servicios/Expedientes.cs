@@ -38,12 +38,24 @@ namespace EyesofterWeb.Servicios
                 RegistradoPor = usuario
             });
 
+        /// <summary>
+        /// Siguiente folio EYS-AAAA-NNNN. Llamar DENTRO de una transacción: toma el mismo candado que
+        /// el servidor de la app (pg_advisory_xact_lock('folio-caso')), así dos casos creados al mismo
+        /// tiempo (portal y escritorio) no reciben el mismo folio. El candado se suelta al confirmar.
+        /// </summary>
         public async Task<string> GenerarFolioAsync()
         {
+            if (_db.Database.CurrentTransaction is not null)
+                await _db.Database.ExecuteSqlRawAsync("select pg_advisory_xact_lock(hashtext('folio-caso'))");
             var prefijo = $"EYS-{DateTime.Today.Year}-";
             // Sin filtro por escuela: el folio es único en TODO el sistema (índice único) y el
             // servidor de la app usa la misma numeración.
             var folios = await _db.Casos.IgnoreQueryFilters().Where(c => c.Folio.StartsWith(prefijo)).Select(c => c.Folio).ToListAsync();
+            // También los tamizajes "WEB-EYS-…" que deja un caso borrado: si no, el siguiente caso
+            // repetiría su folio y el tamizaje chocaría con el índice único.
+            var web = "WEB-" + prefijo;
+            folios.AddRange((await _db.Tamizajes.IgnoreQueryFilters().Where(t => t.Folio.StartsWith(web)).Select(t => t.Folio).ToListAsync())
+                .Select(f => f["WEB-".Length..]));
             var siguiente = folios.Select(f => int.TryParse(f[prefijo.Length..], out var n) ? n : 0).DefaultIfEmpty(0).Max() + 1;
             return $"{prefijo}{siguiente:D4}";
         }
@@ -161,10 +173,11 @@ namespace EyesofterWeb.Servicios
                 .Include(p => p.Caso).ThenInclude(c => c!.Tamizaje)
                 .FirstOrDefaultAsync(p => p.Codigo == NormalizarCodigo(codigo));
             if (pase is null) return new(false, "El código no corresponde a ningún pase. Revisa que esté bien escrito.", null);
+            // Primero la clínica: a otra clínica no se le dice si el pase se usó, cuándo, ni si venció.
+            if (pase.ClinicaId != clinica.Id) return new(false, $"Este pase es para {pase.Clinica?.Nombre}, no para tu clínica.", null);
             if (pase.Estado == EstadoPase.Usado) return new(false, $"Este pase ya se usó el {pase.UsadoEn!.Value.ToLocalTime():dd/MM/yyyy}.", null);
             if (pase.Estado == EstadoPase.Cancelado) return new(false, "Este pase fue reemplazado por uno nuevo. Pide a la familia el pase vigente.", null);
             if (pase.ExpiraEn <= DateTime.UtcNow) return new(false, $"Este pase expiró el {pase.ExpiraEn.ToLocalTime():dd/MM/yyyy}. La familia puede generar uno nuevo.", null);
-            if (pase.ClinicaId != clinica.Id) return new(false, $"Este pase es para {pase.Clinica?.Nombre}, no para tu clínica.", null);
             return new(true, "Pase válido.", pase);
         }
 

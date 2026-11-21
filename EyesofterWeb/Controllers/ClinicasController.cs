@@ -43,6 +43,7 @@ namespace EyesofterWeb.Controllers
         }
 
         // GET: Clinicas/Create
+        [Authorize(Policy = Roles.PoliticaGlobal)] // directorio compartido por todas las escuelas
         public IActionResult Create()
         {
             return View(new Clinica());
@@ -51,6 +52,7 @@ namespace EyesofterWeb.Controllers
         // POST: Clinicas/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Policy = Roles.PoliticaGlobal)] // directorio compartido por todas las escuelas
         public async Task<IActionResult> Create([Bind("Nombre,Tipo,Direccion,Ciudad,CodigoPostal,Latitud,Longitud,Horario,Telefono,Correo,EsAsociada,Activa")] Clinica clinica)
         {
             if (!ModelState.IsValid) return View(clinica);
@@ -62,6 +64,7 @@ namespace EyesofterWeb.Controllers
         }
 
         // GET: Clinicas/Edit/5
+        [Authorize(Policy = Roles.PoliticaGlobal)] // directorio compartido por todas las escuelas
         public async Task<IActionResult> Edit(int? id)
         {
             if (id is null) return NotFound();
@@ -73,6 +76,7 @@ namespace EyesofterWeb.Controllers
         // POST: Clinicas/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Policy = Roles.PoliticaGlobal)] // directorio compartido por todas las escuelas
         public async Task<IActionResult> Edit(int id, [Bind("Id,Nombre,Tipo,Direccion,Ciudad,CodigoPostal,Latitud,Longitud,Horario,Telefono,Correo,EsAsociada,Activa")] Clinica clinica)
         {
             if (id != clinica.Id) return NotFound();
@@ -95,6 +99,7 @@ namespace EyesofterWeb.Controllers
         /// <summary>W-RFN-12: desactivar en lugar de borrar (conserva el historial). Una clínica inactiva no recibe pases.</summary>
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Policy = Roles.PoliticaGlobal)] // directorio compartido por todas las escuelas
         public async Task<IActionResult> CambiarActiva(int id)
         {
             var clinica = await _context.Clinicas.FindAsync(id);
