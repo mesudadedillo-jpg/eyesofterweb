@@ -36,7 +36,8 @@ namespace EyesofterWeb.Controllers
             return q.Where(a => (a.PlantelId != null && planteles.Contains(a.PlantelId.Value))
                                 || (a.PlantelId == null && personal.Contains(a.Usuario)
                                     && (a.Accion.StartsWith("LOGIN") || a.Accion == "LOGOUT" || a.Accion.StartsWith("PASSWORD")
-                                        || a.Accion == "RECUPERAR_PASSWORD" || a.Accion.Contains("2FA") || a.Accion == "ACCESO_DENEGADO")));
+                                        || a.Accion == "RECUPERAR_PASSWORD" || a.Accion.Contains("2FA") || a.Accion == "ACCESO_DENEGADO"
+                                        || a.Accion == "CUENTA_BLOQUEADA")));
         }
 
         public async Task<IActionResult> Index(string? usuario, string? accion, bool soloDenegados = false, int pagina = 1)
