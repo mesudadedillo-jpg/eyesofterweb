@@ -106,7 +106,7 @@ cabeceras) más la integración WEB↔API sobre la misma base.
 | C-RFN-07 | ✅ | `leida_en` guarda la primera apertura (WEB y APP) |
 | C-RFN-08 | ✅ | Recordatorio de aviso sin leer y de caso sin atender (`Recordatorios.kt`) |
 | C-RFNN-01 | ✅ | 3 intentos → 15 min, compartido entre WEB y APP (columnas de Identity) |
-| C-RFNN-02 | 🟡 | Enlace por correo de 2 h (`Cuenta/Olvide`); requiere `RESEND_API_KEY` |
+| C-RFNN-02 | 🟡 | Código de 6 dígitos al correo o SMS, 10 min y 5 intentos (`Cuenta/Olvide`, `Servicios/RecuperacionPassword.cs`; en la app `POST /api/recuperar/*`); requiere `RESEND_API_KEY` (SMS opcional con `TWILIO_*`) |
 | C-RFNN-03 | ✅ | El escritorio guarda una cola en SQLite y reintenta con espera creciente (30 s → 30 min); tras 30 min de falla avisa a Enfermería con `/api/escritorio/incidencias`. El folio es idempotente: reenviar no duplica (probado) |
 | C-RFNN-04 | ✅ | A los 3 días: reenvío al tutor y alerta a Enfermería |
 | C-RFNN-05 | ✅ | Solo JPG, PNG, WEBP o PDF (por contenido) y hasta 10 MB, con el motivo |

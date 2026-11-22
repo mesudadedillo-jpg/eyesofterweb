@@ -124,7 +124,8 @@ Un proyecto con tres servicios. Cada repositorio trae su `Dockerfile` y su `rail
 | `ADMIN_CORREO` / `ADMIN_PASSWORD` | Primera cuenta de Dirección (se crea al primer arranque) |
 | `Eyesofter__UrlWeb` | URL pública del portal (va en los correos) |
 | `Eyesofter__UrlApi` | URL pública del servidor de la app |
-| `RESEND_API_KEY` / `CORREO_REMITENTE` | Correo (recuperación de contraseña) |
+| `RESEND_API_KEY` / `CORREO_REMITENTE` | Correo (código de recuperación de contraseña) |
+| `TWILIO_ACCOUNT_SID` / `TWILIO_AUTH_TOKEN` / `TWILIO_NUMERO` | (Opcional, de pago) SMS con el código de recuperación |
 | `SEMBRAR_DEMO` | `true` solo si quieres datos de ejemplo en producción |
 
    En *Settings → Networking* genera el dominio público.

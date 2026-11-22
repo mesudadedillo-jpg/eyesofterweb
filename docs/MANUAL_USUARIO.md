@@ -6,7 +6,10 @@ tamizaje hasta que tienen su corrección (lentes o tratamiento).
 - **Entrar:** abre el portal en el navegador y escribe tu correo y contraseña. Tu cuenta te la da Dirección.
 - **Seguridad:** si te equivocas 3 veces seguidas, la cuenta se bloquea 15 minutos. La sesión se
   cierra sola tras 15 minutos sin uso; un aviso te deja continuar.
-- **¿Olvidaste tu contraseña?** En la pantalla de entrada; te llega un enlace al correo que vale 2 horas.
+- **¿Olvidaste tu contraseña?** En la pantalla de entrada (web o app) escribe tu correo o tu celular;
+  te llega un **código de 6 dígitos** (al correo, o por SMS si la escuela lo activó) que vale 10 minutos.
+  Escríbelo junto con tu contraseña nueva. Tienes 5 intentos; si se acaban, pide otro código.
+  Cambiar la contraseña cierra tus sesiones abiertas y **no** desactiva la verificación en dos pasos.
 - **Cambiar contraseña:** menú de tu nombre → *Cambiar contraseña*.
 
 ---
