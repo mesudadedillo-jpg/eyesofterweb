@@ -1,0 +1,62 @@
+@{
+    ViewData["Title"] = "Descarga la app";
+    var urlApk = (string)ViewBag.UrlApk;
+    var urlPagina = (string)ViewBag.UrlPagina;
+}
+<div class="row justify-content-center">
+    <div class="col-lg-9">
+        <div class="d-flex align-items-center gap-3 mb-3">
+            <i class="bi bi-phone text-primary display-5" aria-hidden="true"></i>
+            <div>
+                <h1 class="h2 mb-0">Descarga la app EYESOFTER</h1>
+                <p class="text-body-secondary mb-0">Recibe en tu teléfono los resultados de la vista de tus hijos, los avisos de la escuela y el pase médico con QR.</p>
+            </div>
+        </div>
+
+        <div class="row g-3 mb-3">
+            <div class="col-md-7">
+                <section class="card shadow-sm h-100" aria-labelledby="android">
+                    <div class="card-body">
+                        <h2 id="android" class="h5"><i class="bi bi-android2 me-1 text-success" aria-hidden="true"></i>Teléfonos Android</h2>
+                        <a class="btn btn-marca btn-lg my-2" href="@urlApk" rel="noopener">
+                            <i class="bi bi-download me-1" aria-hidden="true"></i>Descargar la app (APK)
+                        </a>
+                        <ol class="small mb-0 mt-2">
+                            <li>Toca <strong>Descargar la app</strong> y abre el archivo <code>eyesofter.apk</code> cuando termine.</li>
+                            <li>Si el teléfono lo pide, permite <strong>"Instalar apps desconocidas"</strong> para tu navegador. Es normal: la app todavía no está en la Play Store.</li>
+                            <li>Toca <strong>Instalar</strong> y entra con el correo y la contraseña que te dio la escuela.</li>
+                        </ol>
+                    </div>
+                </section>
+            </div>
+            <div class="col-md-5 d-none d-md-block">
+                <section class="card shadow-sm h-100 text-center" aria-labelledby="qr">
+                    <div class="card-body">
+                        <h2 id="qr" class="h6">¿Estás en una computadora?</h2>
+                        <p class="small text-body-secondary mb-2">Escanea este código con la cámara de tu teléfono.</p>
+                        <img src="@Url.Action("Qr")" alt="Código QR para abrir esta página en el teléfono" width="200" height="200" class="img-fluid border rounded p-1 bg-white" />
+                        <p class="small mt-2 mb-0 text-break"><a href="@urlPagina">@urlPagina</a></p>
+                    </div>
+                </section>
+            </div>
+        </div>
+
+        <section class="card shadow-sm mb-3" aria-labelledby="iphone">
+            <div class="card-body">
+                <h2 id="iphone" class="h5"><i class="bi bi-apple me-1" aria-hidden="true"></i>iPhone</h2>
+                <p class="small mb-0">Por ahora la app es solo para Android. En iPhone entra a este portal desde Safari: ahí ves lo mismo (resultados, avisos y el pase médico) con tu misma cuenta.</p>
+            </div>
+        </section>
+
+        <section class="card shadow-sm mb-3 border-success-subtle" aria-labelledby="segura">
+            <div class="card-body">
+                <h2 id="segura" class="h5"><i class="bi bi-shield-check me-1 text-success" aria-hidden="true"></i>Descárgala solo desde aquí</h2>
+                <p class="small mb-0">
+                    La escuela nunca te enviará la app por WhatsApp ni por otro medio. Si alguien te manda un archivo "EYESOFTER", no lo instales.
+                    La app no guarda los resultados en la nube ni en otro teléfono, y los borra al cerrar sesión.
+                    <a asp-controller="Privacidad" asp-action="Seguridad">Así protegemos tu información</a>.
+                </p>
+            </div>
+        </section>
+    </div>
+</div>

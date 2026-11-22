@@ -96,6 +96,7 @@ El repositorio trae `Dockerfile` y `railway.json` (healthcheck en `/salud`).
 | `Eyesofter__UrlWeb` | URL pública de este portal (va en los correos) |
 | `Eyesofter__UrlApi` | URL pública del servidor de la app |
 | `RESEND_API_KEY` / `CORREO_REMITENTE` | Correo para recuperar contraseñas (opcional al principio) |
+| `Eyesofter__UrlApk` | (Opcional) Dónde se descarga el instalador de Android. Por defecto, el último APK publicado en GitHub Releases de `eyesofterandroidfront` (página pública `/App`) |
 | `CUENTAS_PRUEBA_PASSWORD` | (Opcional) Crea y mantiene una cuenta de prueba por rol en una escuela ficticia aparte (ver abajo). Pon esta variable a mano en el panel; no la publiques |
 | `CUENTAS_PRUEBA_CORREO` | (Opcional) Correo base de las cuentas de prueba. Si no se define, se usa `ADMIN_CORREO` |
 

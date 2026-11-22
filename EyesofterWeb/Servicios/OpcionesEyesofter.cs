@@ -20,5 +20,11 @@ namespace EyesofterWeb.Servicios
         /// (ven información de salud de muchos menores). Eyesofter__Exigir2FAPersonal=false la vuelve opcional.
         /// </summary>
         public bool Exigir2FAPersonal { get; set; } = true;
+
+        /// <summary>
+        /// Instalador de la app para Android (APK). Por defecto, el último que publicó el flujo
+        /// "Publicar APK" del repositorio de la app en GitHub Releases. Eyesofter__UrlApk lo cambia.
+        /// </summary>
+        public string UrlApk { get; set; } = "https://github.com/mesudadedillo-jpg/eyesofterandroidfront/releases/latest/download/eyesofter.apk";
     }
 }
