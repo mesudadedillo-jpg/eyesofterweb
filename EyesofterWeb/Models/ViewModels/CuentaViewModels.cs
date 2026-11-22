@@ -41,10 +41,42 @@ namespace EyesofterWeb.Models.ViewModels
 
     public class OlvideViewModel
     {
-        [Required(ErrorMessage = "El correo es obligatorio.")]
-        [EmailAddress(ErrorMessage = "Escribe un correo electrónico válido.")]
-        [Display(Name = "Correo electrónico")]
-        public string Correo { get; set; } = string.Empty;
+        /// <summary>Correo de la cuenta o celular de 10 dígitos (el del tutor que registró la escuela).</summary>
+        [Required(ErrorMessage = "Escribe tu correo o tu celular.")]
+        [StringLength(120, ErrorMessage = "Es demasiado largo.")]
+        [Display(Name = "Correo electrónico o celular")]
+        public string Cuenta { get; set; } = string.Empty;
+    }
+
+    /// <summary>Paso 2 de "¿Olvidaste tu contraseña?": el código que llegó y la contraseña nueva.</summary>
+    public class IngresarCodigoViewModel
+    {
+        [Required(ErrorMessage = "Escribe tu correo o tu celular.")]
+        [StringLength(120, ErrorMessage = "Es demasiado largo.")]
+        [Display(Name = "Correo electrónico o celular")]
+        public string Cuenta { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Escribe el código que te enviamos.")]
+        [RegularExpression(@"^\s*\d{3}\s?\d{3}\s*$", ErrorMessage = "El código son 6 números.")]
+        [Display(Name = "Código de 6 dígitos")]
+        public string Codigo { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "La contraseña es obligatoria.")]
+        [StringLength(64, MinimumLength = 8, ErrorMessage = "La contraseña debe tener al menos {2} caracteres.")]
+        [DataType(DataType.Password)]
+        [Display(Name = "Nueva contraseña")]
+        public string Password { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Confirma la contraseña.")]
+        [DataType(DataType.Password)]
+        [Compare(nameof(Password), ErrorMessage = "Las contraseñas no coinciden.")]
+        [Display(Name = "Confirmar contraseña")]
+        public string ConfirmarPassword { get; set; } = string.Empty;
+
+        /// <summary>Se escribió un celular (para decir dónde buscar el código).</summary>
+        public bool PorCelular { get; set; }
+        /// <summary>Hay proveedor de SMS; si no, el código de quien escribe su celular va a su correo.</summary>
+        public bool SmsDisponible { get; set; }
     }
 
     public class RestablecerViewModel

@@ -569,6 +569,63 @@ namespace EyesofterWeb.Migrations
                     b.ToTable("clinicas", (string)null);
                 });
 
+            modelBuilder.Entity("EyesofterWeb.Models.CodigoRecuperacion", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Canal")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)")
+                        .HasColumnName("canal");
+
+                    b.Property<string>("CodigoHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("codigo_hash");
+
+                    b.Property<DateTime>("CreadoEn")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("creado_en");
+
+                    b.Property<int>("Intentos")
+                        .HasColumnType("integer")
+                        .HasColumnName("intentos");
+
+                    b.Property<string>("Ip")
+                        .HasMaxLength(45)
+                        .HasColumnType("character varying(45)")
+                        .HasColumnName("ip");
+
+                    b.Property<DateTime?>("UsadoEn")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("usado_en");
+
+                    b.Property<string>("UsuarioId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("character varying(450)")
+                        .HasColumnName("usuario_id");
+
+                    b.Property<DateTime>("VenceEn")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("vence_en");
+
+                    b.HasKey("Id")
+                        .HasName("pk_codigos_recuperacion");
+
+                    b.HasIndex("UsuarioId", "CreadoEn")
+                        .HasDatabaseName("ix_codigos_recuperacion_usuario_id_creado_en");
+
+                    b.ToTable("codigos_recuperacion", (string)null);
+                });
+
             modelBuilder.Entity("EyesofterWeb.Models.Comprobante", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1680,6 +1737,18 @@ namespace EyesofterWeb.Migrations
                     b.Navigation("Caso");
 
                     b.Navigation("Clinica");
+                });
+
+            modelBuilder.Entity("EyesofterWeb.Models.CodigoRecuperacion", b =>
+                {
+                    b.HasOne("EyesofterWeb.Models.ApplicationUser", "Usuario")
+                        .WithMany()
+                        .HasForeignKey("UsuarioId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_codigos_recuperacion_users_usuario_id");
+
+                    b.Navigation("Usuario");
                 });
 
             modelBuilder.Entity("EyesofterWeb.Models.Comprobante", b =>

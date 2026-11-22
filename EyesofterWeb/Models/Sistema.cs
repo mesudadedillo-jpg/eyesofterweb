@@ -198,6 +198,40 @@ namespace EyesofterWeb.Models
         public string? AprobadaPor { get; set; }
     }
 
+    /// <summary>
+    /// Código de 6 dígitos para recuperar la contraseña (C-RFNN-02). Lo crean el portal y el
+    /// servidor de la app con las MISMAS reglas, así un código pedido en la app sirve en la web y al revés.
+    /// Nunca se guarda el código: solo su huella HMAC-SHA256 con la llave de datos (CifradoDatos.Firma).
+    /// </summary>
+    public class CodigoRecuperacion
+    {
+        public int Id { get; set; }
+
+        [Required, StringLength(450)]
+        public string UsuarioId { get; set; } = string.Empty;
+        public ApplicationUser? Usuario { get; set; }
+
+        /// <summary>HMAC-SHA256 (hex) de "usuarioId:codigo".</summary>
+        [Required, StringLength(64)]
+        public string CodigoHash { get; set; } = string.Empty;
+
+        /// <summary>"correo" o "sms": por dónde se mandó.</summary>
+        [Required, StringLength(10)]
+        public string Canal { get; set; } = "correo";
+
+        public DateTime CreadoEn { get; set; } = DateTime.UtcNow;
+        public DateTime VenceEn { get; set; }
+
+        /// <summary>Códigos equivocados escritos; al llegar al máximo el código deja de servir.</summary>
+        public int Intentos { get; set; }
+
+        /// <summary>Cuándo se usó para cambiar la contraseña (o se anuló al pedir otro). null = vigente.</summary>
+        public DateTime? UsadoEn { get; set; }
+
+        [StringLength(45)]
+        public string? Ip { get; set; }
+    }
+
     /// <summary>Marca una propiedad para que se guarde cifrada con AES-256-GCM (C-RC-04).</summary>
     [AttributeUsage(AttributeTargets.Property)]
     public sealed class CifradoAttribute : Attribute { }

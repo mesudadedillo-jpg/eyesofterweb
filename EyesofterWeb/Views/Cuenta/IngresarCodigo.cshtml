@@ -1,0 +1,62 @@
+@model IngresarCodigoViewModel
+@{
+    ViewData["Title"] = "Escribe tu código";
+    var dondeLlega = Model.PorCelular && Model.SmsDisponible ? "por SMS a tu celular"
+        : Model.PorCelular ? "al correo registrado en tu cuenta"
+        : "a tu correo";
+}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-5">
+        <div class="card shadow-sm">
+            <div class="card-body p-4">
+                <h1 class="h4 mb-1"><i class="bi bi-shield-lock text-marca me-1" aria-hidden="true"></i>Crea tu nueva contraseña</h1>
+                @if (!string.IsNullOrEmpty(Model.Cuenta))
+                {
+                    <div class="alert alert-info small py-2" role="status">
+                        Si los datos corresponden a una cuenta, te enviamos un código de 6 dígitos @dondeLlega.
+                        Vence en @EyesofterWeb.Servicios.RecuperacionPassword.MinutosVigencia minutos. Si no llega, revisa la carpeta de spam o pide otro.
+                    </div>
+                }
+                else
+                {
+                    <p class="text-body-secondary small mb-3">Escribe tu correo o celular y el código que te enviamos (también sirve uno que pediste en la app).</p>
+                }
+                <form asp-action="IngresarCodigo" method="post" novalidate>
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2" role="alert"></div>
+                    <div class="mb-3">
+                        <label asp-for="Cuenta" class="form-label"></label>
+                        <input asp-for="Cuenta" class="form-control" autocomplete="username" />
+                        <span asp-validation-for="Cuenta" class="text-danger small"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="Codigo" class="form-label"></label>
+                        <input asp-for="Codigo" class="form-control form-control-lg text-center font-monospace" inputmode="numeric"
+                               autocomplete="one-time-code" maxlength="7" placeholder="000000" autofocus />
+                        <span asp-validation-for="Codigo" class="text-danger small"></span>
+                    </div>
+                    <p class="text-body-secondary small mb-2">Mínimo 8 caracteres, con mayúscula, minúscula y número.</p>
+                    <div class="mb-3">
+                        <label asp-for="Password" class="form-label"></label>
+                        <input asp-for="Password" class="form-control" autocomplete="new-password" />
+                        <span asp-validation-for="Password" class="text-danger small"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="ConfirmarPassword" class="form-label"></label>
+                        <input asp-for="ConfirmarPassword" class="form-control" autocomplete="new-password" />
+                        <span asp-validation-for="ConfirmarPassword" class="text-danger small"></span>
+                    </div>
+                    <button type="submit" class="btn btn-marca w-100">Guardar contraseña</button>
+                </form>
+                @if (!string.IsNullOrEmpty(Model.Cuenta))
+                {
+                    <form asp-action="Olvide" method="post" class="text-center mt-3">
+                        <input type="hidden" name="Cuenta" value="@Model.Cuenta" />
+                        <button type="submit" class="btn btn-link btn-sm">No me llegó: enviar otro código</button>
+                    </form>
+                }
+                <p class="small mt-2 mb-0 text-center"><a asp-action="Login">Volver a iniciar sesión</a></p>
+            </div>
+        </div>
+    </div>
+</div>
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

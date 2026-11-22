@@ -40,6 +40,7 @@ namespace EyesofterWeb.Data
         public DbSet<UsuarioPlantel> UsuarioPlanteles => Set<UsuarioPlantel>();
         public DbSet<Convenio> Convenios => Set<Convenio>();
         public DbSet<VinculacionEscritorio> VinculacionesEscritorio => Set<VinculacionEscritorio>();
+        public DbSet<CodigoRecuperacion> CodigosRecuperacion => Set<CodigoRecuperacion>();
         public DbSet<Campana> Campanas => Set<Campana>();
         public DbSet<Tutor> Tutores => Set<Tutor>();
         public DbSet<Alumno> Alumnos => Set<Alumno>();
@@ -110,6 +111,14 @@ namespace EyesofterWeb.Data
                 e.ToTable("vinculaciones_escritorio");
                 e.HasIndex(v => v.Codigo).IsUnique();
                 e.HasIndex(v => v.ExpiraEn);
+            });
+
+            // Recuperación de contraseña con código (la usan el portal y el servidor de la app).
+            builder.Entity<CodigoRecuperacion>(e =>
+            {
+                e.ToTable("codigos_recuperacion");
+                e.HasIndex(c => new { c.UsuarioId, c.CreadoEn });
+                e.HasOne(c => c.Usuario).WithMany().HasForeignKey(c => c.UsuarioId).OnDelete(DeleteBehavior.Cascade);
             });
 
             builder.Entity<Campana>(e =>
