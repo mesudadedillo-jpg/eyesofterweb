@@ -96,9 +96,32 @@ El repositorio trae `Dockerfile` y `railway.json` (healthcheck en `/salud`).
 | `Eyesofter__UrlWeb` | URL pública de este portal (va en los correos) |
 | `Eyesofter__UrlApi` | URL pública del servidor de la app |
 | `RESEND_API_KEY` / `CORREO_REMITENTE` | Correo para recuperar contraseñas (opcional al principio) |
+| `Eyesofter__UrlApk` | (Opcional) Dónde se descarga el instalador de Android. Por defecto, el último APK publicado en GitHub Releases de `eyesofterandroidfront` (página pública `/App`) |
+| `CUENTAS_PRUEBA_PASSWORD` | (Opcional) Crea y mantiene una cuenta de prueba por rol en una escuela ficticia aparte (ver abajo). Pon esta variable a mano en el panel; no la publiques |
+| `CUENTAS_PRUEBA_CORREO` | (Opcional) Correo base de las cuentas de prueba. Si no se define, se usa `ADMIN_CORREO` |
 
 3. *Settings → Networking → Generate Domain*. Pon esa URL en `URL_PORTAL` del servidor de la app.
 4. Al arrancar aplica las migraciones y crea la cuenta de Dirección. Revisa `https://<dominio>/salud`.
+
+### Cuentas de prueba (una por rol)
+
+Con `CUENTAS_PRUEBA_PASSWORD`, en cada arranque el portal asegura una **Escuela de prueba (datos ficticios)**
+con un tutor, dos alumnos, dos casos (rojo y amarillo), una óptica ficticia con convenio y un pase vigente,
+y estas cuentas, todas con esa contraseña (con el correo base `micorreo@gmail.com`):
+
+| Rol | Cuenta |
+|---|---|
+| Dirección (solo la escuela de prueba) | `micorreo+direccion@gmail.com` |
+| Enfermería (solo la escuela de prueba) | `micorreo+enfermeria@gmail.com` |
+| Tutor | `micorreo+tutor@gmail.com` |
+| Alumno | `micorreo+alumno@gmail.com` |
+| Especialista de la óptica de prueba | `micorreo+especialista@gmail.com` |
+
+Gmail y Outlook entregan los correos con `+algo` al buzón original, así que la recuperación de contraseña
+llega a quien las configuró. Dirección y Enfermería de prueba también activan la verificación en dos pasos.
+Si se borra algo, se vuelve a crear al reiniciar; el pase de prueba se renueva al vencer; si cambias
+`CUENTAS_PRUEBA_PASSWORD`, las cuentas toman la nueva contraseña. La óptica de prueba aparece en el
+directorio de clínicas con la leyenda "(ficticia)".
 
 Si falta `EYESOFTER_CLAVE_DATOS`, el portal se detiene a propósito con un mensaje claro en los logs:
 sin esa llave no puede proteger los datos de los alumnos.
