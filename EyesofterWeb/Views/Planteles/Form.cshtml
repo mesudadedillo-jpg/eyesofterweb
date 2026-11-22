@@ -1,0 +1,14 @@
+@model Plantel
+@{ ViewData["Title"] = Model.Id == 0 ? "Nueva escuela" : "Editar escuela"; }
+<h1 class="h3">@ViewData["Title"]</h1>
+<form asp-action="@(Model.Id == 0 ? "Create" : "Edit")" method="post" class="card card-body shadow-sm">
+    <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2" role="alert"></div>
+    <input type="hidden" asp-for="Id" />
+    <div class="row g-3">
+        <div class="col-md-8"><label asp-for="Nombre" class="form-label requerido"></label><input asp-for="Nombre" class="form-control" /><span asp-validation-for="Nombre" class="text-danger small"></span></div>
+        <div class="col-md-4"><label asp-for="Clave" class="form-label"></label><input asp-for="Clave" class="form-control campo-mayusculas" placeholder="Ej. 13PPR0123X" /><span asp-validation-for="Clave" class="text-danger small"></span></div>
+        <div class="col-12"><div class="form-check"><input asp-for="Activo" class="form-check-input" /><label asp-for="Activo" class="form-check-label"></label><div class="form-text">Una escuela inactiva no aparece para registrar alumnos nuevos; su historial se conserva.</div></div></div>
+    </div>
+    <div class="d-flex gap-2 mt-3"><button class="btn btn-marca">Guardar</button><a asp-action="Index" class="btn btn-outline-secondary">Cancelar</a></div>
+</form>
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

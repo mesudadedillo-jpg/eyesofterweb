@@ -25,8 +25,12 @@
                     }
                 </dl>
                 <div class="d-flex justify-content-center gap-2">
-                    <a class="btn btn-marca" asp-controller="Home" asp-action="Index">Ir al tablero</a>
-                    <a class="btn btn-outline-secondary" asp-controller="Home" asp-action="Permisos">Ver permisos por rol</a>
+                    <a class="btn btn-marca" asp-controller="Home" asp-action="Index">Ir al inicio</a>
+                    @* Solo Dirección y Enfermería pueden ver la tabla de permisos: a los demás no se les ofrece un enlace que también les daría 403. *@
+                    @if (User.IsInRole(EyesofterWeb.Models.Roles.Administrador) || User.IsInRole(EyesofterWeb.Models.Roles.Enfermeria))
+                    {
+                        <a class="btn btn-outline-secondary" asp-controller="Home" asp-action="Permisos">Ver permisos por rol</a>
+                    }
                 </div>
             </div>
         </div>

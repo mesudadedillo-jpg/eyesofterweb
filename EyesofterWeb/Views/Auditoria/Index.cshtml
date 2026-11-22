@@ -1,0 +1,37 @@
+@model List<RegistroAuditoria>
+@{
+    ViewData["Title"] = "Bitácora de auditoría";
+    int pagina = ViewBag.Pagina;
+}
+<h1 class="h3">Bitácora de auditoría</h1>
+<p class="text-body-secondary">Accesos y cambios sobre expedientes desde el portal, la app y el sistema de escritorio.</p>
+<form method="get" class="row g-2 mb-3 align-items-end">
+    <div class="col-md-4"><label for="usuario" class="form-label small">Usuario</label><input id="usuario" name="usuario" value="@ViewBag.Usuario" class="form-control" /></div>
+    <div class="col-md-4"><label for="accion" class="form-label small">Acción</label>
+        <select id="accion" name="accion" class="form-select"><option value="">Todas</option>@foreach (string a in ViewBag.Acciones) { <option selected="@(a == (string?)ViewBag.Accion)">@a</option> }</select></div>
+    <div class="col-md-2 form-check ms-2"><input class="form-check-input" type="checkbox" id="soloDenegados" name="soloDenegados" value="true" checked="@((bool)ViewBag.SoloDenegados)" /><label class="form-check-label" for="soloDenegados">Solo denegados</label></div>
+    <div class="col-auto"><button class="btn btn-outline-secondary">Filtrar</button></div>
+</form>
+<div class="table-responsive card shadow-sm">
+    <table class="table table-sm mb-0 align-middle">
+        <thead class="table-light"><tr><th scope="col">Fecha</th><th scope="col">Usuario</th><th scope="col">Acción</th><th scope="col">Entidad</th><th scope="col">Detalle</th><th scope="col">Origen</th><th scope="col">IP</th></tr></thead>
+        <tbody>
+            @foreach (var a in Model)
+            {
+                <tr class="@(a.Exito ? "" : "table-danger")">
+                    <td class="text-nowrap small">@a.Fecha.ToLocalTime().ToString("dd/MM/yy HH:mm:ss")</td>
+                    <td class="small">@a.Usuario</td>
+                    <td class="small"><code>@a.Accion</code></td>
+                    <td class="small">@a.Entidad @a.EntidadId</td>
+                    <td class="small">@a.Detalle</td>
+                    <td class="small">@a.Origen</td>
+                    <td class="small">@a.Ip</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+<nav class="mt-2 d-flex gap-2" aria-label="Páginas">
+    @if (pagina > 1) { <a class="btn btn-sm btn-outline-secondary" asp-route-pagina="@(pagina - 1)" asp-route-usuario="@ViewBag.Usuario" asp-route-accion="@ViewBag.Accion" asp-route-soloDenegados="@ViewBag.SoloDenegados">Anterior</a> }
+    @if (Model.Count == 50) { <a class="btn btn-sm btn-outline-secondary" asp-route-pagina="@(pagina + 1)" asp-route-usuario="@ViewBag.Usuario" asp-route-accion="@ViewBag.Accion" asp-route-soloDenegados="@ViewBag.SoloDenegados">Siguiente</a> }
+</nav>

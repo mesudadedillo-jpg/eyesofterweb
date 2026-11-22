@@ -1,0 +1,24 @@
+@model List<EyesofterWeb.Controllers.PlantelesController.FilaPlantel>
+@{ ViewData["Title"] = "Escuelas"; }
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <div><h1 class="h3 mb-0">Escuelas</h1><p class="text-body-secondary mb-0">Cada escuela solo ve a sus alumnos. Para sumar una: créala aquí y asígnale su Dirección en Usuarios.</p></div>
+    <a asp-action="Create" class="btn btn-marca"><i class="bi bi-building-add me-1" aria-hidden="true"></i>Nueva escuela</a>
+</div>
+<div class="table-responsive card shadow-sm">
+    <table class="table align-middle mb-0">
+        <thead class="table-light"><tr><th scope="col">Escuela</th><th scope="col">Clave</th><th scope="col" class="text-end">Alumnos</th><th scope="col" class="text-end">Personal</th><th scope="col">Estado</th><th scope="col"></th></tr></thead>
+        <tbody>
+            @foreach (var f in Model)
+            {
+                <tr class="@(f.Plantel.Activo ? "" : "table-secondary")">
+                    <td>@f.Plantel.Nombre</td>
+                    <td><code>@(f.Plantel.Clave ?? "—")</code></td>
+                    <td class="text-end">@f.Alumnos</td>
+                    <td class="text-end">@f.Personal</td>
+                    <td>@if (f.Plantel.Activo) { <span class="badge text-bg-success">Activa</span> } else { <span class="badge text-bg-secondary">Inactiva</span> }</td>
+                    <td class="text-end"><a asp-action="Edit" asp-route-id="@f.Plantel.Id" class="btn btn-sm btn-outline-primary">Editar</a></td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

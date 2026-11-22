@@ -1,0 +1,61 @@
+# C-RC-13: respaldo automático diario de la base de datos (ver docs/RESPALDO.md).
+# Solo corre en un repositorio PRIVADO (ver el job "visibilidad").
+# Secretos del repositorio (Settings → Secrets and variables → Actions):
+#   DATABASE_PUBLIC_URL  URL pública de PostgreSQL en Railway (variable DATABASE_PUBLIC_URL del servicio Postgres)
+#   RESPALDO_CLAVE       contraseña con la que se cifra el respaldo (guárdala fuera de GitHub)
+name: Respaldo diario de la base
+
+on:
+  schedule:
+    - cron: "17 8 * * *"   # 02:17 en Ciudad de México (UTC-6)
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  # En un repositorio PÚBLICO cualquier cuenta de GitHub puede descargar los artefactos, así que
+  # el respaldo solo corre si el repositorio es privado. Para tenerlo con el portal público, copia
+  # este archivo a un repositorio privado (ver docs/RESPALDO.md, sección 0).
+  # (Se consulta la API: en las ejecuciones programadas el evento no trae "repository".)
+  visibilidad:
+    runs-on: ubuntu-latest
+    outputs:
+      privado: ${{ steps.consulta.outputs.privado }}
+    steps:
+      - id: consulta
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          privado=$(gh api "repos/${GITHUB_REPOSITORY}" --jq .private)
+          echo "privado=${privado}" >> "$GITHUB_OUTPUT"
+          [ "$privado" = "true" ] || echo "::notice::Repositorio público: el respaldo no se ejecuta aquí (ver docs/RESPALDO.md)."
+
+  respaldo:
+    needs: visibilidad
+    if: ${{ needs.visibilidad.outputs.privado == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Volcado con pg_dump (cliente de PostgreSQL 17, sirve para servidores 16 y 17)
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_PUBLIC_URL }}
+        run: |
+          test -n "$DATABASE_URL" || { echo "Falta el secreto DATABASE_PUBLIC_URL"; exit 1; }
+          docker run --rm -e DATABASE_URL -v "$PWD:/out" postgres:17-alpine \
+            sh -c 'pg_dump "$DATABASE_URL" --format=custom --no-owner --no-privileges --file=/out/eyesofter.dump'
+          ls -lh eyesofter.dump
+      - name: Cifrar (AES-256)
+        env:
+          RESPALDO_CLAVE: ${{ secrets.RESPALDO_CLAVE }}
+        run: |
+          test -n "$RESPALDO_CLAVE" || { echo "Falta el secreto RESPALDO_CLAVE"; exit 1; }
+          gpg --batch --yes --pinentry-mode loopback --passphrase "$RESPALDO_CLAVE" \
+            --symmetric --cipher-algo AES256 -o "eyesofter-$(date -u +%F).dump.gpg" eyesofter.dump
+          rm eyesofter.dump
+      - name: Guardar 30 días
+        uses: actions/upload-artifact@v4
+        with:
+          name: respaldo-${{ github.run_id }}
+          path: "*.dump.gpg"
+          retention-days: 30

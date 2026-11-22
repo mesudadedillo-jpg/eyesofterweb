@@ -1,0 +1,13 @@
+@model EstadoComprobante
+@switch (Model)
+{
+    case EstadoComprobante.Aprobado:
+        <span class="badge text-bg-success"><i class="bi bi-check-circle me-1" aria-hidden="true"></i>Aprobado</span>
+        break;
+    case EstadoComprobante.Rechazado:
+        <span class="badge text-bg-danger"><i class="bi bi-x-circle me-1" aria-hidden="true"></i>Rechazado</span>
+        break;
+    default:
+        <span class="badge text-bg-warning"><i class="bi bi-hourglass-split me-1" aria-hidden="true"></i>Pendiente</span>
+        break;
+}

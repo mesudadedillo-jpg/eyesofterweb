@@ -1,7 +1,9 @@
 @model IEnumerable<Clinica>
 @{
     ViewData["Title"] = "Clínicas";
-    var esAdmin = User.IsInRole(Roles.Administrador);
+    // El directorio lo comparten todas las escuelas: lo mantiene el administrador global.
+    var esAdmin = User.IsInRole(Roles.Administrador) && User.HasClaim(EyesofterWeb.Seguridad.AlcanceEscuela.ClaimGlobal, "true");
+    var puedeEditar = esAdmin;
 }
 
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
@@ -9,9 +11,9 @@
         <h1 class="h3 mb-0">Clínicas</h1>
         <p class="text-body-secondary mb-0">Ópticas y consultorios a los que se canaliza a los alumnos.</p>
     </div>
-    @if (esAdmin)
+    @if (puedeEditar)
     {
-        <a asp-action="Create" class="btn btn-marca"><i class="bi bi-plus-lg me-1"></i>Nueva clínica</a>
+        <a asp-action="Create" class="btn btn-marca"><i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Nueva clínica</a>
     }
 </div>
 
@@ -27,22 +29,27 @@
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-start gap-2">
                         <h2 class="h6 mb-1">@item.Nombre</h2>
-                        @if (item.EsAsociada)
-                        {
-                            <span class="badge text-bg-success"><i class="bi bi-patch-check me-1"></i>Asociada</span>
-                        }
+                        <span>
+                        @if (item.EsAsociada) { <span class="badge text-bg-success"><i class="bi bi-patch-check me-1" aria-hidden="true"></i>Asociada</span> }
+                        @if (!item.Activa) { <span class="badge text-bg-secondary">Desactivada</span> }
+                        </span>
                     </div>
                     <p class="small text-body-secondary mb-2">@item.Tipo.Texto()</p>
-                    <p class="small mb-1"><i class="bi bi-geo-alt me-1"></i>@item.Direccion</p>
+                    <p class="small mb-1"><i class="bi bi-geo-alt me-1" aria-hidden="true"></i>@item.Direccion, @item.Ciudad @item.CodigoPostal
+                        @if (item.Latitud is null) { <span class="text-warning d-block"><i class="bi bi-exclamation-triangle me-1" aria-hidden="true"></i>Sin ubicación: no aparece en el mapa de la app</span> }</p>
                     <p class="small mb-1"><i class="bi bi-telephone me-1"></i>@item.Telefono</p>
                     <p class="small mb-0"><i class="bi bi-clipboard2-pulse me-1"></i>@item.Casos.Count caso(s) canalizados</p>
                 </div>
                 <div class="card-footer bg-body d-flex gap-2">
                     <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-outline-secondary"><i class="bi bi-eye"></i> Ver</a>
-                    @if (esAdmin)
+                    @if (puedeEditar)
                     {
-                        <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i> Editar</a>
-                        <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></a>
+                        <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil" aria-hidden="true"></i> Editar</a>
+                        <form asp-action="CambiarActiva" asp-route-id="@item.Id" method="post" class="d-inline"><button class="btn btn-sm btn-outline-secondary">@(item.Activa ? "Desactivar" : "Activar")</button></form>
+                    }
+                    @if (esAdmin && item.Casos.Count == 0)
+                    {
+                        <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-outline-danger" aria-label="Eliminar @item.Nombre"><i class="bi bi-trash" aria-hidden="true"></i></a>
                     }
                 </div>
             </div>

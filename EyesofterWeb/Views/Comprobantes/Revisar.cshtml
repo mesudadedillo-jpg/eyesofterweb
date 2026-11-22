@@ -1,0 +1,53 @@
+@model EyesofterWeb.Controllers.ComprobantesController.Fila
+@{
+    ViewData["Title"] = "Revisar comprobante";
+    string tipo = ViewBag.ContentType;
+    var esImagen = tipo.StartsWith("image/");
+}
+<h1 class="h3">@Model.Tipo.Texto() de @Model.Alumno</h1>
+<p class="text-body-secondary">Caso <a asp-controller="Casos" asp-action="Details" asp-route-id="@Model.CasoId"><code>@Model.Folio</code></a> · @Model.GradoGrupo · recibido el @Model.SubidoEn.ToLocalTime().ToString("dd/MM/yyyy HH:mm") · <partial name="_EstadoComprobante" model="Model.Estado" /></p>
+<div class="row g-3">
+    <div class="col-lg-8">
+        <div class="card shadow-sm">
+            <div class="card-body text-center">
+                @if (esImagen)
+                {
+                    <img src="@Url.Action("Archivo", new { id = Model.Id })" alt="Foto del comprobante" class="img-fluid rounded" />
+                }
+                else
+                {
+                    <p><i class="bi bi-filetype-pdf display-4 text-marca" aria-hidden="true"></i></p>
+                    <a asp-action="Archivo" asp-route-id="@Model.Id" target="_blank" rel="noopener" class="btn btn-outline-secondary">Abrir PDF (@((int)ViewBag.Tamano / 1024) KB)</a>
+                }
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        @if (Model.Estado == EstadoComprobante.Pendiente)
+        {
+            <form asp-action="Aprobar" asp-route-id="@Model.Id" method="post" class="card card-body shadow-sm mb-3">
+                <p class="mb-2">¿Se ve claro y corresponde a una receta o compra de lentes del alumno?</p>
+                <button type="submit" class="btn btn-success"><i class="bi bi-check-lg me-1" aria-hidden="true"></i>Aprobar</button>
+            </form>
+            <form asp-action="Rechazar" asp-route-id="@Model.Id" method="post" class="card card-body shadow-sm">
+                <label for="motivo" class="form-label">Motivo del rechazo (lo verá el tutor)</label>
+                <textarea id="motivo" name="motivo" class="form-control mb-2" rows="3" maxlength="300" required minlength="5"></textarea>
+                <div class="d-flex flex-wrap gap-1 mb-2">
+                    @foreach (var m in new[] { "La foto está borrosa", "No se ve el nombre del alumno", "No es una receta ni un comprobante" })
+                    {
+                        <button type="button" class="btn btn-sm btn-outline-secondary" data-motivo="@m">@m</button>
+                    }
+                </div>
+                <button type="submit" class="btn btn-outline-danger"><i class="bi bi-x-lg me-1" aria-hidden="true"></i>Rechazar y pedir otro</button>
+            </form>
+        }
+        else if (Model.Motivo is not null)
+        {
+            <div class="alert alert-danger">Motivo: @Model.Motivo</div>
+        }
+        <a asp-action="Index" class="btn btn-link px-0 mt-2"><i class="bi bi-arrow-left" aria-hidden="true"></i> Volver</a>
+    </div>
+</div>
+@section Scripts {
+    <script src="~/js/comprobantes.js" asp-append-version="true"></script>
+}

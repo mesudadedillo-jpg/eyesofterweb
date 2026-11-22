@@ -32,7 +32,18 @@ namespace EyesofterWeb.Models
         [StringLength(30, ErrorMessage = "El campo {0} no puede pasar de {1} caracteres.")]
         public string Parentesco { get; set; } = "Madre";
 
+        /// <summary>
+        /// Escuela que lo registró. Un tutor con hijos en varias escuelas lo ve el personal de
+        /// cualquiera de ellas; un tutor sin hijos todavía, solo la escuela que lo registró.
+        /// </summary>
+        [Display(Name = "Escuela")]
+        public int PlantelId { get; set; } = 1;
+        public Plantel? Plantel { get; set; }
+
         public ICollection<Alumno> Alumnos { get; set; } = new List<Alumno>();
+
+        /// <summary>Cuentas de acceso de este tutor (normalmente una).</summary>
+        public ICollection<ApplicationUser> Usuarios { get; set; } = new List<ApplicationUser>();
 
         [NotMapped]
         [Display(Name = "Tutor")]

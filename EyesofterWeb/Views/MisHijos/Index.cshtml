@@ -1,0 +1,39 @@
+@model List<Alumno>
+@{ ViewData["Title"] = "Mis hijos"; }
+<h1 class="h3">Mis hijos</h1>
+@if ((bool)ViewBag.SinVinculo)
+{
+    <div class="alert alert-info">Tu cuenta aún no está vinculada con tus hijos. Pide a Enfermería que la vincule.</div>
+}
+<div class="row g-3">
+    @foreach (var a in Model)
+    {
+        var ultimo = a.Tamizajes.OrderByDescending(t => t.Fecha).FirstOrDefault();
+        var abierto = a.Casos.Any(c => c.Estado != EstadoCaso.Cerrado);
+        <div class="col-md-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h2 class="h5 mb-1">@a.NombreCompleto</h2>
+                    <p class="small text-body-secondary">@a.GradoGrupo</p>
+                    @if (ultimo is null)
+                    {
+                        <p class="mb-0 text-body-secondary">Todavía no hay resultados de la revisión visual.</p>
+                    }
+                    else
+                    {
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <span class="badge semaforo @TextosSemaforo.Clase(ultimo.Semaforo) fs-6"><i class="bi @TextosSemaforo.Icono(ultimo.Semaforo) me-1" aria-hidden="true"></i>@TextosSemaforo.Titulo(ultimo.Semaforo)</span>
+                            <span class="small text-body-secondary">Revisión del @ultimo.Fecha.ToString("dd/MM/yyyy")</span>
+                        </div>
+                        @if (abierto) { <p class="small mb-2"><i class="bi bi-arrow-repeat me-1" aria-hidden="true"></i>Seguimiento en curso</p> }
+                        <a asp-action="Reporte" asp-route-id="@ultimo.Id" class="btn btn-marca">Ver resultado y qué hacer</a>
+                        @foreach (var t in a.Tamizajes.OrderByDescending(t => t.Fecha).Skip(1))
+                        {
+                            <a asp-action="Reporte" asp-route-id="@t.Id" class="d-block small mt-2">Revisión anterior del @t.Fecha.ToString("dd/MM/yyyy") (@TextosSemaforo.Titulo(t.Semaforo))</a>
+                        }
+                    }
+                </div>
+            </div>
+        </div>
+    }
+</div>

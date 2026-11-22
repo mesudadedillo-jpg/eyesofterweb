@@ -1,0 +1,44 @@
+@{
+    ViewData["Title"] = "Leer pase médico";
+    Clinica? clinica = ViewBag.Clinica;
+    bool habilitado = ViewBag.Habilitado;
+}
+<h1 class="h3">Leer pase médico</h1>
+@if (!habilitado)
+{
+    <div class="alert alert-warning" role="alert">
+        <i class="bi bi-shield-exclamation me-1" aria-hidden="true"></i>
+        @(clinica is null ? "Tu cuenta no está vinculada a ninguna clínica." : $"{clinica.Nombre} no está asociada al programa o está desactivada.")
+        Solo los especialistas de clínicas asociadas y activas pueden leer pases. Comunícate con la escuela.
+    </div>
+}
+else
+{
+    <p class="text-body-secondary">@clinica!.Nombre · Apunta la cámara al código QR del pase (en el teléfono de la familia o impreso), o escribe el código.</p>
+    <div class="row g-4">
+        <div class="col-md-6">
+            <div class="card shadow-sm"><div class="card-body">
+                <h2 class="h6"><i class="bi bi-camera me-1" aria-hidden="true"></i>Con la cámara</h2>
+                <div id="lectorQr" class="mb-2"></div>
+                <button type="button" id="iniciarCamara" class="btn btn-marca"><i class="bi bi-qr-code-scan me-1" aria-hidden="true"></i>Encender cámara</button>
+                <p id="estadoCamara" class="small text-body-secondary mt-2 mb-0" role="status" aria-live="polite"></p>
+            </div></div>
+        </div>
+        <div class="col-md-6">
+            <form asp-action="Validar" method="get" class="card card-body shadow-sm">
+                <h2 class="h6"><i class="bi bi-keyboard me-1" aria-hidden="true"></i>Escribir el código</h2>
+                <label for="codigo" class="form-label small">Código del pase (26 caracteres, con o sin guiones)</label>
+                <input id="codigo" name="codigo" class="form-control campo-mayusculas codigo-pase mb-2" autocomplete="off" required minlength="26" maxlength="40" />
+                <button type="submit" class="btn btn-outline-primary">Validar</button>
+            </form>
+        </div>
+    </div>
+    <p class="small text-body-secondary mt-3"><a asp-controller="Soporte" asp-action="GuiaClinicas">Guía para clínicas: cómo leer el pase y registrar la atención</a></p>
+}
+@section Scripts {
+    @if (habilitado)
+    {
+        <script src="~/lib/html5-qrcode/html5-qrcode.min.js"></script>
+        <script src="~/js/lector-qr.js" asp-append-version="true"></script>
+    }
+}

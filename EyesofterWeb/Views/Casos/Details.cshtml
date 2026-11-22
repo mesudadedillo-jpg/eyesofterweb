@@ -1,35 +1,48 @@
-@model Caso
+@model CasoDetalleViewModel
 @{
-    ViewData["Title"] = "Caso " + Model.Folio;
+    var c = Model.Caso;
+    ViewData["Title"] = "Caso " + c.Folio;
     var esAdmin = User.IsInRole(Roles.Administrador);
-    var puedeEditar = esAdmin || User.IsInRole(Roles.Enfermeria);
-    var cerrado = Model.Estado == EstadoCaso.Cerrado;
+    var cerrado = c.Estado == EstadoCaso.Cerrado;
 }
 
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
     <div>
-        <h1 class="h3 mb-1">Caso <code>@Model.Folio</code></h1>
-        <partial name="_Semaforo" model="Model.Semaforo" />
-        <partial name="_Estado" model="Model.Estado" />
+        <h1 class="h3 mb-1">Caso <code>@c.Folio</code></h1>
+        <partial name="_Semaforo" model="c.Semaforo" />
+        <partial name="_Estado" model="c.Estado" />
+        @if (c.Tamizaje?.Origen == "escritorio") { <span class="badge text-bg-light"><i class="bi bi-pc-display me-1" aria-hidden="true"></i>Del sistema de escritorio</span> }
     </div>
     <div class="d-flex flex-wrap gap-2">
-        @if (puedeEditar && !cerrado)
+        @if (!cerrado)
         {
-            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-outline-primary"><i class="bi bi-pencil me-1"></i>Editar</a>
-            <a asp-action="Cerrar" asp-route-id="@Model.Id" class="btn btn-outline-success"><i class="bi bi-check2-square me-1"></i>Cerrar caso</a>
+            <a asp-action="Edit" asp-route-id="@c.Id" class="btn btn-outline-primary"><i class="bi bi-pencil me-1" aria-hidden="true"></i>Actualizar estado</a>
+            <a asp-action="Destino" asp-route-id="@c.Id" class="btn btn-outline-primary"><i class="bi bi-hospital me-1" aria-hidden="true"></i>Clínica de destino</a>
+            @if (Model.PuedeCerrar)
+            {
+                <a asp-action="Cerrar" asp-route-id="@c.Id" class="btn btn-success"><i class="bi bi-check2-square me-1" aria-hidden="true"></i>Cerrar caso</a>
+            }
+            else
+            {
+                <span class="d-inline-block" tabindex="0" title="@Model.MotivoNoCierre"><button class="btn btn-outline-success" disabled><i class="bi bi-check2-square me-1" aria-hidden="true"></i>Cerrar caso</button></span>
+            }
         }
         @if (esAdmin && cerrado)
         {
-            <form asp-action="Reabrir" asp-route-id="@Model.Id" method="post" class="d-inline">
-                <button type="submit" class="btn btn-outline-warning"><i class="bi bi-arrow-counterclockwise me-1"></i>Reabrir</button>
+            <form asp-action="Reabrir" asp-route-id="@c.Id" method="post" class="d-inline">
+                <button type="submit" class="btn btn-outline-warning"><i class="bi bi-arrow-counterclockwise me-1" aria-hidden="true"></i>Reabrir</button>
             </form>
         }
         @if (esAdmin)
         {
-            <a asp-action="Delete" asp-route-id="@Model.Id" class="btn btn-outline-danger"><i class="bi bi-trash me-1"></i>Eliminar</a>
+            <a asp-action="Delete" asp-route-id="@c.Id" class="btn btn-outline-danger"><i class="bi bi-trash me-1" aria-hidden="true"></i>Eliminar</a>
         }
     </div>
 </div>
+@if (!cerrado && !Model.PuedeCerrar)
+{
+    <p class="small text-body-secondary"><i class="bi bi-info-circle me-1" aria-hidden="true"></i>@Model.MotivoNoCierre</p>
+}
 
 <div class="row g-3">
     <div class="col-lg-5">
@@ -38,44 +51,142 @@
             <div class="card-body">
                 <dl class="row mb-0">
                     <dt class="col-5">Alumno</dt>
-                    <dd class="col-7"><a asp-controller="Alumnos" asp-action="Details" asp-route-id="@Model.AlumnoId">@Model.Alumno?.NombreCompleto</a>
-                        <div class="small text-body-secondary">@Model.Alumno?.GradoGrupo</div></dd>
-                    <dt class="col-5">Detección</dt><dd class="col-7">@Model.FechaDeteccion.ToString("dd/MM/yyyy")</dd>
-                    <dt class="col-5">Agudeza OD / OI</dt><dd class="col-7">@Model.AgudezaOjoDerecho / @Model.AgudezaOjoIzquierdo</dd>
-                    <dt class="col-5">Clínica</dt>
+                    <dd class="col-7"><a asp-controller="Alumnos" asp-action="Details" asp-route-id="@c.AlumnoId">@c.Alumno?.NombreCompleto</a>
+                        <div class="small text-body-secondary">@c.Alumno?.GradoGrupo · @c.Alumno?.Matricula</div></dd>
+                    <dt class="col-5">Tutor</dt>
+                    <dd class="col-7">@c.Alumno?.Tutor?.NombreCompleto <div class="small text-body-secondary">@c.Alumno?.Tutor?.Telefono</div></dd>
+                    <dt class="col-5">Detección</dt><dd class="col-7">@c.FechaDeteccion.ToString("dd/MM/yyyy")</dd>
+                    <dt class="col-5">Agudeza OD / OI</dt><dd class="col-7">@c.AgudezaOjoDerecho / @c.AgudezaOjoIzquierdo</dd>
+                    <dt class="col-5">Clínica de destino</dt>
                     <dd class="col-7">
-                        @if (Model.Clinica is not null)
+                        @if (c.Clinica is not null)
                         {
-                            <a asp-controller="Clinicas" asp-action="Details" asp-route-id="@Model.ClinicaId">@Model.Clinica.Nombre</a>
+                            <a asp-controller="Clinicas" asp-action="Details" asp-route-id="@c.ClinicaId">@c.Clinica.Nombre</a>
+                            @if (c.Clinica.EsAsociada) { <span class="badge text-bg-success ms-1"><i class="bi bi-patch-check me-1" aria-hidden="true"></i>Asociada</span> }
                         }
-                        else
-                        {
-                            <span class="text-body-secondary">Sin canalizar</span>
-                        }
+                        else if (c.ClinicaDestinoManual is not null) { @c.ClinicaDestinoManual <span class="badge text-bg-secondary ms-1">No registrada</span> }
+                        else { <span class="text-body-secondary">Sin canalizar</span> }
                     </dd>
-                    @if (Model.FechaCierre.HasValue)
-                    {
-                        <dt class="col-5">Cierre</dt><dd class="col-7">@Model.FechaCierre.Value.ToString("dd/MM/yyyy")</dd>
-                    }
-                    <dt class="col-5">Registrado por</dt><dd class="col-7 small">@(Model.RegistradoPor ?? "—")</dd>
-                    <dt class="col-12">Observaciones</dt><dd class="col-12">@(string.IsNullOrWhiteSpace(Model.Observaciones) ? "—" : Model.Observaciones)</dd>
+                    @if (c.FechaAtencion.HasValue) { <dt class="col-5">Atención</dt><dd class="col-7">@c.FechaAtencion.Value.ToString("dd/MM/yyyy") <span class="small text-body-secondary">(@((c.FechaAtencion.Value - c.FechaDeteccion).Days) días)</span></dd> }
+                    @if (c.FechaCierre.HasValue) { <dt class="col-5">Cierre</dt><dd class="col-7">@c.FechaCierre.Value.ToString("dd/MM/yyyy")</dd> }
+                    <dt class="col-5">Registrado por</dt><dd class="col-7 small">@(c.RegistradoPor ?? "—")</dd>
+                    <dt class="col-12">Observaciones</dt><dd class="col-12">@(string.IsNullOrWhiteSpace(c.Observaciones) ? "—" : c.Observaciones)</dd>
                 </dl>
             </div>
         </div>
+
+        <div class="card shadow-sm mb-3">
+            <div class="card-header bg-body"><h2 class="h6 mb-0">Pase médico o resumen</h2></div>
+            <div class="card-body">
+                @if (Model.PaseVigente is { } pase)
+                {
+                    <div class="d-flex gap-3 align-items-center">
+                        <img src="@Url.Action("QrPase", new { id = c.Id })" alt="Código QR del pase médico" class="qr-pase" width="120" height="120" />
+                        <div>
+                            <div>Para <strong>@pase.Clinica?.Nombre</strong></div>
+                            <div class="codigo-pase">@EyesofterWeb.Servicios.Documentos.CodigoLegible(pase.Codigo)</div>
+                            <div class="small text-body-secondary">Vence el @pase.ExpiraEn.ToLocalTime().ToString("dd/MM/yyyy") · un solo uso</div>
+                            <a asp-action="PasePdf" asp-route-id="@c.Id" class="btn btn-sm btn-outline-secondary mt-2"><i class="bi bi-filetype-pdf me-1" aria-hidden="true"></i>Descargar pase</a>
+                        </div>
+                    </div>
+                }
+                else if (c.Pases.Any(p => p.Estado == EstadoPase.Usado))
+                {
+                    <p class="mb-0"><i class="bi bi-check-circle text-success me-1" aria-hidden="true"></i>El pase ya se usó en la clínica.</p>
+                }
+                else
+                {
+                    <p class="small text-body-secondary">Sin pase con QR (la clínica de destino no es asociada o aún no se elige).</p>
+                }
+                <a asp-action="ResumenPdf" asp-route-id="@c.Id" class="btn btn-sm btn-outline-secondary mt-2"><i class="bi bi-filetype-pdf me-1" aria-hidden="true"></i>Resumen del tamizaje</a>
+            </div>
+        </div>
+
+        <div class="card shadow-sm mb-3">
+            <div class="card-header bg-body d-flex justify-content-between align-items-center">
+                <h2 class="h6 mb-0">Comprobantes (@Model.Comprobantes.Count)</h2>
+                <a class="small" asp-controller="Comprobantes" asp-action="Index">Bandeja</a>
+            </div>
+            <ul class="list-group list-group-flush">
+                @foreach (var comp in Model.Comprobantes)
+                {
+                    <li class="list-group-item d-flex justify-content-between align-items-center gap-2">
+                        <span>@comp.Tipo.Texto() <span class="small text-body-secondary">· @comp.SubidoEn.ToLocalTime().ToString("dd/MM/yyyy")</span>
+                            @if (comp.MotivoRechazo is not null) { <span class="d-block small text-danger">Motivo: @comp.MotivoRechazo</span> }</span>
+                        <span class="text-nowrap">
+                            <partial name="_EstadoComprobante" model="comp.Estado" />
+                            <a asp-controller="Comprobantes" asp-action="Revisar" asp-route-id="@comp.Id" class="btn btn-sm btn-outline-secondary ms-1">Ver</a>
+                        </span>
+                    </li>
+                }
+                @if (Model.Comprobantes.Count == 0) { <li class="list-group-item small text-body-secondary">El tutor aún no sube receta ni comprobante.</li> }
+            </ul>
+            @if (!cerrado && Model.Comprobantes.Any(x => x.Estado == EstadoComprobante.Aprobado))
+            {
+                <div class="card-footer bg-body">
+                    <a asp-action="AtencionManual" asp-route-id="@c.Id" class="btn btn-sm btn-outline-primary"><i class="bi bi-clipboard-plus me-1" aria-hidden="true"></i>Registrar atención (clínica no asociada)</a>
+                </div>
+            }
+        </div>
+
+        @if (c.Citas.Count > 0)
+        {
+            <div class="card shadow-sm mb-3">
+                <div class="card-header bg-body"><h2 class="h6 mb-0">Citas solicitadas</h2></div>
+                <ul class="list-group list-group-flush">
+                    @foreach (var cita in c.Citas.OrderByDescending(x => x.CreadaEn))
+                    {
+                        <li class="list-group-item">
+                            <div class="d-flex justify-content-between"><strong>@(cita.Clinica?.Nombre ?? "Clínica")</strong><span class="badge text-bg-light">@cita.Estado</span></div>
+                            <div class="small">Prefiere el @cita.FechaPreferida.ToString("dd/MM/yyyy") @cita.Horario</div>
+                            @if (!string.IsNullOrWhiteSpace(cita.Comentario)) { <div class="small text-body-secondary">@cita.Comentario</div> }
+                            @if (cita.Estado == EstadoCita.Solicitada && !cerrado)
+                            {
+                                <form asp-action="EstadoCita" asp-route-id="@cita.Id" method="post" class="d-inline">
+                                    <input type="hidden" name="estado" value="Confirmada" /><button class="btn btn-sm btn-outline-success mt-1">Confirmar</button>
+                                </form>
+                                <form asp-action="EstadoCita" asp-route-id="@cita.Id" method="post" class="d-inline">
+                                    <input type="hidden" name="estado" value="Cancelada" /><button class="btn btn-sm btn-outline-secondary mt-1">Cancelar</button>
+                                </form>
+                            }
+                        </li>
+                    }
+                </ul>
+            </div>
+        }
+
+        @if (c.Atenciones.Count > 0)
+        {
+            <div class="card shadow-sm mb-3">
+                <div class="card-header bg-body"><h2 class="h6 mb-0">Atenciones médicas</h2></div>
+                <ul class="list-group list-group-flush">
+                    @foreach (var a in c.Atenciones.OrderBy(x => x.Fecha))
+                    {
+                        <li class="list-group-item">
+                            <div class="d-flex justify-content-between"><strong>@(a.Clinica?.Nombre ?? a.ClinicaNombre)</strong><span class="small">@a.Fecha.ToString("dd/MM/yyyy")</span></div>
+                            <div class="small text-body-secondary">@a.Origen.Texto() · @a.RegistradoPor</div>
+                            <div>@a.Valoracion</div>
+                            @if (!string.IsNullOrWhiteSpace(a.Indicaciones)) { <div class="small"><strong>Indicaciones:</strong> @a.Indicaciones</div> }
+                            @if (a.CorreccionOptica) { <span class="badge text-bg-info mt-1">Corrección óptica</span> }
+                        </li>
+                    }
+                </ul>
+            </div>
+        }
     </div>
 
     <div class="col-lg-7">
         <div class="card shadow-sm">
             <div class="card-header bg-body d-flex justify-content-between align-items-center">
-                <h2 class="h6 mb-0">Línea de tiempo (@Model.Eventos.Count)</h2>
-                @if (puedeEditar && !cerrado)
+                <h2 class="h6 mb-0">Línea de tiempo (@c.Eventos.Count)</h2>
+                @if (!cerrado)
                 {
-                    <a asp-controller="Eventos" asp-action="Create" asp-route-casoId="@Model.Id" class="btn btn-sm btn-marca"><i class="bi bi-plus-lg"></i> Agregar evento</a>
+                    <a asp-controller="Eventos" asp-action="Create" asp-route-casoId="@c.Id" class="btn btn-sm btn-marca"><i class="bi bi-plus-lg" aria-hidden="true"></i> Agregar evento</a>
                 }
             </div>
             <div class="card-body">
-                <ul class="linea-tiempo mb-0">
-                    @foreach (var ev in Model.Eventos.OrderBy(e => e.Fecha).ThenBy(e => e.Id))
+                <ol class="linea-tiempo mb-0">
+                    @foreach (var ev in c.Eventos.OrderBy(e => e.Fecha).ThenBy(e => e.Id))
                     {
                         <li>
                             <div class="d-flex flex-wrap justify-content-between gap-2">
@@ -88,18 +199,17 @@
                                 @if (esAdmin)
                                 {
                                     <a asp-controller="Eventos" asp-action="Edit" asp-route-id="@ev.Id" class="ms-2">Editar</a>
-                                    <form asp-controller="Eventos" asp-action="Delete" asp-route-id="@ev.Id" method="post" class="d-inline"
-                                          onsubmit="return confirm('¿Eliminar este evento?');">
+                                    <form asp-controller="Eventos" asp-action="Delete" asp-route-id="@ev.Id" method="post" class="d-inline" data-confirmar="¿Eliminar este evento?">
                                         <button type="submit" class="btn btn-link btn-sm text-danger p-0 ms-2 align-baseline">Eliminar</button>
                                     </form>
                                 }
                             </div>
                         </li>
                     }
-                </ul>
+                </ol>
             </div>
         </div>
     </div>
 </div>
 
-<a asp-action="Index" class="btn btn-link mt-3 px-0"><i class="bi bi-arrow-left"></i> Volver a casos</a>
+<a asp-action="Index" class="btn btn-link mt-3 px-0"><i class="bi bi-arrow-left" aria-hidden="true"></i> Volver a casos</a>

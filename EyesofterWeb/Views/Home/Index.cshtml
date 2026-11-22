@@ -1,79 +1,169 @@
-@model TableroViewModel
+@model EyesofterWeb.Servicios.TableroIndicadores
 @{
-    ViewData["Title"] = "Tablero";
-    var puedeEditar = User.IsInRole(Roles.Administrador) || User.IsInRole(Roles.Enfermeria);
+    ViewData["Title"] = "Dashboard";
+    var urgentes = (List<Caso>)ViewBag.CasosUrgentes;
 }
 
-@if (!Model.BaseDeDatosLista)
-{
-    <div class="alert alert-warning">
-        <h2 class="h5"><i class="bi bi-database-exclamation me-1"></i>La base de datos no está lista</h2>
-        <p class="mb-1">Ejecuta en la carpeta del proyecto:</p>
-        <pre class="mb-0"><code>dotnet ef migrations add Inicial
-dotnet ef database update</code></pre>
-    </div>
-}
-
-<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+<div class="d-flex flex-wrap justify-content-between align-items-end gap-2 mb-3">
     <div>
-        <h1 class="h3 mb-0">Tablero</h1>
-        <p class="text-body-secondary mb-0">Resumen del seguimiento visual escolar</p>
+        <h1 class="h3 mb-0">Dashboard institucional</h1>
+        @if (ViewBag.Escuelas is string escuelas) { <p class="text-body-secondary small mb-0"><i class="bi bi-building me-1" aria-hidden="true"></i>@escuelas</p> }
+        <p class="text-body-secondary mb-0">@Model.Alcance</p>
     </div>
-    @if (puedeEditar)
-    {
-        <a class="btn btn-marca" asp-controller="Casos" asp-action="Create"><i class="bi bi-plus-lg me-1"></i>Nuevo caso</a>
-    }
+    <form method="get" class="d-flex gap-2 align-items-center no-imprimir" aria-label="Filtrar por campaña">
+        <label for="campanaId" class="small text-body-secondary">Campaña</label>
+        <select id="campanaId" name="campanaId" class="form-select form-select-sm" data-auto-enviar>
+            <option value="">Todas</option>
+            @foreach (var c in Model.Campanas)
+            {
+                <option value="@c.Id" selected="@(c.Id == Model.CampanaId)">@c.Nombre (@c.CicloEscolar)</option>
+            }
+        </select>
+        <noscript><button class="btn btn-sm btn-outline-secondary">Ver</button></noscript>
+        <a class="btn btn-sm btn-outline-secondary text-nowrap" asp-action="TableroPdf" asp-route-campanaId="@Model.CampanaId"><i class="bi bi-filetype-pdf me-1" aria-hidden="true"></i>PDF</a>
+        <a class="btn btn-sm btn-outline-secondary text-nowrap" asp-action="TableroExcel" asp-route-campanaId="@Model.CampanaId"><i class="bi bi-file-earmark-excel me-1" aria-hidden="true"></i>Excel</a>
+    </form>
 </div>
 
 <div class="row g-3 mb-4">
     <div class="col-6 col-lg-3">
-        <div class="card tarjeta-dato shadow-sm h-100"><div class="card-body">
-            <div class="numero">@Model.CasosAbiertos</div><div class="text-body-secondary">Casos activos</div>
-        </div></div>
-    </div>
-    <div class="col-6 col-lg-3">
-        <div class="card tarjeta-dato shadow-sm h-100" style="border-left-color:#b42318"><div class="card-body">
-            <div class="numero text-danger">@Model.CasosRojos</div><div class="text-body-secondary">Activos en rojo</div>
-        </div></div>
-    </div>
-    <div class="col-6 col-lg-3">
-        <div class="card tarjeta-dato shadow-sm h-100"><div class="card-body">
-            <div class="numero">@Model.Alumnos</div><div class="text-body-secondary">Alumnos</div>
-        </div></div>
+        <a class="card tarjeta-dato shadow-sm h-100 text-decoration-none" asp-controller="Casos" asp-action="Index" asp-route-estado="Abierto">
+            <div class="card-body">
+                <div class="text-body-secondary small">Casos abiertos</div>
+                <div class="numero text-marca">@Model.CasosAbiertos</div>
+                <div class="small text-danger">@Model.CasosRojosAbiertos en rojo</div>
+            </div>
+        </a>
     </div>
     <div class="col-6 col-lg-3">
         <div class="card tarjeta-dato shadow-sm h-100"><div class="card-body">
-            <div class="numero">@Model.Clinicas</div><div class="text-body-secondary">Clínicas</div>
+            <div class="text-body-secondary small">Alumnos evaluados</div>
+            <div class="numero">@Model.PorcentajeEvaluados%</div>
+            <div class="small text-body-secondary">@Model.AlumnosEvaluados de @Model.TotalAlumnos</div>
+        </div></div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="card tarjeta-dato shadow-sm h-100"><div class="card-body">
+            <div class="text-body-secondary small">Tasa de casos resueltos</div>
+            <div class="numero">@Model.TasaResueltos%</div>
+            <div class="small text-body-secondary">@Model.CasosResueltos de @Model.CasosTotales</div>
+        </div></div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="card tarjeta-dato shadow-sm h-100"><div class="card-body">
+            <div class="text-body-secondary small">Días de la detección a la atención</div>
+            <div class="numero">@(Model.PromedioDiasAtencion?.ToString("0.#") ?? "—")</div>
+            <div class="small text-body-secondary">promedio</div>
         </div></div>
     </div>
 </div>
 
-<div class="card shadow-sm">
-    <div class="card-header bg-body d-flex justify-content-between align-items-center">
-        <h2 class="h6 mb-0">Casos más recientes</h2>
-        <a asp-controller="Casos" asp-action="Index" class="small">Ver todos</a>
+<div class="row g-3 mb-4">
+    <div class="col-lg-7">
+        <div class="card shadow-sm h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h2 class="h6 mb-0">Casos abiertos más urgentes</h2>
+                <a class="small" asp-controller="Casos" asp-action="Index">Ver todos</a>
+            </div>
+            <ul class="list-group list-group-flush">
+                @foreach (var c in urgentes)
+                {
+                    <li class="list-group-item d-flex justify-content-between align-items-center gap-2">
+                        <a asp-controller="Casos" asp-action="Details" asp-route-id="@c.Id" class="text-decoration-none">
+                            <span class="folio fw-semibold">@c.Folio</span> · @c.Alumno?.NombreCompleto
+                            <span class="small text-body-secondary d-block">@c.Alumno?.GradoGrupo · detectado @c.FechaDeteccion.ToString("dd/MM/yyyy")</span>
+                        </a>
+                        <partial name="_Semaforo" model="c.Semaforo" />
+                    </li>
+                }
+                @if (urgentes.Count == 0)
+                {
+                    <li class="list-group-item text-body-secondary">No hay casos abiertos.</li>
+                }
+            </ul>
+        </div>
     </div>
-    <div class="table-responsive">
-        <table class="table table-hover align-middle mb-0">
-            <thead class="table-light">
-                <tr><th>Folio</th><th>Alumno</th><th>Semáforo</th><th>Estado</th><th>Detección</th></tr>
-            </thead>
-            <tbody>
-                @if (!Model.UltimosCasos.Any())
-                {
-                    <tr><td colspan="5" class="text-center text-body-secondary py-4">Todavía no hay casos.</td></tr>
-                }
-                @foreach (var c in Model.UltimosCasos)
-                {
-                    <tr>
-                        <td><a asp-controller="Casos" asp-action="Details" asp-route-id="@c.Id">@c.Folio</a></td>
-                        <td>@c.Alumno?.NombreCompleto</td>
-                        <td><partial name="_Semaforo" model="c.Semaforo" /></td>
-                        <td><partial name="_Estado" model="c.Estado" /></td>
-                        <td>@c.FechaDeteccion.ToString("dd/MM/yyyy")</td>
-                    </tr>
-                }
-            </tbody>
-        </table>
+    <div class="col-lg-5">
+        <div class="card shadow-sm mb-3">
+            <div class="card-body d-flex justify-content-between align-items-center">
+                <div><div class="small text-body-secondary">Comprobantes por revisar</div><div class="h4 mb-0">@Model.ComprobantesPendientes</div></div>
+                <a class="btn btn-outline-primary btn-sm" asp-controller="Comprobantes" asp-action="Index">Revisar</a>
+            </div>
+        </div>
+        <div class="card shadow-sm">
+            <div class="card-body d-flex justify-content-between align-items-center">
+                <div><div class="small text-body-secondary">Familias sin leer su resultado</div><div class="h4 mb-0">@Model.AvisosSinLeer</div></div>
+                <a class="btn btn-outline-primary btn-sm" asp-controller="Avisos" asp-action="Seguimiento">Seguimiento</a>
+            </div>
+        </div>
     </div>
 </div>
+
+<div class="row g-3 mb-4">
+    <div class="col-lg-7">
+        <div class="card shadow-sm h-100">
+            <div class="card-header"><h2 class="h6 mb-0">Alumnos evaluados por grado y grupo</h2></div>
+            <div class="table-responsive" tabindex="0" role="region" aria-label="Tabla desplazable">
+                <table class="table table-sm mb-0 align-middle">
+                    <caption class="visually-hidden">Porcentaje de alumnos con tamizaje por grado y grupo</caption>
+                    <thead><tr><th scope="col">Grado y grupo</th><th scope="col" class="text-end">Alumnos</th><th scope="col" class="text-end">Evaluados</th><th scope="col" class="w-50">Avance</th></tr></thead>
+                    <tbody>
+                        @foreach (var f in Model.EvaluadosPorGrupo)
+                        {
+                            <tr>
+                                <td>@f.Grado° @f.Grupo · @f.Nivel</td>
+                                <td class="text-end">@f.Total</td>
+                                <td class="text-end">@f.Evaluados</td>
+                                <td><div class="d-flex align-items-center gap-2"><div class="barra flex-grow-1" role="img" aria-label="@f.Porcentaje por ciento"><span style="width:@(f.Porcentaje.ToString(System.Globalization.CultureInfo.InvariantCulture))%"></span></div><span class="small">@f.Porcentaje%</span></div></td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-5">
+        <div class="card shadow-sm h-100">
+            <div class="card-header"><h2 class="h6 mb-0">Severidad: primaria contra secundaria</h2></div>
+            <div class="card-body">
+                @foreach (var s in Model.Severidad)
+                {
+                    <h3 class="h6 mt-2">@s.Nivel <span class="small text-body-secondary fw-normal">(@s.Total evaluados)</span></h3>
+                    foreach (var (nombre, n, clase) in new[] { ("Verde", s.Verde, "barra-verde"), ("Amarillo", s.Amarillo, "barra-amarilla"), ("Rojo", s.Rojo, "barra-roja") })
+                    {
+                        <div class="d-flex align-items-center gap-2 mb-1">
+                            <span class="small" style="width:5rem">@nombre</span>
+                            <div class="barra @clase flex-grow-1" role="img" aria-label="@nombre: @s.Pct(n) por ciento"><span style="width:@(s.Pct(n).ToString(System.Globalization.CultureInfo.InvariantCulture))%"></span></div>
+                            <span class="small text-nowrap">@n (@s.Pct(n)%)</span>
+                        </div>
+                    }
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (Model.Comparativo.Count > 0)
+{
+    <div class="card shadow-sm">
+        <div class="card-header"><h2 class="h6 mb-0">Comparativo entre ciclos escolares y campañas</h2></div>
+        <div class="table-responsive" tabindex="0" role="region" aria-label="Tabla desplazable">
+            <table class="table table-sm mb-0">
+                <thead><tr><th scope="col">Campaña</th><th scope="col" class="text-end">Evaluados</th><th scope="col" class="text-end">Con indicios</th><th scope="col" class="text-end">Casos</th><th scope="col" class="text-end">Resueltos</th><th scope="col" class="text-end">Días a la atención</th></tr></thead>
+                <tbody>
+                    @foreach (var k in Model.Comparativo)
+                    {
+                        <tr>
+                            <td>@k.Nombre <span class="text-body-secondary">(@k.Ciclo)</span></td>
+                            <td class="text-end">@k.Evaluados</td>
+                            <td class="text-end">@k.PctConIndicios%</td>
+                            <td class="text-end">@k.Casos</td>
+                            <td class="text-end">@k.TasaResueltos%</td>
+                            <td class="text-end">@(k.PromedioDias?.ToString("0.#") ?? "—")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}

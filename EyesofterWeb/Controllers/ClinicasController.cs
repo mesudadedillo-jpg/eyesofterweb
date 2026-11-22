@@ -9,7 +9,7 @@ namespace EyesofterWeb.Controllers
     /// <summary>
     /// Catálogo de clínicas. Consultar: todos los roles. Crear/editar/eliminar: solo Administrador.
     /// </summary>
-    [Authorize]
+    [Authorize(Roles = Roles.AdminOEnfermeria)]
     public class ClinicasController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -43,7 +43,7 @@ namespace EyesofterWeb.Controllers
         }
 
         // GET: Clinicas/Create
-        [Authorize(Roles = Roles.Administrador)]
+        [Authorize(Policy = Roles.PoliticaGlobal)] // directorio compartido por todas las escuelas
         public IActionResult Create()
         {
             return View(new Clinica());
@@ -52,8 +52,8 @@ namespace EyesofterWeb.Controllers
         // POST: Clinicas/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = Roles.Administrador)]
-        public async Task<IActionResult> Create([Bind("Nombre,Tipo,Direccion,Telefono,Correo,EsAsociada")] Clinica clinica)
+        [Authorize(Policy = Roles.PoliticaGlobal)] // directorio compartido por todas las escuelas
+        public async Task<IActionResult> Create([Bind("Nombre,Tipo,Direccion,Ciudad,CodigoPostal,Latitud,Longitud,Horario,Telefono,Correo,EsAsociada,Activa")] Clinica clinica)
         {
             if (!ModelState.IsValid) return View(clinica);
 
@@ -64,7 +64,7 @@ namespace EyesofterWeb.Controllers
         }
 
         // GET: Clinicas/Edit/5
-        [Authorize(Roles = Roles.Administrador)]
+        [Authorize(Policy = Roles.PoliticaGlobal)] // directorio compartido por todas las escuelas
         public async Task<IActionResult> Edit(int? id)
         {
             if (id is null) return NotFound();
@@ -76,8 +76,8 @@ namespace EyesofterWeb.Controllers
         // POST: Clinicas/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = Roles.Administrador)]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Nombre,Tipo,Direccion,Telefono,Correo,EsAsociada")] Clinica clinica)
+        [Authorize(Policy = Roles.PoliticaGlobal)] // directorio compartido por todas las escuelas
+        public async Task<IActionResult> Edit(int id, [Bind("Id,Nombre,Tipo,Direccion,Ciudad,CodigoPostal,Latitud,Longitud,Horario,Telefono,Correo,EsAsociada,Activa")] Clinica clinica)
         {
             if (id != clinica.Id) return NotFound();
             if (!ModelState.IsValid) return View(clinica);
@@ -96,14 +96,30 @@ namespace EyesofterWeb.Controllers
             return RedirectToAction(nameof(Index));
         }
 
+        /// <summary>W-RFN-12: desactivar en lugar de borrar (conserva el historial). Una clínica inactiva no recibe pases.</summary>
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize(Policy = Roles.PoliticaGlobal)] // directorio compartido por todas las escuelas
+        public async Task<IActionResult> CambiarActiva(int id)
+        {
+            var clinica = await _context.Clinicas.FindAsync(id);
+            if (clinica is null) return NotFound();
+            clinica.Activa = !clinica.Activa;
+            await _context.SaveChangesAsync();
+            TempData["Exito"] = $"{clinica.Nombre} quedó {(clinica.Activa ? "activa" : "desactivada: ya no aparece en el directorio ni puede leer pases")}.";
+            return RedirectToAction(nameof(Index));
+        }
+
         // GET: Clinicas/Delete/5
-        [Authorize(Roles = Roles.Administrador)]
+        // El directorio de clínicas lo comparten todas las escuelas: solo el administrador global lo borra.
+        [Authorize(Policy = Roles.PoliticaGlobal)]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id is null) return NotFound();
 
             var clinica = await _context.Clinicas
                 .Include(c => c.Casos)
+                .IgnoreQueryFilters() // cuenta los casos de todas las escuelas
                 .FirstOrDefaultAsync(m => m.Id == id);
             if (clinica is null) return NotFound();
 
@@ -113,10 +129,10 @@ namespace EyesofterWeb.Controllers
         // POST: Clinicas/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = Roles.Administrador)]
+        [Authorize(Policy = Roles.PoliticaGlobal)]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var clinica = await _context.Clinicas.Include(c => c.Casos).FirstOrDefaultAsync(c => c.Id == id);
+            var clinica = await _context.Clinicas.Include(c => c.Casos).IgnoreQueryFilters().FirstOrDefaultAsync(c => c.Id == id);
             if (clinica is null) return RedirectToAction(nameof(Index));
 
             if (clinica.Casos.Any())

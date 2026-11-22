@@ -1,0 +1,21 @@
+@model List<ReporteFalla>
+@{ ViewData["Title"] = "Reportes de fallas"; }
+<h1 class="h3">Reportes de fallas y dudas</h1>
+<div class="list-group shadow-sm">
+    @foreach (var r in Model)
+    {
+        <div class="list-group-item">
+            <div class="d-flex justify-content-between"><strong>@r.Tipo · @r.Plataforma</strong><span class="small text-body-secondary">@r.CreadoEn.ToLocalTime().ToString("dd/MM/yyyy HH:mm") · @r.Estado.Texto()</span></div>
+            <p class="mb-1">@r.Mensaje</p>
+            <p class="small text-body-secondary mb-2">@r.Correo</p>
+            <form asp-action="Atender" asp-route-id="@r.Id" method="post" class="d-flex flex-wrap gap-2">
+                <select name="estado" class="form-select form-select-sm w-auto" aria-label="Estado">
+                    @foreach (var e in Enum.GetValues<EstadoReporte>()) { <option value="@e" selected="@(r.Estado == e)">@e.Texto()</option> }
+                </select>
+                <input name="respuesta" value="@r.Respuesta" class="form-control form-control-sm flex-grow-1" placeholder="Respuesta (se le notifica al usuario)" aria-label="Respuesta" maxlength="1000" />
+                <button class="btn btn-sm btn-outline-primary">Guardar</button>
+            </form>
+        </div>
+    }
+    @if (Model.Count == 0) { <div class="list-group-item text-body-secondary">Sin reportes.</div> }
+</div>

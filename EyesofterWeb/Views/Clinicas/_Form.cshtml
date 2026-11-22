@@ -17,6 +17,30 @@
         <span asp-validation-for="Direccion" class="text-danger small"></span>
     </div>
     <div class="col-md-4">
+        <label asp-for="Ciudad" class="form-label"></label>
+        <input asp-for="Ciudad" class="form-control" />
+    </div>
+    <div class="col-md-2">
+        <label asp-for="CodigoPostal" class="form-label"></label>
+        <input asp-for="CodigoPostal" class="form-control" inputmode="numeric" maxlength="5" />
+        <span asp-validation-for="CodigoPostal" class="text-danger small"></span>
+    </div>
+    <div class="col-md-3">
+        <label asp-for="Latitud" class="form-label"></label>
+        <input asp-for="Latitud" class="form-control" step="any" placeholder="20.0825" />
+        <span asp-validation-for="Latitud" class="text-danger small"></span>
+    </div>
+    <div class="col-md-3">
+        <label asp-for="Longitud" class="form-label"></label>
+        <input asp-for="Longitud" class="form-control" step="any" placeholder="-98.3622" />
+        <span asp-validation-for="Longitud" class="text-danger small"></span>
+    </div>
+    <div class="col-12 form-text mt-0">La ubicación la usa el mapa de la app. En Google Maps: clic derecho sobre el lugar → copia las coordenadas.</div>
+    <div class="col-md-6">
+        <label asp-for="Horario" class="form-label"></label>
+        <input asp-for="Horario" class="form-control" placeholder="Lun a Vie 9:00-18:00" />
+    </div>
+    <div class="col-md-4">
         <label asp-for="Telefono" class="form-label requerido"></label>
         <input asp-for="Telefono" class="form-control" inputmode="numeric" maxlength="10" placeholder="10 dígitos" />
         <span asp-validation-for="Telefono" class="text-danger small"></span>
@@ -30,6 +54,10 @@
         <div class="form-check form-switch mb-2">
             <input asp-for="EsAsociada" class="form-check-input" role="switch" />
             <label asp-for="EsAsociada" class="form-check-label"></label>
+        </div>
+        <div class="form-check form-switch mb-2 ms-3">
+            <input asp-for="Activa" class="form-check-input" role="switch" />
+            <label asp-for="Activa" class="form-check-label"></label>
         </div>
     </div>
 </div>

@@ -1,0 +1,63 @@
+@model AtencionQrViewModel
+@{
+    ViewData["Title"] = "Registrar atención";
+    Pase pase = ViewBag.Pase;
+    var caso = pase.Caso!;
+}
+<div class="alert alert-success d-flex gap-2" role="status">
+    <i class="bi bi-patch-check-fill fs-4" aria-hidden="true"></i>
+    <div>Pase válido para <strong>@pase.Clinica?.Nombre</strong>. Vence el @pase.ExpiraEn.ToLocalTime().ToString("dd/MM/yyyy").</div>
+</div>
+@if (ViewBag.Convenio is Convenio convenio)
+{
+    <div class="alert alert-info d-flex gap-2" role="status">
+        <i class="bi bi-tag-fill fs-5" aria-hidden="true"></i>
+        <div><strong>Alumno con convenio de su escuela:</strong> @convenio.Beneficio</div>
+    </div>
+}
+<div class="row g-3">
+    <div class="col-lg-5">
+        <div class="card shadow-sm">
+            <div class="card-header bg-body"><h2 class="h6 mb-0">Datos del tamizaje escolar</h2></div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-5">Alumno</dt><dd class="col-7">@caso.Alumno?.NombreCompleto</dd>
+                    <dt class="col-5">Grado</dt><dd class="col-7">@caso.Alumno?.GradoGrupo</dd>
+                    <dt class="col-5">Fecha</dt><dd class="col-7">@caso.FechaDeteccion.ToString("dd/MM/yyyy")</dd>
+                    <dt class="col-5">Resultado</dt><dd class="col-7"><partial name="_Semaforo" model="caso.Semaforo" /></dd>
+                    <dt class="col-5">Agudeza (Snellen)</dt><dd class="col-7">OD @caso.AgudezaOjoDerecho · OI @caso.AgudezaOjoIzquierdo</dd>
+                    <dt class="col-12">Observaciones de la escuela</dt><dd class="col-12">@(caso.Observaciones ?? "—")</dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-7">
+        <form asp-action="Atender" method="post" class="card card-body shadow-sm">
+            <h2 class="h6">Registrar la atención brindada</h2>
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2" role="alert"></div>
+            <input type="hidden" asp-for="Codigo" />
+            <div class="mb-3">
+                <label asp-for="Fecha" class="form-label requerido"></label>
+                <input asp-for="Fecha" class="form-control" />
+                <span asp-validation-for="Fecha" class="text-danger small"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="Valoracion" class="form-label requerido"></label>
+                <textarea asp-for="Valoracion" class="form-control" rows="3"></textarea>
+                <span asp-validation-for="Valoracion" class="text-danger small"></span>
+                <div class="form-text">Se guarda cifrada y solo la ve el personal escolar.</div>
+            </div>
+            <div class="mb-3">
+                <label asp-for="Indicaciones" class="form-label"></label>
+                <textarea asp-for="Indicaciones" class="form-control" rows="2"></textarea>
+                <div class="form-text">La familia verá este texto: escríbelo sin términos técnicos.</div>
+            </div>
+            <div class="form-check mb-3">
+                <input asp-for="CorreccionOptica" class="form-check-input" />
+                <label asp-for="CorreccionOptica" class="form-check-label"></label>
+            </div>
+            <button type="submit" class="btn btn-marca">Registrar atención</button>
+        </form>
+    </div>
+</div>
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

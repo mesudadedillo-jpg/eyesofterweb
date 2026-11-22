@@ -1,0 +1,32 @@
+@model List<Convenio>
+@{
+    ViewData["Title"] = "Convenios con clínicas";
+    var esAdmin = User.IsInRole(Roles.Administrador);
+}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <div>
+        <h1 class="h3 mb-0">Convenios con clínicas</h1>
+        <p class="text-body-secondary mb-0">El beneficio que cada clínica da a los alumnos de tu escuela. Las familias lo ven en el directorio y en el pase; la clínica no recibe datos de nadie por tener convenio.</p>
+    </div>
+    @if (esAdmin) { <a asp-action="Create" class="btn btn-marca"><i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Nuevo convenio</a> }
+</div>
+<div class="table-responsive card shadow-sm">
+    <table class="table align-middle mb-0">
+        <thead class="table-light"><tr><th scope="col">Escuela</th><th scope="col">Clínica</th><th scope="col" class="text-end">Descuento</th><th scope="col">Beneficio</th><th scope="col">Vigencia</th><th scope="col">Estado</th><th scope="col"></th></tr></thead>
+        <tbody>
+            @foreach (var c in Model)
+            {
+                <tr class="@(c.Vigente ? "" : "table-secondary")">
+                    <td>@c.Plantel?.Nombre</td>
+                    <td>@c.Clinica?.Nombre @if (c.Clinica?.EsAsociada == true) { <span class="badge text-bg-light border" title="Lee el pase con QR">QR</span> }</td>
+                    <td class="text-end">@(c.Descuento > 0 ? $"{c.Descuento} %" : "—")</td>
+                    <td class="small">@c.Beneficio</td>
+                    <td class="small">@(c.VigenteHasta?.ToString("dd/MM/yyyy") ?? "Sin fecha de fin")</td>
+                    <td>@if (c.Vigente) { <span class="badge text-bg-success">Vigente</span> } else { <span class="badge text-bg-secondary">No vigente</span> }</td>
+                    <td class="text-end">@if (esAdmin) { <a asp-action="Edit" asp-route-id="@c.Id" class="btn btn-sm btn-outline-primary">Editar</a> }</td>
+                </tr>
+            }
+            @if (Model.Count == 0) { <tr><td colspan="7" class="text-center text-body-secondary py-4">Tu escuela todavía no tiene convenios.</td></tr> }
+        </tbody>
+    </table>
+</div>

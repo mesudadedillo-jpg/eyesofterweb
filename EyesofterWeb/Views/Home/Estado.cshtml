@@ -1,0 +1,18 @@
+@{
+    int codigo = ViewBag.Codigo ?? 500;
+    var (titulo, texto) = codigo switch
+    {
+        404 => ("No encontramos esta página", "Puede que la dirección esté mal escrita o que el registro ya no exista."),
+        403 => ("No tienes permiso", "Esta sección no está disponible para tu rol."),
+        429 => ("Demasiados intentos", "Espera un minuto antes de volver a intentarlo."),
+        _ => ("Algo salió mal", "Inténtalo de nuevo. Si el problema sigue, repórtalo.")
+    };
+    ViewData["Title"] = titulo;
+}
+<div class="text-center py-5">
+    <p class="display-4 fw-bold text-marca">@codigo</p>
+    <h1 class="h4">@titulo</h1>
+    <p class="text-body-secondary">@texto</p>
+    <a class="btn btn-marca" asp-controller="Home" asp-action="Index">Ir al inicio</a>
+    <a class="btn btn-outline-secondary" asp-controller="Soporte" asp-action="Reportar">Reportar el problema</a>
+</div>

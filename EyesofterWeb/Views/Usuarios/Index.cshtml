@@ -1,59 +1,46 @@
-@model IEnumerable<UsuarioListaItem>
-@{
-    ViewData["Title"] = "Usuarios y roles";
-}
-
+@model List<UsuarioListaItem>
+@{ ViewData["Title"] = "Usuarios"; }
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
-    <div>
-        <h1 class="h3 mb-0">Usuarios y roles</h1>
-        <p class="text-body-secondary mb-0">Solo el Administrador puede ver esta página y asignar roles.</p>
-    </div>
+    <div><h1 class="h3 mb-0">Usuarios</h1><p class="text-body-secondary mb-0">Las mismas cuentas sirven para el portal y la app móvil.</p></div>
+    <a asp-action="Crear" class="btn btn-marca"><i class="bi bi-person-plus me-1" aria-hidden="true"></i>Nueva cuenta</a>
 </div>
-
-<div class="card shadow-sm">
-    <div class="table-responsive">
-        <table class="table table-hover align-middle mb-0">
-            <thead class="table-light">
-                <tr><th>Nombre</th><th>Correo</th><th>Rol</th><th>Estado</th><th class="text-end">Acciones</th></tr>
-            </thead>
-            <tbody>
-                @foreach (var u in Model)
-                {
-                    <tr>
-                        <td>@u.NombreCompleto</td>
-                        <td>@u.Correo</td>
-                        <td>
-                            @foreach (var r in u.Roles)
-                            {
-                                <span class="badge text-bg-primary">@r</span>
-                            }
-                            @if (!u.Roles.Any())
-                            {
-                                <span class="badge text-bg-warning">Sin rol</span>
-                            }
-                        </td>
-                        <td>
-                            @if (u.Bloqueado)
-                            {
-                                <span class="badge text-bg-danger"><i class="bi bi-lock-fill me-1"></i>Bloqueado</span>
-                            }
-                            else
-                            {
-                                <span class="badge text-bg-success">Activo</span>
-                            }
-                        </td>
-                        <td class="text-end text-nowrap">
-                            <a class="btn btn-sm btn-outline-primary" asp-action="EditarRol" asp-route-id="@u.Id"><i class="bi bi-person-gear me-1"></i>Cambiar rol</a>
-                            @if (u.Bloqueado)
-                            {
-                                <form asp-action="Desbloquear" asp-route-id="@u.Id" method="post" class="d-inline">
-                                    <button type="submit" class="btn btn-sm btn-outline-warning"><i class="bi bi-unlock me-1"></i>Desbloquear</button>
-                                </form>
-                            }
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
+@if (TempData["Enlace"] is string enlace)
+{
+    <div class="alert alert-warning" role="alert">
+        <p class="mb-1"><strong>No hay servicio de correo configurado.</strong> Entrega este enlace en persona (vence en 2 horas y es de un solo uso):</p>
+        <input class="form-control form-control-sm" value="@enlace" readonly aria-label="Enlace para crear la contraseña" />
     </div>
+}
+<form method="get" class="d-flex gap-2 mb-3" role="search"><input name="buscar" value="@ViewBag.Buscar" class="form-control" placeholder="Nombre o correo" aria-label="Buscar" /><button class="btn btn-outline-secondary">Buscar</button></form>
+<div class="table-responsive card shadow-sm">
+    <table class="table align-middle mb-0">
+        <thead class="table-light"><tr><th scope="col">Nombre</th><th scope="col">Correo</th><th scope="col">Rol</th><th scope="col">Vinculado con</th><th scope="col">Escuelas</th><th scope="col">Estado</th><th scope="col" class="text-end">Acciones</th></tr></thead>
+        <tbody>
+            @foreach (var u in Model)
+            {
+                <tr class="@(u.Activo ? "" : "table-secondary")">
+                    <td>@u.NombreCompleto</td>
+                    <td class="small">@u.Correo</td>
+                    <td>@string.Join(", ", u.Roles.Select(Roles.NombreVisible))</td>
+                    <td class="small">@(u.Vinculo ?? "—")</td>
+                    <td class="small">@(u.Escuelas ?? "—")</td>
+                    <td>
+                        @if (!u.Activo) { <span class="badge text-bg-secondary">Desactivada</span> }
+                        else if (u.Bloqueado) { <span class="badge text-bg-danger">Bloqueada</span> }
+                        else { <span class="badge text-bg-success">Activa</span> }
+                        @if (u.DosPasos) { <span class="badge text-bg-light border" title="Verificación en dos pasos activa"><i class="bi bi-shield-check" aria-hidden="true"></i> 2 pasos</span> }
+                    </td>
+                    <td class="text-end text-nowrap">
+                        <a asp-action="Editar" asp-route-id="@u.Id" class="btn btn-sm btn-outline-primary">Editar</a>
+                        <form asp-action="EnviarEnlace" asp-route-id="@u.Id" method="post" class="d-inline"><button class="btn btn-sm btn-outline-secondary" title="Enviar enlace para crear o cambiar contraseña">Contraseña</button></form>
+                        @if (u.DosPasos) { <form asp-action="RestablecerDosPasos" asp-route-id="@u.Id" method="post" class="d-inline" data-confirmar="¿Restablecer la verificación en dos pasos? Úsalo solo si la persona perdió su teléfono y sus códigos de respaldo."><button class="btn btn-sm btn-outline-secondary" title="Perdió su teléfono">Restablecer 2 pasos</button></form> }
+                        @if (u.Bloqueado) { <form asp-action="Desbloquear" asp-route-id="@u.Id" method="post" class="d-inline"><button class="btn btn-sm btn-outline-warning">Desbloquear</button></form> }
+                        <form asp-action="CambiarActivo" asp-route-id="@u.Id" method="post" class="d-inline" data-confirmar="@(u.Activo ? "¿Desactivar esta cuenta? No podrá entrar ni en la web ni en la app." : "¿Reactivar esta cuenta?")">
+                            <button class="btn btn-sm @(u.Activo ? "btn-outline-danger" : "btn-outline-success")">@(u.Activo ? "Desactivar" : "Activar")</button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
 </div>
