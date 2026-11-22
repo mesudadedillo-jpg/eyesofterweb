@@ -11,7 +11,9 @@ namespace EyesofterWeb.Data
     ///  3. Crea la cuenta inicial de Dirección con ADMIN_CORREO / ADMIN_PASSWORD si todavía no hay ninguna.
     ///     Si nadie es administrador global, marca como tal la cuenta ADMIN_GLOBAL_CORREO (o
     ///     ADMIN_CORREO): es quien da de alta escuelas.
-    ///  4. SOLO en desarrollo (o con SEMBRAR_DEMO=true): usuarios y datos ficticios de ejemplo.
+    ///  4. Con CUENTAS_PRUEBA_PASSWORD: una cuenta de prueba por rol en una escuela ficticia aparte
+    ///     (ver <see cref="CuentasPrueba"/>). La contraseña la decide quien despliega; no está en el código.
+    ///  5. SOLO en desarrollo (o con SEMBRAR_DEMO=true): usuarios y datos ficticios de ejemplo.
     ///     En producción NO se crean cuentas con contraseñas conocidas.
     /// </summary>
     public static class DbSeeder
@@ -85,8 +87,18 @@ namespace EyesofterWeb.Data
             // cualquiera que lea el README podría entrar.
             if (!demo) await DesactivarCuentasDemoAsync(userManager, logger);
 
-            if (!demo || await db.Tutores.AnyAsync()) return;
-            await SembrarDemoAsync(db, userManager, logger);
+            if (demo && !await db.Tutores.AnyAsync()) await SembrarDemoAsync(db, userManager, logger);
+
+            // Cuentas de prueba permanentes (una por rol) en una escuela ficticia aparte.
+            var clavePrueba = config["CUENTAS_PRUEBA_PASSWORD"];
+            if (!string.IsNullOrWhiteSpace(clavePrueba))
+            {
+                var correoBase = config["CUENTAS_PRUEBA_CORREO"] ?? config["ADMIN_CORREO"];
+                if (string.IsNullOrWhiteSpace(correoBase) || !correoBase.Contains('@'))
+                    logger.LogWarning("CUENTAS_PRUEBA_PASSWORD está definida pero falta CUENTAS_PRUEBA_CORREO (o ADMIN_CORREO): no se crearon las cuentas de prueba.");
+                else
+                    await CuentasPrueba.AsegurarAsync(db, userManager, logger, correoBase, clavePrueba);
+            }
         }
 
         private static readonly string[] CorreosDemo =
@@ -224,7 +236,7 @@ namespace EyesofterWeb.Data
             logger.LogInformation("Datos de ejemplo creados. Contraseña de las cuentas demo: {Clave}", PasswordDemo);
         }
 
-        private static async Task CrearUsuarioAsync(UserManager<ApplicationUser> userManager, ILogger logger,
+        internal static async Task CrearUsuarioAsync(UserManager<ApplicationUser> userManager, ILogger logger,
             string correo, string nombre, string password, string rol, Action<ApplicationUser>? vincular = null)
         {
             var usuario = await userManager.FindByEmailAsync(correo);
