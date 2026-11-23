@@ -72,7 +72,9 @@ main:focus { outline: none; }
 /* Reporte para el tutor: semáforo grande con icono y texto */
 .semaforo-grande { border-radius: 1rem; padding: 1.5rem; text-align: center; }
 .semaforo-grande .bi { font-size: 3rem; }
-.qr-pase { max-width: 260px; width: 100%; image-rendering: pixelated; }
+.qr-pase { max-width: 260px; width: 100%; }
+/* Los QR siempre cuadrados: sin esto, en flex o con width:100% + atributo height, se deformaban en escritorio */
+.qr-pase, .qr-img { height: auto !important; aspect-ratio: 1 / 1; object-fit: contain; flex-shrink: 0; image-rendering: pixelated; }
 .codigo-pase { font-family: ui-monospace, monospace; font-size: 1.25rem; letter-spacing: .08em; }
 #lectorQr { max-width: 420px; }
 .barra { height: .75rem; background: var(--marca-clara); border-radius: 1rem; overflow: hidden; }

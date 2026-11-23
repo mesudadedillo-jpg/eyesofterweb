@@ -81,7 +81,7 @@
                 @if (Model.PaseVigente is { } pase)
                 {
                     <div class="d-flex gap-3 align-items-center">
-                        <img src="@Url.Action("QrPase", new { id = c.Id })" alt="Código QR del pase médico" class="qr-pase" width="120" height="120" />
+                        <img src="@Url.Action("QrPase", new { id = c.Id })" alt="Código QR del pase médico" class="qr-pase" width="120" height="120" style="width:120px" />
                         <div>
                             <div>Para <strong>@pase.Clinica?.Nombre</strong></div>
                             <div class="codigo-pase">@EyesofterWeb.Servicios.Documentos.CodigoLegible(pase.Codigo)</div>
