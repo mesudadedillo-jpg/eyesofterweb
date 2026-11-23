@@ -15,7 +15,7 @@
                 <ol class="mb-3">
                     <li class="mb-2">Instala en tu teléfono una app autenticadora: <strong>Google Authenticator</strong>, <strong>Microsoft Authenticator</strong> o Authy (son gratuitas).</li>
                     <li class="mb-2">En la app, elige «Agregar cuenta» y escanea este código:
-                        <div class="my-2"><img src="@Model.QrDataUri" alt="Código QR para agregar EYESOFTER a tu app autenticadora" width="200" height="200" class="border rounded" /></div>
+                        <div class="my-2"><img src="@Model.QrDataUri" alt="Código QR para agregar EYESOFTER a tu app autenticadora" width="200" height="200" class="qr-img border rounded" style="max-width:100%" /></div>
                         <div class="small text-body-secondary">¿No puedes escanearlo? Escribe esta clave en la app: <code class="user-select-all">@Model.ClaveLegible</code></div>
                     </li>
                     <li>Escribe el código de 6 dígitos que te muestra la app:</li>
