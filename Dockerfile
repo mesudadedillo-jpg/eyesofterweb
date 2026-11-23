@@ -15,8 +15,9 @@ RUN dotnet publish EyesofterWeb/EyesofterWeb.csproj -c Release -o /app --no-rest
 FROM mcr.microsoft.com/dotnet/aspnet:10.0
 WORKDIR /app
 # Fuentes y fontconfig: los PDF (QuestPDF) y los Excel (ClosedXML) las usan para medir el texto.
+# libgssapi-krb5-2: la librería de PostgreSQL (Npgsql) la busca al arrancar; sin ella sale un aviso en el log.
 RUN apt-get update \
- && apt-get install -y --no-install-recommends fontconfig fonts-dejavu-core \
+ && apt-get install -y --no-install-recommends fontconfig fonts-dejavu-core libgssapi-krb5-2 \
  && rm -rf /var/lib/apt/lists/*
 COPY --from=build /app .
 ENV ASPNETCORE_ENVIRONMENT=Production \

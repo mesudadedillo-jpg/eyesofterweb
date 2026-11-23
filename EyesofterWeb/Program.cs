@@ -179,7 +179,7 @@ builder.Services.AddScoped<Notificador>();
 builder.Services.AddScoped<Expedientes>();
 builder.Services.AddScoped<Indicadores>();
 builder.Services.AddScoped<Documentos>();
-builder.Services.AddScoped<ICorreo, CorreoResend>();
+builder.Services.AddScoped<ICorreo, CorreoConfigurado>(); // Brevo o Resend, según las variables
 builder.Services.AddScoped<ISms, SmsTwilio>();
 builder.Services.AddScoped<RecuperacionPassword>();
 builder.Services.AddScoped<AccesoGoogle>();
