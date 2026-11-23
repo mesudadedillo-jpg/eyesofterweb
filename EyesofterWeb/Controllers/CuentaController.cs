@@ -21,11 +21,15 @@ namespace EyesofterWeb.Controllers
         private readonly ILogger<CuentaController> _logger;
         private readonly Documentos _documentos;
         private readonly RecuperacionPassword _recuperacion;
+        private readonly AccesoGoogle _google;
+        private readonly IConfiguration _config;
 
         public CuentaController(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager,
                                 Auditoria auditoria, ILogger<CuentaController> logger, Documentos documentos,
-                                RecuperacionPassword recuperacion)
+                                RecuperacionPassword recuperacion, AccesoGoogle google, IConfiguration config)
         {
+            _google = google;
+            _config = config;
             _documentos = documentos;
             _recuperacion = recuperacion;
             _userManager = userManager;
@@ -35,11 +39,19 @@ namespace EyesofterWeb.Controllers
         }
 
         [AllowAnonymous]
-        public IActionResult Login(string? returnUrl = null, bool expirada = false)
+        public IActionResult Login(string? returnUrl = null, bool expirada = false, string? google = null)
         {
             if (User.Identity?.IsAuthenticated == true) return RedirectToAction("Index", "Home");
             if (expirada) ViewBag.Aviso = "Tu sesión se cerró por inactividad. Vuelve a entrar.";
-            return View(new LoginViewModel { ReturnUrl = returnUrl });
+            if (google == "cancelado") ViewBag.Aviso = "No se completó el inicio de sesión con Google. Puedes intentarlo de nuevo o entrar con tu correo y contraseña.";
+            return View(ConGoogle(new LoginViewModel { ReturnUrl = returnUrl }));
+        }
+
+        /// <summary>El botón "Iniciar sesión con Google" solo aparece si el portal tiene las credenciales.</summary>
+        private LoginViewModel ConGoogle(LoginViewModel m)
+        {
+            m.GoogleDisponible = AccesoGoogle.Configurado(_config);
+            return m;
         }
 
         [HttpPost]
@@ -48,6 +60,7 @@ namespace EyesofterWeb.Controllers
         [EnableRateLimiting("acceso")]
         public async Task<IActionResult> Login(LoginViewModel modelo)
         {
+            ConGoogle(modelo);
             if (!ModelState.IsValid) return View(modelo);
 
             var usuario = await _userManager.FindByEmailAsync(modelo.Correo);
@@ -96,6 +109,130 @@ namespace EyesofterWeb.Controllers
             await _signInManager.SignOutAsync();
             TempData["Exito"] = "Cerraste sesión correctamente.";
             return RedirectToAction("Index", "Home");
+        }
+
+        // ---------- Iniciar sesión con Google (OAuth 2.0) ----------
+        // Las reglas (vincular por correo verificado, una cuenta de Google por cuenta, avisos por correo)
+        // viven en Servicios/AccesoGoogle.cs. La verificación en dos pasos del personal se sigue pidiendo.
+
+        /// <summary>Paso 1: manda a la persona a Google (formulario con antifalsificación, no un enlace).</summary>
+        [HttpPost]
+        [AllowAnonymous]
+        [ValidateAntiForgeryToken]
+        [EnableRateLimiting("acceso")]
+        public IActionResult LoginGoogle(string? returnUrl = null)
+        {
+            if (!AccesoGoogle.Configurado(_config)) return RedirectToAction(nameof(Login));
+            var regreso = Url.Action(nameof(RetornoGoogle), new { returnUrl = Url.IsLocalUrl(returnUrl) ? returnUrl : null });
+            var propiedades = _signInManager.ConfigureExternalAuthenticationProperties(AccesoGoogle.Proveedor, regreso);
+            return Challenge(propiedades, AccesoGoogle.Proveedor);
+        }
+
+        /// <summary>Paso 2: Google regresó (pasando por /signin-google). Se busca la cuenta y se inicia sesión.</summary>
+        [AllowAnonymous]
+        [EnableRateLimiting("acceso")]
+        public async Task<IActionResult> RetornoGoogle(string? returnUrl = null)
+        {
+            if (!AccesoGoogle.Configurado(_config)) return RedirectToAction(nameof(Login));
+            var info = await _signInManager.GetExternalLoginInfoAsync();
+            if (info is null)
+            {
+                TempData["Error"] = "No se pudo leer la respuesta de Google. Vuelve a intentarlo.";
+                return RedirectToAction(nameof(Login));
+            }
+
+            var cuenta = await _google.ResolverAsync(info);
+            if (!cuenta.Exito)
+            {
+                await HttpContext.SignOutAsync(IdentityConstants.ExternalScheme);
+                TempData["Error"] = AccesoGoogle.Mensaje(cuenta.Rechazo!.Value);
+                return RedirectToAction(nameof(Login));
+            }
+
+            // Mismo camino que una cuenta con contraseña: bloqueo por intentos y código de dos pasos.
+            var resultado = await _signInManager.ExternalLoginSignInAsync(info.LoginProvider, info.ProviderKey, isPersistent: false, bypassTwoFactor: false);
+            await HttpContext.SignOutAsync(IdentityConstants.ExternalScheme);
+            var usuario = cuenta.Usuario!;
+            if (cuenta.RecienVinculada)
+                TempData["Exito"] = "Listo: tu cuenta de Google quedó vinculada. Te enviamos un aviso a tu correo.";
+
+            if (resultado.Succeeded)
+            {
+                _auditoria.Registrar("LOGIN", "Usuario", usuario.Id, "Con Google", usuario: usuario.Email);
+                await GuardarAuditoriaAsync();
+                if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl)) return LocalRedirect(returnUrl);
+                return RedirectToAction("Index", "Home");
+            }
+            if (resultado.RequiresTwoFactor)
+                return RedirectToAction(nameof(LoginDosPasos), new { returnUrl });
+
+            _auditoria.Registrar(resultado.IsLockedOut ? "LOGIN_BLOQUEADO" : "LOGIN_FALLIDO", "Usuario", usuario.Id, "Con Google", exito: false, usuario: usuario.Email);
+            await GuardarAuditoriaAsync();
+            TempData.Remove("Exito");
+            TempData["Error"] = resultado.IsLockedOut
+                ? "Tu cuenta está bloqueada 15 minutos por intentos fallidos. Puedes esperar o recuperar tu contraseña."
+                : "No se pudo iniciar sesión con Google.";
+            return RedirectToAction(nameof(Login));
+        }
+
+        /// <summary>Mi cuenta → Google: ver si está vinculada, vincular o quitarla.</summary>
+        [Authorize]
+        public async Task<IActionResult> Google()
+        {
+            var usuario = await _userManager.GetUserAsync(User);
+            if (usuario is null) return Challenge();
+            return View(new CuentaGoogleViewModel
+            {
+                Disponible = AccesoGoogle.Configurado(_config),
+                Vinculada = await _google.VinculadaAsync(usuario),
+                Correo = usuario.Email ?? string.Empty
+            });
+        }
+
+        [HttpPost]
+        [Authorize]
+        [ValidateAntiForgeryToken]
+        public IActionResult VincularGoogle()
+        {
+            if (!AccesoGoogle.Configurado(_config)) return RedirectToAction(nameof(Google));
+            var propiedades = _signInManager.ConfigureExternalAuthenticationProperties(AccesoGoogle.Proveedor,
+                Url.Action(nameof(RetornoVincularGoogle)), _userManager.GetUserId(User));
+            return Challenge(propiedades, AccesoGoogle.Proveedor);
+        }
+
+        [Authorize]
+        public async Task<IActionResult> RetornoVincularGoogle()
+        {
+            var usuario = await _userManager.GetUserAsync(User);
+            if (usuario is null) return Challenge();
+            // Con el id de la cuenta: la respuesta de Google debe ser de esta misma sesión.
+            var info = await _signInManager.GetExternalLoginInfoAsync(usuario.Id);
+            await HttpContext.SignOutAsync(IdentityConstants.ExternalScheme);
+            if (info is null)
+            {
+                TempData["Error"] = "No se pudo leer la respuesta de Google. Vuelve a intentarlo.";
+                return RedirectToAction(nameof(Google));
+            }
+            var r = await _google.VincularAsync(usuario, info);
+            if (r.Exito) TempData["Exito"] = "Listo: ya puedes entrar con Google. Te enviamos un aviso a tu correo.";
+            else TempData["Error"] = AccesoGoogle.Mensaje(r.Rechazo!.Value);
+            return RedirectToAction(nameof(Google));
+        }
+
+        [HttpPost]
+        [Authorize]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DesvincularGoogle()
+        {
+            var usuario = await _userManager.GetUserAsync(User);
+            if (usuario is null) return Challenge();
+            if (await _google.DesvincularAsync(usuario))
+            {
+                // Quitar un login cambia el sello de seguridad: se renueva esta sesión.
+                await _signInManager.RefreshSignInAsync(usuario);
+                TempData["Exito"] = "Quitaste el inicio de sesión con Google. Entra con tu correo y contraseña.";
+            }
+            return RedirectToAction(nameof(Google));
         }
 
         // ---------- "¿Olvidaste tu contraseña?" con código al correo o al celular (C-RFNN-02, C-RI-02) ----------

@@ -1,6 +1,7 @@
 @model LoginViewModel
 @{
     ViewData["Title"] = "Iniciar sesión";
+    ViewData["Descripcion"] = "Entra al portal EYESOFTER con tu correo y contraseña o con tu cuenta de Google.";
 }
 
 <div class="row justify-content-center">
@@ -32,8 +33,20 @@
                     <button type="submit" class="btn btn-marca w-100">Entrar</button>
                 </form>
 
+                @if (Model.GoogleDisponible)
+                {
+                    <div class="separador-o my-3" role="separator"><span>o</span></div>
+                    <form asp-action="LoginGoogle" asp-route-returnUrl="@Model.ReturnUrl" method="post">
+                        <button type="submit" class="btn btn-google w-100">
+                            <partial name="_LogoGoogle" />
+                            <span>Iniciar sesión con Google</span>
+                        </button>
+                    </form>
+                    <p class="small text-body-secondary mt-2 mb-0 text-center">Usa la cuenta de Google con el correo que registró la escuela.</p>
+                }
+
                 <hr />
-                <p class="small mb-1 text-center"><a asp-action="Olvide">¿Olvidaste tu contraseña?</a></p>
+                <p class="small mb-1 text-center"><a class="enlace-tactil" asp-action="Olvide">¿Olvidaste tu contraseña?</a></p>
                 <p class="small mb-0 text-center text-body-secondary">¿No tienes cuenta? Pídela a la Dirección o a Enfermería de la escuela.</p>
             </div>
         </div>

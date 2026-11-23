@@ -6,6 +6,7 @@ using EyesofterWeb.Data;
 using EyesofterWeb.Models;
 using EyesofterWeb.Seguridad;
 using EyesofterWeb.Servicios;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
@@ -68,6 +69,39 @@ builder.Services
     .AddErrorDescriber<IdentityErroresEspanol>()
     .AddDefaultTokenProviders();
 
+// ---------- Iniciar sesión con Google (opcional: solo si hay GOOGLE_CLIENT_ID y GOOGLE_CLIENT_SECRET) ----------
+// Google dice quién es la persona; la cuenta debe existir ya en el portal (ver Servicios/AccesoGoogle.cs).
+var (googleId, googleSecreto) = AccesoGoogle.Credenciales(builder.Configuration);
+if (googleId is not null && googleSecreto is not null)
+{
+    builder.Services.AddAuthentication().AddGoogle(AccesoGoogle.Proveedor, o =>
+    {
+        o.ClientId = googleId;
+        o.ClientSecret = googleSecreto;
+        // URI de redireccionamiento autorizada en Google Cloud: https://<dominio>/signin-google
+        o.CallbackPath = "/signin-google";
+        o.SignInScheme = IdentityConstants.ExternalScheme;
+        // Solo nombre y correo (scopes openid, profile, email). No se pide acceso a Gmail ni a Drive.
+        o.ClaimActions.MapJsonKey(AccesoGoogle.ClaimCorreoVerificado, "email_verified");
+        // Google regresa con una navegación GET normal: Lax basta (y funciona en http://localhost).
+        o.CorrelationCookie.SameSite = SameSiteMode.Lax;
+        o.CorrelationCookie.SecurePolicy = builder.Environment.IsDevelopment() ? CookieSecurePolicy.SameAsRequest : CookieSecurePolicy.Always;
+        o.Events.OnRedirectToAuthorizationEndpoint = ctx =>
+        {
+            // Computadoras compartidas de la escuela: que siempre pregunte qué cuenta de Google usar.
+            ctx.Response.Redirect(Microsoft.AspNetCore.WebUtilities.QueryHelpers.AddQueryString(ctx.RedirectUri, "prompt", "select_account"));
+            return Task.CompletedTask;
+        };
+        o.Events.OnRemoteFailure = ctx =>
+        {
+            // La persona canceló en Google o el enlace de regreso ya no sirve: de vuelta al login con un aviso.
+            ctx.Response.Redirect("/Cuenta/Login?google=cancelado");
+            ctx.HandleResponse();
+            return Task.CompletedTask;
+        };
+    });
+}
+
 builder.Services.AddAuthorization(o => o.AddPolicy(Roles.PoliticaGlobal,
     p => p.RequireRole(Roles.Administrador).RequireClaim(AlcanceEscuela.ClaimGlobal, "true")));
 
@@ -124,6 +158,18 @@ builder.Services.Configure<WebEncoderOptions>(options =>
     options.TextEncoderSettings = new TextEncoderSettings(UnicodeRanges.All);
 });
 
+// ---------- Rendimiento (Lighthouse): comprimir CSS, JS, fuentes e íconos ----------
+// Solo archivos estáticos: el HTML lleva el token antifalsificación y no se comprime sobre HTTPS (BREACH).
+builder.Services.AddResponseCompression(o =>
+{
+    o.EnableForHttps = true;
+    o.Providers.Add<Microsoft.AspNetCore.ResponseCompression.BrotliCompressionProvider>();
+    o.Providers.Add<Microsoft.AspNetCore.ResponseCompression.GzipCompressionProvider>();
+    o.MimeTypes = ArchivosEstaticos.TiposComprimibles;
+});
+builder.Services.Configure<Microsoft.AspNetCore.ResponseCompression.BrotliCompressionProviderOptions>(o => o.Level = System.IO.Compression.CompressionLevel.Fastest);
+builder.Services.Configure<Microsoft.AspNetCore.ResponseCompression.GzipCompressionProviderOptions>(o => o.Level = System.IO.Compression.CompressionLevel.Fastest);
+
 // ---------- Servicios propios ----------
 builder.Services.AddHttpClient();
 builder.Services.Configure<OpcionesEyesofter>(builder.Configuration.GetSection("Eyesofter"));
@@ -136,6 +182,7 @@ builder.Services.AddScoped<Documentos>();
 builder.Services.AddScoped<ICorreo, CorreoResend>();
 builder.Services.AddScoped<ISms, SmsTwilio>();
 builder.Services.AddScoped<RecuperacionPassword>();
+builder.Services.AddScoped<AccesoGoogle>();
 QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
 
 // ---------- MVC ----------
@@ -187,7 +234,8 @@ else
 app.UseStatusCodePagesWithReExecute("/Home/Estado/{0}");
 
 app.UseCabecerasSeguridad();
-app.UseStaticFiles();
+app.UseResponseCompression();
+app.UseStaticFiles(new StaticFileOptions { OnPrepareResponse = ArchivosEstaticos.PonerCache });
 
 app.UseRouting();
 app.UseRateLimiter();

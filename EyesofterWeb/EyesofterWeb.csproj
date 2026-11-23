@@ -10,6 +10,7 @@
 
   <ItemGroup>
     <!-- Identity con almacenamiento en Entity Framework Core -->
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.Google" Version="10.0.15" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="10.0.15" />
     <!-- Página de error de base de datos en desarrollo (aplicar migraciones pendientes) -->
     <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="10.0.15" />
