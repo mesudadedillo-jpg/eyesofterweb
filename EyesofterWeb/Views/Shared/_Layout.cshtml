@@ -16,6 +16,10 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - EYESOFTER Web</title>
+    <meta name="description" content="@(ViewData["Descripcion"] as string ?? "EYESOFTER Suite: portal del programa de salud visual escolar. Resultados del tamizaje, pase médico, clínicas asociadas y avisos para familias, Enfermería y Dirección.")" />
+    <meta name="theme-color" content="#0B47A8" />
+    <link rel="icon" href="~/favicon.svg" type="image/svg+xml" />
+    <link rel="alternate icon" href="~/favicon.ico" sizes="any" />
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/lib/bootstrap-icons/font/bootstrap-icons.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
@@ -88,6 +92,7 @@
                                 <ul class="dropdown-menu dropdown-menu-end">
                                     <li><a class="dropdown-item" asp-controller="Cuenta" asp-action="CambiarPassword"><i class="bi bi-key me-1" aria-hidden="true"></i>Cambiar contraseña</a></li>
                                     <li><a class="dropdown-item" asp-controller="Cuenta" asp-action="DosPasos"><i class="bi bi-shield-lock me-1" aria-hidden="true"></i>Verificación en dos pasos</a></li>
+                                    <li><a class="dropdown-item" asp-controller="Cuenta" asp-action="Google"><i class="bi bi-google me-1" aria-hidden="true"></i>Iniciar sesión con Google</a></li>
                                     <li><a class="dropdown-item" asp-controller="Soporte" asp-action="Reportar"><i class="bi bi-life-preserver me-1" aria-hidden="true"></i>Reportar una falla o duda</a></li>
                                     <li><hr class="dropdown-divider" /></li>
                                     <li>

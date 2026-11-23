@@ -1,0 +1,22 @@
+# Pruebas unitarias del portal (EyesofterWeb.Tests) en cada push y pull request.
+name: Pruebas
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  pruebas:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+      - name: Compilar y probar
+        run: dotnet test EyesofterWeb.sln --configuration Release --logger "console;verbosity=normal"

@@ -15,6 +15,17 @@ namespace EyesofterWeb.Models.ViewModels
         public string Password { get; set; } = string.Empty;
 
         public string? ReturnUrl { get; set; }
+
+        /// <summary>El portal tiene configurado "Iniciar sesión con Google".</summary>
+        public bool GoogleDisponible { get; set; }
+    }
+
+    /// <summary>Mi cuenta → Google.</summary>
+    public class CuentaGoogleViewModel
+    {
+        public bool Disponible { get; set; }
+        public bool Vinculada { get; set; }
+        public string Correo { get; set; } = string.Empty;
     }
 
     public class LoginDosPasosViewModel

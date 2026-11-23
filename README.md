@@ -66,6 +66,41 @@ Una sola instalación atiende a varias escuelas y **cada una solo ve a sus alumn
   recibe ningún dato por tener convenio: solo ve el caso cuando la familia la elige y llega con su pase.
 - La matrícula es única **dentro de cada escuela**.
 
+## Iniciar sesión con Google
+
+En la pantalla de inicio de sesión aparece el botón **Iniciar sesión con Google** (solo si están configuradas
+`GOOGLE_CLIENT_ID` y `GOOGLE_CLIENT_SECRET`). Google solo dice quién es la persona: **no hay registro público**,
+las cuentas las sigue creando la Dirección.
+
+- **Primera vez:** se vincula con la cuenta de EYESOFTER que tiene **el mismo correo**, solo si Google confirma que
+  el correo es de esa persona (`email_verified`). Si el correo no tiene cuenta, se le pide que la solicite a la escuela.
+- **Después:** se reconoce por el identificador de la cuenta de Google, aunque cambie su correo de Gmail.
+- **Otro correo:** con la sesión iniciada, *menú de la cuenta → Iniciar sesión con Google → Vincular* (por ejemplo,
+  la escuela registró un correo del trabajo y el tutor usa Gmail). Ahí también se puede **quitar**.
+- **Aviso por correo** (Resend) cada vez que se vincula o se quita Google, con el enlace para quitarlo si no fue la persona.
+- Se siguen aplicando: cuentas desactivadas, bloqueo de 15 min por intentos y la **verificación en dos pasos** de
+  Dirección y Enfermería (Google no la sustituye). Solo se piden los permisos `openid profile email`; Google siempre
+  pregunta qué cuenta usar (computadoras compartidas). La contraseña sigue funcionando en el portal y en la app.
+- Bitácora: `GOOGLE_VINCULADA`, `GOOGLE_DESVINCULADA`, `LOGIN_GOOGLE_RECHAZADO` y `LOGIN` con detalle "Con Google".
+- Las reglas están en `Servicios/AccesoGoogle.cs`; el flujo, en `CuentaController` (`LoginGoogle`, `RetornoGoogle`,
+  `Google`, `VincularGoogle`, `DesvincularGoogle`).
+
+**Configurar (una vez):**
+
+1. [Google Cloud Console](https://console.cloud.google.com) → crea un proyecto → *APIs y servicios →
+   Pantalla de consentimiento de OAuth*: tipo **Externo**, nombre "EYESOFTER", correo de soporte, y los permisos
+   `openid`, `.../auth/userinfo.email` y `.../auth/userinfo.profile`. Publica la app (estado *En producción*);
+   en *Prueba* solo entran los correos que agregues como usuarios de prueba.
+2. *Credenciales → Crear credenciales → ID de cliente de OAuth* → **Aplicación web**.
+   - Orígenes autorizados: `https://eyesofterweb-production.up.railway.app` (y `https://localhost:7080` para probar en tu PC).
+   - **URI de redireccionamiento autorizados:** `https://eyesofterweb-production.up.railway.app/signin-google`
+     (y `https://localhost:7080/signin-google`).
+3. En Railway, variables del portal: `GOOGLE_CLIENT_ID` y `GOOGLE_CLIENT_SECRET` (y que `Eyesofter__UrlWeb` sea
+   `https://eyesofterweb-production.up.railway.app`, para que el enlace de los correos de aviso sea el correcto). En tu PC, sin ponerlas en el repositorio:
+   `dotnet user-secrets set GOOGLE_CLIENT_ID "..."` y `dotnet user-secrets set GOOGLE_CLIENT_SECRET "..."` (en `EyesofterWeb/`).
+
+Si Google responde `redirect_uri_mismatch`, la URI del paso 2 no coincide exactamente (https, dominio y `/signin-google`).
+
 ## Seguridad
 
 - **Verificación en dos pasos (TOTP)** con cualquier app autenticadora. **Obligatoria para Dirección y
@@ -95,7 +130,8 @@ El repositorio trae `Dockerfile` y `railway.json` (healthcheck en `/salud`).
 | `ADMIN_GLOBAL_CORREO` | (Opcional) Correo de la cuenta de Dirección que será administrador global si todavía no hay ninguno. Si no se define, se usa `ADMIN_CORREO` |
 | `Eyesofter__UrlWeb` | URL pública de este portal (va en los correos) |
 | `Eyesofter__UrlApi` | URL pública del servidor de la app |
-| `RESEND_API_KEY` / `CORREO_REMITENTE` | Correo con el código para recuperar contraseñas (Resend es gratis hasta 3 000 correos al mes). Sin ellas no llega el código |
+| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | (Opcional) Botón **Iniciar sesión con Google** (ver "Iniciar sesión con Google"). Sin ellas el botón no aparece |
+| `RESEND_API_KEY` / `CORREO_REMITENTE` | Correo con el código para recuperar contraseñas y los avisos de cuenta de Google vinculada (Resend es gratis hasta 3 000 correos al mes). Sin ellas no llega el código |
 | `TWILIO_ACCOUNT_SID` / `TWILIO_AUTH_TOKEN` / `TWILIO_NUMERO` | (Opcional) Código por SMS al celular del tutor. Twilio cobra (≈ US$0.05 por SMS a México; la cuenta de prueba solo envía a números verificados). Sin ellas, a quien escribe su celular el código le llega al correo. Las mismas en el servidor de la app |
 | `SMS_PREFIJO_PAIS` | (Opcional) Lada para celulares de 10 dígitos. Por defecto `+52` |
 | `Eyesofter__UrlApk` | (Opcional) Dónde se descarga el instalador de Android. Por defecto, el último APK publicado en GitHub Releases de `eyesofterandroidfront` (página pública `/App`) |
@@ -128,6 +164,31 @@ directorio de clínicas con la leyenda "(ficticia)".
 Si falta `EYESOFTER_CLAVE_DATOS`, el portal se detiene a propósito con un mensaje claro en los logs:
 sin esa llave no puede proteger los datos de los alumnos.
 
+## Pruebas unitarias
+
+```bash
+dotnet test
+```
+
+`EyesofterWeb.Tests/` (xUnit, sin base de datos ni internet: Identity sobre EF Core en memoria y correo/HTTP falsos):
+
+| Archivo | Qué prueba |
+|---|---|
+| `AccesoGoogleTests.cs` | Vincular por correo verificado, reconocer por el id de Google, correo no verificado, sin cuenta, cuenta desactivada, una sola cuenta de Google por cuenta, vincular otro correo con sesión, quitar Google, avisos por correo y bitácora |
+| `CorreoTests.cs` | Envío por Resend: URL, llave, remitente, destinatario, asunto y HTML; errores de Resend y sin red; sin configurar no envía |
+| `CuentaControllerTests.cs` | El botón de Google aparece solo si está configurado; aviso al cancelar; sin configurar regresa al login |
+| `CabecerasSeguridadTests.cs` | La CSP permite el formulario hacia `accounts.google.com` y sigue sin scripts de terceros ni iframes |
+| `ArchivosEstaticosTests.cs` | Caché de archivos estáticos y que el HTML no se comprima |
+| `RecuperacionPasswordTests.cs`, `LoginViewModelTests.cs` | Correo o celular, código por correo/SMS y validación del formulario de login |
+
+GitHub Actions las corre en cada push (`.github/workflows/pruebas.yml`).
+
+## Lighthouse (escritorio y móvil)
+
+Las 6 páginas públicas obtienen **100 en accesibilidad, buenas prácticas y SEO** en móvil y escritorio;
+rendimiento **95–97 en móvil** y **100 en escritorio**. Detalle, antes/después y reportes en
+[`docs/lighthouse/`](docs/lighthouse/README.md). Para repetirlo: `scripts/lighthouse.sh https://eyesofterweb-production.up.railway.app` (o `https://localhost:7080`).
+
 ## Estructura
 
 ```
@@ -136,7 +197,7 @@ EyesofterWeb/
 ├─ Data/          ApplicationDbContext, conexión (DATABASE_URL), siembra inicial
 ├─ Migrations/    Esquema de la base (también lo usa el servidor de la app)
 ├─ Models/        Entidades y enums
-├─ Servicios/     Expedientes (reglas del caso), Notificador, Indicadores, Documentos (PDF/Excel/QR), Auditoría, Correo
-├─ Seguridad/     Cifrado AES-256-GCM, cabeceras, consentimiento
+├─ Servicios/     Expedientes (reglas del caso), Notificador, Indicadores, Documentos (PDF/Excel/QR), Auditoría, Correo, AccesoGoogle
+├─ Seguridad/     Cifrado AES-256-GCM, cabeceras, consentimiento, caché de archivos estáticos
 └─ Views/ wwwroot/
 ```
