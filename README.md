@@ -131,7 +131,8 @@ El repositorio trae `Dockerfile` y `railway.json` (healthcheck en `/salud`).
 | `Eyesofter__UrlWeb` | URL pública de este portal (va en los correos) |
 | `Eyesofter__UrlApi` | URL pública del servidor de la app |
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | (Opcional) Botón **Iniciar sesión con Google** (ver "Iniciar sesión con Google"). Sin ellas el botón no aparece |
-| `RESEND_API_KEY` / `CORREO_REMITENTE` | Correo con el código para recuperar contraseñas y los avisos de cuenta de Google vinculada (Resend es gratis hasta 3 000 correos al mes). Sin ellas no llega el código |
+| `BREVO_API_KEY` / `CORREO_REMITENTE` | Correo: código para recuperar contraseñas, enlace para crear la contraseña de cuentas nuevas y avisos de Google. Con [Brevo](https://www.brevo.com) (gratis, 300 correos al día) **no se necesita dominio propio**: ver "Correo sin dominio propio (Brevo)". Las mismas en el servidor de la app |
+| `RESEND_API_KEY` | Alternativa a Brevo con [Resend](https://resend.com) (3 000 al mes). Para enviar a cualquiera, el remitente debe ser de un dominio verificado en Resend; con `onboarding@resend.dev` solo llega al correo de tu cuenta de Resend. Si están las dos llaves, se usa Brevo |
 | `TWILIO_ACCOUNT_SID` / `TWILIO_AUTH_TOKEN` / `TWILIO_NUMERO` | (Opcional) Código por SMS al celular del tutor. Twilio cobra (≈ US$0.05 por SMS a México; la cuenta de prueba solo envía a números verificados). Sin ellas, a quien escribe su celular el código le llega al correo. Las mismas en el servidor de la app |
 | `SMS_PREFIJO_PAIS` | (Opcional) Lada para celulares de 10 dígitos. Por defecto `+52` |
 | `Eyesofter__UrlApk` | (Opcional) Dónde se descarga el instalador de Android. Por defecto, el último APK publicado en GitHub Releases de `eyesofterandroidfront` (página pública `/App`) |
@@ -164,6 +165,18 @@ directorio de clínicas con la leyenda "(ficticia)".
 Si falta `EYESOFTER_CLAVE_DATOS`, el portal se detiene a propósito con un mensaje claro en los logs:
 sin esa llave no puede proteger los datos de los alumnos.
 
+## Correo sin dominio propio (Brevo)
+
+1. Crea una cuenta gratis en [brevo.com](https://www.brevo.com). Conviene un Gmail del proyecto (p. ej. `eyesofter.avisos@gmail.com`).
+2. *Senders, Domains & Dedicated IPs → Senders → Add a sender*: nombre `EYESOFTER` y ese Gmail. Brevo manda un
+   código a ese Gmail para verificarlo.
+3. *SMTP & API → API Keys → Generate a new API key* (empieza con `xkeysib-`).
+4. En Railway, **en el portal y en el servidor de la app**: `BREVO_API_KEY` = la llave y
+   `CORREO_REMITENTE` = `EYESOFTER <eyesofter.avisos@gmail.com>`. Puedes quitar `RESEND_API_KEY`.
+
+Sin dominio propio, Gmail y Outlook a veces mandan estos correos a **Spam**: pide a las familias que revisen esa
+carpeta y marquen "No es spam". Con un dominio verificado (en Brevo o Resend) llegan mejor.
+
 ## Pruebas unitarias
 
 ```bash
@@ -175,7 +188,7 @@ dotnet test
 | Archivo | Qué prueba |
 |---|---|
 | `AccesoGoogleTests.cs` | Vincular por correo verificado, reconocer por el id de Google, correo no verificado, sin cuenta, cuenta desactivada, una sola cuenta de Google por cuenta, vincular otro correo con sesión, quitar Google, avisos por correo y bitácora |
-| `CorreoTests.cs` | Envío por Resend: URL, llave, remitente, destinatario, asunto y HTML; errores de Resend y sin red; sin configurar no envía |
+| `CorreoTests.cs`, `CorreoBrevoTests.cs` | Envío por Resend y por Brevo: URL, llave, remitente, destinatario, asunto y HTML; elección del proveedor; errores y sin red; sin configurar no envía |
 | `CuentaControllerTests.cs` | El botón de Google aparece solo si está configurado; aviso al cancelar; sin configurar regresa al login |
 | `CabecerasSeguridadTests.cs` | La CSP permite el formulario hacia `accounts.google.com` y sigue sin scripts de terceros ni iframes |
 | `ArchivosEstaticosTests.cs` | Caché de archivos estáticos y que el HTML no se comprima |
