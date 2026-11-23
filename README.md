@@ -95,7 +95,9 @@ El repositorio trae `Dockerfile` y `railway.json` (healthcheck en `/salud`).
 | `ADMIN_GLOBAL_CORREO` | (Opcional) Correo de la cuenta de Dirección que será administrador global si todavía no hay ninguno. Si no se define, se usa `ADMIN_CORREO` |
 | `Eyesofter__UrlWeb` | URL pública de este portal (va en los correos) |
 | `Eyesofter__UrlApi` | URL pública del servidor de la app |
-| `RESEND_API_KEY` / `CORREO_REMITENTE` | Correo para recuperar contraseñas (opcional al principio) |
+| `RESEND_API_KEY` / `CORREO_REMITENTE` | Correo con el código para recuperar contraseñas (Resend es gratis hasta 3 000 correos al mes). Sin ellas no llega el código |
+| `TWILIO_ACCOUNT_SID` / `TWILIO_AUTH_TOKEN` / `TWILIO_NUMERO` | (Opcional) Código por SMS al celular del tutor. Twilio cobra (≈ US$0.05 por SMS a México; la cuenta de prueba solo envía a números verificados). Sin ellas, a quien escribe su celular el código le llega al correo. Las mismas en el servidor de la app |
+| `SMS_PREFIJO_PAIS` | (Opcional) Lada para celulares de 10 dígitos. Por defecto `+52` |
 | `Eyesofter__UrlApk` | (Opcional) Dónde se descarga el instalador de Android. Por defecto, el último APK publicado en GitHub Releases de `eyesofterandroidfront` (página pública `/App`) |
 | `CUENTAS_PRUEBA_PASSWORD` | (Opcional) Crea y mantiene una cuenta de prueba por rol en una escuela ficticia aparte (ver abajo). Pon esta variable a mano en el panel; no la publiques |
 | `CUENTAS_PRUEBA_CORREO` | (Opcional) Correo base de las cuentas de prueba. Si no se define, se usa `ADMIN_CORREO` |

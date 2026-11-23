@@ -37,7 +37,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(o => BaseDeDatos.Configurar(
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
 // Las llaves que protegen las cookies se guardan en la base: si Railway reinicia el
-// contenedor, las sesiones y los enlaces de recuperación de contraseña siguen siendo válidos.
+// contenedor, las sesiones y los enlaces para crear la contraseña siguen siendo válidos.
 builder.Services.AddDataProtection()
     .SetApplicationName("EyesofterWeb")
     .PersistKeysToDbContext<ApplicationDbContext>();
@@ -71,7 +71,7 @@ builder.Services
 builder.Services.AddAuthorization(o => o.AddPolicy(Roles.PoliticaGlobal,
     p => p.RequireRole(Roles.Administrador).RequireClaim(AlcanceEscuela.ClaimGlobal, "true")));
 
-// Los enlaces de recuperación de contraseña caducan en 2 horas.
+// Los enlaces para crear la contraseña (alta de cuentas) caducan en 2 horas.
 builder.Services.Configure<DataProtectionTokenProviderOptions>(o => o.TokenLifespan = TimeSpan.FromHours(2));
 
 // Revisa el sello de seguridad en cada petición: si se cambia el rol o se desactiva
@@ -134,6 +134,8 @@ builder.Services.AddScoped<Expedientes>();
 builder.Services.AddScoped<Indicadores>();
 builder.Services.AddScoped<Documentos>();
 builder.Services.AddScoped<ICorreo, CorreoResend>();
+builder.Services.AddScoped<ISms, SmsTwilio>();
+builder.Services.AddScoped<RecuperacionPassword>();
 QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
 
 // ---------- MVC ----------

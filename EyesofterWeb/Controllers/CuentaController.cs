@@ -1,4 +1,3 @@
-using System.Text.Encodings.Web;
 using EyesofterWeb.Models;
 using EyesofterWeb.Models.ViewModels;
 using EyesofterWeb.Servicios;
@@ -19,18 +18,19 @@ namespace EyesofterWeb.Controllers
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly Auditoria _auditoria;
-        private readonly ICorreo _correo;
         private readonly ILogger<CuentaController> _logger;
         private readonly Documentos _documentos;
+        private readonly RecuperacionPassword _recuperacion;
 
         public CuentaController(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager,
-                                Auditoria auditoria, ICorreo correo, ILogger<CuentaController> logger, Documentos documentos)
+                                Auditoria auditoria, ILogger<CuentaController> logger, Documentos documentos,
+                                RecuperacionPassword recuperacion)
         {
             _documentos = documentos;
+            _recuperacion = recuperacion;
             _userManager = userManager;
             _signInManager = signInManager;
             _auditoria = auditoria;
-            _correo = correo;
             _logger = logger;
         }
 
@@ -98,7 +98,8 @@ namespace EyesofterWeb.Controllers
             return RedirectToAction("Index", "Home");
         }
 
-        // ---------- Recuperación de contraseña por correo (C-RFNN-02, C-RI-02) ----------
+        // ---------- "¿Olvidaste tu contraseña?" con código al correo o al celular (C-RFNN-02, C-RI-02) ----------
+        // Las reglas viven en Servicios/RecuperacionPassword.cs (las mismas que la app).
 
         [AllowAnonymous]
         public IActionResult Olvide() => View(new OlvideViewModel());
@@ -110,24 +111,56 @@ namespace EyesofterWeb.Controllers
         public async Task<IActionResult> Olvide(OlvideViewModel modelo)
         {
             if (!ModelState.IsValid) return View(modelo);
-
-            var usuario = await _userManager.FindByEmailAsync(modelo.Correo);
-            if (usuario is { Activo: true })
+            var cuenta = modelo.Cuenta.Trim();
+            if (!cuenta.Contains('@') && !RecuperacionPassword.EsTelefono(cuenta))
             {
-                var token = await _userManager.GeneratePasswordResetTokenAsync(usuario);
-                var enlace = Url.Action(nameof(Restablecer), "Cuenta", new { correo = usuario.Email, token }, Request.Scheme)!;
-                await _correo.EnviarAsync(usuario.Email!, "EYESOFTER: restablece tu contraseña",
-                    $"<p>Hola, {HtmlEncoder.Default.Encode(usuario.NombreCompleto)}:</p>" +
-                    $"<p>Para crear una contraseña nueva entra a este enlace (vence en 2 horas):</p>" +
-                    $"<p><a href=\"{HtmlEncoder.Default.Encode(enlace)}\">Restablecer mi contraseña</a></p>" +
-                    "<p>Si no lo pediste, ignora este correo: tu contraseña no cambia.</p>");
-                _auditoria.Registrar("RECUPERAR_PASSWORD", "Usuario", usuario.Id, modelo.Correo, usuario: usuario.Email);
-                await GuardarAuditoriaAsync();
+                ModelState.AddModelError(nameof(modelo.Cuenta), "Escribe tu correo o tu celular de 10 dígitos.");
+                return View(modelo);
             }
-            // Mismo mensaje exista o no la cuenta: así no se puede averiguar quién está registrado.
-            TempData["Exito"] = "Si el correo está registrado, te enviamos un enlace para restablecer la contraseña.";
+            await _recuperacion.SolicitarAsync(cuenta, HttpContext.Connection.RemoteIpAddress?.ToString());
+            // Mismo resultado exista o no la cuenta: así no se puede averiguar quién está registrado.
+            TempData[ClaveCuentaRecuperacion] = cuenta;
+            return RedirectToAction(nameof(IngresarCodigo));
+        }
+
+        /// <summary>Paso 2: escribir el código y la contraseña nueva. También sirve con un código pedido en la app.</summary>
+        [AllowAnonymous]
+        public IActionResult IngresarCodigo()
+        {
+            var cuenta = TempData.Peek(ClaveCuentaRecuperacion) as string ?? "";
+            return View(ModeloCodigo(new IngresarCodigoViewModel { Cuenta = cuenta }));
+        }
+
+        [HttpPost]
+        [AllowAnonymous]
+        [ValidateAntiForgeryToken]
+        [EnableRateLimiting("acceso")]
+        public async Task<IActionResult> IngresarCodigo(IngresarCodigoViewModel modelo)
+        {
+            if (!ModelState.IsValid) return View(ModeloCodigo(modelo));
+            var r = await _recuperacion.RestablecerAsync(modelo.Cuenta, modelo.Codigo, modelo.Password);
+            if (!r.Exito)
+            {
+                if (r.Clave == RecuperacionPassword.ClavePasswordInvalida)
+                    foreach (var e in r.Errores ?? new[] { r.Mensaje! }) ModelState.AddModelError(nameof(modelo.Password), e);
+                else ModelState.AddModelError(string.Empty, r.Mensaje!);
+                return View(ModeloCodigo(modelo));
+            }
+            TempData.Remove(ClaveCuentaRecuperacion);
+            TempData["Exito"] = "Listo. Ya puedes entrar con tu nueva contraseña (también en la app).";
             return RedirectToAction(nameof(Login));
         }
+
+        private const string ClaveCuentaRecuperacion = "RecuperarCuenta";
+
+        private IngresarCodigoViewModel ModeloCodigo(IngresarCodigoViewModel m)
+        {
+            m.PorCelular = RecuperacionPassword.EsTelefono(m.Cuenta ?? "");
+            m.SmsDisponible = _recuperacion.SmsDisponible;
+            return m;
+        }
+
+        // ---------- Crear la contraseña con el enlace del correo de bienvenida (alta de cuentas) ----------
 
         [AllowAnonymous]
         public IActionResult Restablecer(string? correo, string? token)

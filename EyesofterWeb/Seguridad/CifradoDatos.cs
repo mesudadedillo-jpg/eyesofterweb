@@ -78,6 +78,18 @@ namespace EyesofterWeb.Seguridad
             return claro;
         }
 
+        /// <summary>
+        /// Huella HMAC-SHA256 (hex en minúsculas) de <paramref name="texto"/> con la llave de datos.
+        /// Sirve para guardar algo que solo hay que COMPARAR, como los códigos de recuperación:
+        /// aunque alguien lea la base, sin la llave no puede probar los 10^6 códigos posibles.
+        /// El servidor Ktor calcula lo mismo (CifradoDatos.firma): "proposito\ntexto".
+        /// </summary>
+        public string Firma(string proposito, string texto)
+        {
+            var mensaje = Encoding.UTF8.GetBytes(proposito + "\n" + texto);
+            return Convert.ToHexStringLower(HMACSHA256.HashData(_clave, mensaje));
+        }
+
         /// <summary>Lee la llave de la configuración. En producción, sin llave no arranca.</summary>
         public static CifradoDatos DesdeConfiguracion(IConfiguration config, IHostEnvironment entorno, ILogger? log = null)
         {
