@@ -24,6 +24,25 @@ Capturas: [`login-movil.png`](login-movil.png) · [`login-escritorio.png`](login
 Login en móvil: primer contenido visible (FCP) y elemento más grande (LCP) de **4.2 s → 2.3 s**; bloqueo total 0 ms; sin
 saltos de diseño (CLS 0).
 
+## En producción (Railway), antes de desplegar estos cambios
+
+`https://eyesofterweb-production.up.railway.app`, medido el mismo día con el mismo script:
+
+| Página | Móvil | Escritorio |
+|---|---|---|
+| `/Cuenta/Login` | 99 · 100 · 96 · 90 | 100 · 100 · 96 · 90 |
+| `/` (inicio) | 100 · 100 · 96 · 90 | 100 · 100 · 96 · 90 |
+| `/App` | 100 · 100 · 96 · 90 | 100 · 100 · 96 · 91 |
+| `/Privacidad/Seguridad` | 100 · 100 · 96 · 90 | 100 · 100 · 96 · 90 |
+| `/Cuenta/Olvide` | 100 · **96** · 96 · 90 | 100 · 100 · 96 · 90 |
+| `/Soporte/Ayuda` | 100 · 100 · 96 · 90 | 100 · 100 · 96 · 90 |
+
+El proxy de Railway ya comprime con gzip, por eso el rendimiento en producción es alto aun sin la compresión
+del portal (en la medición local, sin ese proxy, el móvil daba 76–82). Lo que estos cambios corrigen en producción:
+**buenas prácticas 96 → 100** (el `/favicon.ico` que faltaba daba un error en la consola), **SEO 90 → 100**
+(meta descripción), **accesibilidad de `/Cuenta/Olvide` 96 → 100** (enlaces táctiles) y la caché de los archivos
+estáticos (Lighthouse marcaba 10 archivos sin caché). Después de desplegar, vuelve a correr el script contra producción.
+
 ## Qué se corrigió
 
 | Hallazgo de Lighthouse | Corrección |
@@ -43,7 +62,7 @@ usa una parte; recortarlo requeriría compilar Bootstrap a la medida.
 # Portal local por HTTPS (en otra terminal): cd EyesofterWeb && dotnet run --launch-profile https
 scripts/lighthouse.sh https://localhost:7080
 # o contra Railway:
-scripts/lighthouse.sh https://<dominio>.up.railway.app
+scripts/lighthouse.sh https://eyesofterweb-production.up.railway.app
 ```
 
 El script audita las 6 páginas públicas en móvil y escritorio, deja los reportes en `lighthouse-reportes/` y

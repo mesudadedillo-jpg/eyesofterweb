@@ -92,10 +92,11 @@ las cuentas las sigue creando la Dirección.
    `openid`, `.../auth/userinfo.email` y `.../auth/userinfo.profile`. Publica la app (estado *En producción*);
    en *Prueba* solo entran los correos que agregues como usuarios de prueba.
 2. *Credenciales → Crear credenciales → ID de cliente de OAuth* → **Aplicación web**.
-   - Orígenes autorizados: `https://<dominio>.up.railway.app` (y `https://localhost:7080` para probar en tu PC).
-   - **URI de redireccionamiento autorizados:** `https://<dominio>.up.railway.app/signin-google`
+   - Orígenes autorizados: `https://eyesofterweb-production.up.railway.app` (y `https://localhost:7080` para probar en tu PC).
+   - **URI de redireccionamiento autorizados:** `https://eyesofterweb-production.up.railway.app/signin-google`
      (y `https://localhost:7080/signin-google`).
-3. En Railway, variables del portal: `GOOGLE_CLIENT_ID` y `GOOGLE_CLIENT_SECRET`. En tu PC, sin ponerlas en el repositorio:
+3. En Railway, variables del portal: `GOOGLE_CLIENT_ID` y `GOOGLE_CLIENT_SECRET` (y que `Eyesofter__UrlWeb` sea
+   `https://eyesofterweb-production.up.railway.app`, para que el enlace de los correos de aviso sea el correcto). En tu PC, sin ponerlas en el repositorio:
    `dotnet user-secrets set GOOGLE_CLIENT_ID "..."` y `dotnet user-secrets set GOOGLE_CLIENT_SECRET "..."` (en `EyesofterWeb/`).
 
 Si Google responde `redirect_uri_mismatch`, la URI del paso 2 no coincide exactamente (https, dominio y `/signin-google`).
@@ -186,7 +187,7 @@ GitHub Actions las corre en cada push (`.github/workflows/pruebas.yml`).
 
 Las 6 páginas públicas obtienen **100 en accesibilidad, buenas prácticas y SEO** en móvil y escritorio;
 rendimiento **95–97 en móvil** y **100 en escritorio**. Detalle, antes/después y reportes en
-[`docs/lighthouse/`](docs/lighthouse/README.md). Para repetirlo: `scripts/lighthouse.sh https://localhost:7080`.
+[`docs/lighthouse/`](docs/lighthouse/README.md). Para repetirlo: `scripts/lighthouse.sh https://eyesofterweb-production.up.railway.app` (o `https://localhost:7080`).
 
 ## Estructura
 
