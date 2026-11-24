@@ -1,0 +1,36 @@
+# Compila la app de iPhone (kmp/app/iosApp) para el simulador, sin firmar, en cada cambio.
+# Sirve para detectar errores del código iOS (iosMain) aunque nadie del equipo tenga Mac.
+# Publicar en TestFlight requiere la cuenta de Apple Developer (ver docs/MONOREPO_AVANCE.md).
+name: iOS
+
+on:
+  push:
+    paths:
+      - "kmp/**"
+      - ".github/workflows/ios.yml"
+  pull_request:
+    paths:
+      - "kmp/**"
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  simulador:
+    runs-on: macos-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Compilar para el simulador de iPhone
+        working-directory: kmp/app/iosApp
+        run: |
+          chmod +x ../../gradlew
+          xcodebuild -project iosApp.xcodeproj -target iosApp -configuration Debug \
+            -sdk iphonesimulator -arch arm64 \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO build
