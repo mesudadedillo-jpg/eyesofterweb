@@ -4,6 +4,7 @@ using EyesofterWeb.Seguridad;
 using EyesofterWeb.Servicios;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 
 namespace EyesofterWeb.Tests
 {
@@ -23,7 +24,7 @@ namespace EyesofterWeb.Tests
             BaseDeDatos.Configurar(opciones, "Host=localhost;Database=eyesofter;Username=x;Password=x");
             using var db = new ApplicationDbContext(opciones.Options, new CifradoDatos(CifradoDatos.ClaveDesarrollo),
                 new AlcanceEscuela(new HttpContextAccessor()));
-            Assert.False(db.Database.HasPendingModelChanges(), "Falta una migración para los cambios del modelo.");
+            Assert.False(db.Database.HasPendingModelChanges(), "Falta una migración para los cambios del modelo: " + Diferencias(db));
         }
 
         [Theory]
@@ -42,7 +43,7 @@ namespace EyesofterWeb.Tests
         {
             using var e = new Entorno();
             var (grupo, _) = await CrearGrupoAsync(e, NivelEducativo.Primaria, 2, "B", alumnos: 0);
-            var suelto = await CrearAlumnoAsync(e, "SUELTO01", NivelEducativo.Secundaria, 1, "A", grupo: null);
+            var suelto = await CrearAlumnoAsync(e, "SUELTO01", NivelEducativo.Secundaria, 1, "A", grupo: null, plantelId: grupo.PlantelId);
 
             var n = await new GruposEscolares(e.Db).InscribirAsync(grupo, new[] { suelto.Id });
 
@@ -149,6 +150,32 @@ namespace EyesofterWeb.Tests
             Assert.Equal(4, (await e.Db.GruposEscolares.AsNoTracking().SingleAsync(x => x.Id == cuarto.Id)).Grado);
         }
 
+        /// <summary>Qué difiere entre la última migración y el modelo (para que el mensaje diga qué falta).</summary>
+#pragma warning disable EF1001 // API interna de EF: solo para el diagnóstico de la prueba
+        private static string Diferencias(ApplicationDbContext db)
+        {
+            var snapshot = db.GetService<Microsoft.EntityFrameworkCore.Migrations.IMigrationsAssembly>().ModelSnapshot?.Model;
+            if (snapshot is null) return "sin snapshot";
+            if (snapshot is Microsoft.EntityFrameworkCore.Metadata.IMutableModel mutable) snapshot = mutable.FinalizeModel();
+            snapshot = db.GetService<Microsoft.EntityFrameworkCore.Infrastructure.IModelRuntimeInitializer>().Initialize(snapshot, designTime: true, validationLogger: null);
+            var ops = db.GetService<Microsoft.EntityFrameworkCore.Migrations.IMigrationsModelDiffer>().GetDifferences(
+                snapshot.GetRelationalModel(), db.GetService<Microsoft.EntityFrameworkCore.Metadata.IDesignTimeModel>().Model.GetRelationalModel());
+            return string.Join(" | ", ops.Select(o => o switch
+            {
+                Microsoft.EntityFrameworkCore.Migrations.Operations.AlterColumnOperation c => $"AlterColumn {c.Table}.{c.Name} ({c.OldColumn.ColumnType}/{c.OldColumn.IsNullable}/{c.OldColumn.DefaultValue} -> {c.ColumnType}/{c.IsNullable}/{c.DefaultValue})",
+                Microsoft.EntityFrameworkCore.Migrations.Operations.AddColumnOperation c => $"AddColumn {c.Table}.{c.Name}",
+                Microsoft.EntityFrameworkCore.Migrations.Operations.CreateIndexOperation c => $"CreateIndex {c.Table}.{c.Name} filtro={c.Filter}",
+                Microsoft.EntityFrameworkCore.Migrations.Operations.DropIndexOperation c => $"DropIndex {c.Table}.{c.Name}",
+                Microsoft.EntityFrameworkCore.Migrations.Operations.RenameIndexOperation c => $"RenameIndex {c.Table}.{c.Name}->{c.NewName}",
+                Microsoft.EntityFrameworkCore.Migrations.Operations.AddForeignKeyOperation c => $"AddFK {c.Table}.{c.Name}",
+                Microsoft.EntityFrameworkCore.Migrations.Operations.DropForeignKeyOperation c => $"DropFK {c.Table}.{c.Name}",
+                Microsoft.EntityFrameworkCore.Migrations.Operations.InsertDataOperation c => $"InsertData {c.Table}",
+                Microsoft.EntityFrameworkCore.Migrations.Operations.UpdateDataOperation c => $"UpdateData {c.Table}",
+                _ => o.GetType().Name
+            }));
+        }
+#pragma warning restore EF1001
+
         // ---------- datos de prueba ----------
 
         private static async Task<(GrupoEscolar Grupo, List<Alumno> Alumnos)> CrearGrupoAsync(
@@ -174,9 +201,9 @@ namespace EyesofterWeb.Tests
             return p.Id;
         }
 
-        private static async Task<Alumno> CrearAlumnoAsync(Entorno e, string matricula, NivelEducativo nivel, int grado, string letra, GrupoEscolar? grupo)
+        private static async Task<Alumno> CrearAlumnoAsync(Entorno e, string matricula, NivelEducativo nivel, int grado, string letra, GrupoEscolar? grupo, int? plantelId = null)
         {
-            var plantel = grupo?.PlantelId ?? await CrearPlantelAsync(e);
+            var plantel = grupo?.PlantelId ?? plantelId ?? await CrearPlantelAsync(e);
             var tutor = new Tutor { Nombre = "Laura", Apellidos = "Pérez", Telefono = "7751234567", Parentesco = "Madre", PlantelId = plantel };
             e.Db.Tutores.Add(tutor);
             var alumno = new Alumno
