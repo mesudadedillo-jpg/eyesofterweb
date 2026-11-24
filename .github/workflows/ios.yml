@@ -34,3 +34,9 @@ jobs:
           xcodebuild -project iosApp.xcodeproj -target iosApp -configuration Debug \
             -sdk iphonesimulator -arch arm64 \
             CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO build
+      - name: Comprobar que se generó la app
+        working-directory: kmp/app/iosApp
+        run: |
+          app=$(find build -name '*.app' -maxdepth 4 | head -n 1)
+          if [ -z "$app" ]; then echo "::error::No se generó el .app"; exit 1; fi
+          echo "App generada: $app"; du -sh "$app"
