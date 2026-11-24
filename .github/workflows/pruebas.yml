@@ -19,4 +19,4 @@ jobs:
         with:
           dotnet-version: "10.0.x"
       - name: Compilar y probar
-        run: dotnet test EyesofterWeb.sln --configuration Release --logger "console;verbosity=normal"
+        run: dotnet test portal/EyesofterWeb.sln --configuration Release --logger "console;verbosity=normal"

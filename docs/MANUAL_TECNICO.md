@@ -18,7 +18,7 @@
 |---|---|---|
 | Portal web | `eyesofterweb` | .NET 10, ASP.NET Core MVC, Identity, EF Core 10 + Npgsql, QuestPDF, ClosedXML, QRCoder, html5-qrcode |
 | Servidor de la app | `eyesofterandroid` | Kotlin 2.4, Ktor 3.6, JDBC + HikariCP, ZXing, Firebase HTTP v1, Resend |
-| App móvil | `eyesofterandroidfront` | Kotlin Multiplatform, Compose Multiplatform 1.12, MapLibre 11, multiplatform-settings |
+| App móvil | `eyesofterweb/kmp` | Kotlin Multiplatform, Compose Multiplatform 1.12, MapLibre 11, multiplatform-settings |
 | Base de datos | Railway | PostgreSQL |
 
 **Decisiones clave**
@@ -82,7 +82,7 @@ createdb eyesofter
 **Portal web** (crea las tablas y los datos demo en desarrollo; contraseña demo `Eyesofter123!`):
 
 ```bash
-cd eyesofterweb/EyesofterWeb
+cd eyesofterweb/portal/EyesofterWeb
 dotnet run
 ```
 
@@ -96,7 +96,7 @@ cd eyesofterandroid
 DATABASE_URL="jdbc:postgresql://localhost:5432/eyesofter?user=postgres&password=postgres" ESCRITORIO_API_KEY=k123 URL_PORTAL=http://localhost:5080 ./gradlew run
 ```
 
-**App:** abre `eyesofterandroidfront` en Android Studio. Para usar el servidor local, cambia
+**App:** abre la carpeta `kmp/` en Android Studio. Para usar el servidor local, cambia
 `BASE_URL` a `http://10.0.2.2:8080` en `PlatformConfig.kt`.
 
 **Pruebas:**
@@ -106,12 +106,12 @@ cd eyesofterandroid && ./gradlew test
 ```
 
 ```bash
-cd eyesofterandroidfront && ./gradlew :app:shared:jvmTest
+cd kmp && ./gradlew :app:shared:jvmTest
 ```
 
 ## 4. Despliegue en Railway
 
-Un proyecto con tres servicios. Cada repositorio trae su `Dockerfile` y su `railway.json`
+Un proyecto con tres servicios. Cada repositorio trae su `railway.json` (en `eyesofterweb` apunta a `portal/Dockerfile`)
 (healthcheck en `/salud`, reinicio si falla).
 
 1. **PostgreSQL**: *+ New → Database → PostgreSQL*.

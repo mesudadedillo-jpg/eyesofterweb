@@ -13,7 +13,7 @@ Escuela Primaria-Secundaria METANOIA (Tulancingo, Hgo.).
 Todos tienen la bandeja de notificaciones (con globito de pendientes) y el directorio de clínicas.
 La sesión se guarda en el teléfono: no hay que escribir la contraseña cada vez.
 
-- **Repositorio:** `https://github.com/mesudadedillo-jpg/eyesofterandroidfront`
+- **Repositorio:** `https://github.com/mesudadedillo-jpg/eyesofterweb` (carpeta `kmp/`; antes `eyesofterandroidfront`)
 - **Servidor que usa:** proyecto `eyesofter-backend`, repositorio
   `https://github.com/mesudadedillo-jpg/eyesofterandroid`, desplegado en
   `https://eyesofter-api.up.railway.app`

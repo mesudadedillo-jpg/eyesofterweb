@@ -1,0 +1,9 @@
+.git
+**/bin
+**/obj
+**/.vs
+**/*.user
+# Monorepo: la app KMP y sus compilaciones no entran a la imagen del portal (por ahora).
+kmp/**/build
+kmp/.gradle
+kmp/kotlin-js-store

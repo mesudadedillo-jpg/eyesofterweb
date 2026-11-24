@@ -1,4 +1,5 @@
 # Portal web EYESOFTER (ASP.NET Core 10) para Railway. Dos etapas:
+# Se construye desde la RAÍZ del monorepo (railway.json → dockerfilePath: portal/Dockerfile).
 #  1. "build": el SDK de .NET compila y publica.
 #  2. Imagen final con solo el runtime de ASP.NET, sin código fuente.
 
@@ -6,9 +7,9 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 # Primero solo el proyecto: si no cambian los paquetes, Docker reusa la restauración.
-COPY EyesofterWeb/EyesofterWeb.csproj EyesofterWeb/
+COPY portal/EyesofterWeb/EyesofterWeb.csproj EyesofterWeb/
 RUN dotnet restore EyesofterWeb/EyesofterWeb.csproj
-COPY EyesofterWeb/ EyesofterWeb/
+COPY portal/EyesofterWeb/ EyesofterWeb/
 RUN dotnet publish EyesofterWeb/EyesofterWeb.csproj -c Release -o /app --no-restore
 
 # ---------- Etapa 2: ejecutar ----------

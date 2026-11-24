@@ -1,4 +1,14 @@
-# EYESOFTER Suite — Portal web
+# EYESOFTER Suite — Portal web y app (monorepo)
+
+Este repositorio junta dos partes que antes vivían separadas:
+
+| Carpeta | Qué es | Se publica en |
+|---|---|---|
+| [`portal/`](portal/) | Portal web ASP.NET Core (este README) | Railway (`railway.json` en la raíz → `portal/Dockerfile`) |
+| [`kmp/`](kmp/README.md) | App Kotlin Multiplatform: Android, escritorio, web y (en preparación) iOS. Antes `eyesofterandroidfront` | GitHub Releases de este repo (`.github/workflows/publicar-apk.yml`) |
+
+El servidor de la app ([`eyesofterandroid`](https://github.com/mesudadedillo-jpg/eyesofterandroid), Ktor)
+sigue en su propio repositorio y en su propio servicio de Railway.
 
 Portal de gestión del programa de tamizaje visual de la Escuela Primaria-Secundaria METANOIA
 (Tulancingo, Hgo.), para Dirección, Enfermería, tutores y especialistas de clínicas asociadas.
@@ -30,7 +40,7 @@ createdb eyesofter
 ```
 
 ```bash
-cd EyesofterWeb
+cd portal/EyesofterWeb
 dotnet run
 ```
 
@@ -116,7 +126,8 @@ Si Google responde `redirect_uri_mismatch`, la URI del paso 2 no coincide exacta
 
 ## Desplegar en Railway
 
-El repositorio trae `Dockerfile` y `railway.json` (healthcheck en `/salud`).
+El repositorio trae `railway.json` en la raíz, que construye `portal/Dockerfile` **desde la raíz del repo**
+(healthcheck en `/salud`). En Railway, el *Root Directory* del servicio debe quedar vacío (la raíz).
 
 1. En el proyecto de Railway que ya tiene PostgreSQL: *+ New → GitHub Repo → eyesofterweb*.
 2. *Variables*:
@@ -135,7 +146,7 @@ El repositorio trae `Dockerfile` y `railway.json` (healthcheck en `/salud`).
 | `RESEND_API_KEY` | Alternativa a Brevo con [Resend](https://resend.com) (3 000 al mes). Para enviar a cualquiera, el remitente debe ser de un dominio verificado en Resend; con `onboarding@resend.dev` solo llega al correo de tu cuenta de Resend. Si están las dos llaves, se usa Brevo |
 | `TWILIO_ACCOUNT_SID` / `TWILIO_AUTH_TOKEN` / `TWILIO_NUMERO` | (Opcional) Código por SMS al celular del tutor. Twilio cobra (≈ US$0.05 por SMS a México; la cuenta de prueba solo envía a números verificados). Sin ellas, a quien escribe su celular el código le llega al correo. Las mismas en el servidor de la app |
 | `SMS_PREFIJO_PAIS` | (Opcional) Lada para celulares de 10 dígitos. Por defecto `+52` |
-| `Eyesofter__UrlApk` | (Opcional) Dónde se descarga el instalador de Android. Por defecto, el último APK publicado en GitHub Releases de `eyesofterandroidfront` (página pública `/App`) |
+| `Eyesofter__UrlApk` | (Opcional) Dónde se descarga el instalador de Android. Por defecto, el último APK publicado en GitHub Releases de este repositorio (`eyesofterweb`) (página pública `/App`) |
 | `CUENTAS_PRUEBA_PASSWORD` | (Opcional) Crea y mantiene una cuenta de prueba por rol en una escuela ficticia aparte (ver abajo). Pon esta variable a mano en el panel; no la publiques |
 | `CUENTAS_PRUEBA_CORREO` | (Opcional) Correo base de las cuentas de prueba. Si no se define, se usa `ADMIN_CORREO` |
 
