@@ -28,7 +28,19 @@
         <div class="card shadow-sm h-100">
             <div class="card-body">
                 <dl class="row mb-0">
-                    <dt class="col-5">Grado y grupo</dt><dd class="col-7">@Model.GradoGrupo</dd>
+                    <dt class="col-5">Grado y grupo</dt>
+                    <dd class="col-7">
+                        @Model.GradoGrupo
+                        @if (Model.Egresado) { <span class="badge text-bg-secondary ms-1">Egresado</span> }
+                        @if (Model.GrupoEscolar is { } g)
+                        {
+                            <div class="small"><a asp-controller="Grupos" asp-action="Details" asp-route-id="@g.Id">Ver grupo</a> · ciclo @g.CicloEscolar</div>
+                        }
+                        else if (!Model.Egresado)
+                        {
+                            <div class="small text-body-secondary">Sin grupo escolar: no pasará de año automáticamente.</div>
+                        }
+                    </dd>
                     <dt class="col-5">Nacimiento</dt><dd class="col-7">@Model.FechaNacimiento.ToString("dd/MM/yyyy")</dd>
                     <dt class="col-5">@Html.DisplayNameFor(m => m.UsaLentes)</dt><dd class="col-7">@(Model.UsaLentes ? "Sí" : "No")</dd>
                     <dt class="col-5">Tutor</dt>

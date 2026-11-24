@@ -1,0 +1,22 @@
+@model GrupoEscolar
+@{
+    ViewData["Title"] = "Eliminar grupo";
+}
+<h1 class="h3 text-danger">Eliminar grupo</h1>
+<div class="card border-danger shadow-sm">
+    <div class="card-body">
+        <p>¿Seguro que deseas eliminar el grupo <strong>@Model.Nombre</strong> (ciclo @Model.CicloEscolar)?</p>
+        @if (Model.Alumnos.Any())
+        {
+            <div class="alert alert-warning">
+                <i class="bi bi-exclamation-triangle me-1" aria-hidden="true"></i>
+                Sus <strong>@Model.Alumnos.Count</strong> alumno(s) NO se borran: quedan sin grupo, con su grado y letra actuales.
+            </div>
+        }
+        <form asp-action="Delete" method="post" class="d-flex gap-2">
+            <input type="hidden" asp-for="Id" />
+            <button type="submit" class="btn btn-danger"><i class="bi bi-trash me-1" aria-hidden="true"></i>Eliminar</button>
+            <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-outline-secondary">Cancelar</a>
+        </form>
+    </div>
+</div>

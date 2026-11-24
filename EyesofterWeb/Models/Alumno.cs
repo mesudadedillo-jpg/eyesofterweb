@@ -56,6 +56,18 @@ namespace EyesofterWeb.Models
         public int PlantelId { get; set; } = 1;
         public Plantel? Plantel { get; set; }
 
+        /// <summary>
+        /// Grupo escolar al que está inscrito (opcional). Si tiene grupo, nivel, grado y letra se
+        /// copian del grupo y cambian solos cuando el grupo pasa de año.
+        /// </summary>
+        [Display(Name = "Grupo escolar")]
+        public int? GrupoEscolarId { get; set; }
+        public GrupoEscolar? GrupoEscolar { get; set; }
+
+        /// <summary>true = terminó el último grado de su nivel y ya no está inscrito.</summary>
+        [Display(Name = "Egresado")]
+        public bool Egresado { get; set; }
+
         public ICollection<Caso> Casos { get; set; } = new List<Caso>();
         public ICollection<Tamizaje> Tamizajes { get; set; } = new List<Tamizaje>();
 

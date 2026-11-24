@@ -44,6 +44,7 @@ namespace EyesofterWeb.Data
         public DbSet<Campana> Campanas => Set<Campana>();
         public DbSet<Tutor> Tutores => Set<Tutor>();
         public DbSet<Alumno> Alumnos => Set<Alumno>();
+        public DbSet<GrupoEscolar> GruposEscolares => Set<GrupoEscolar>();
         public DbSet<Clinica> Clinicas => Set<Clinica>();
         public DbSet<Tamizaje> Tamizajes => Set<Tamizaje>();
         public DbSet<Caso> Casos => Set<Caso>();
@@ -151,6 +152,17 @@ namespace EyesofterWeb.Data
                 // No se puede borrar un tutor que todavía tiene alumnos.
                 e.HasOne(a => a.Tutor).WithMany(t => t.Alumnos).HasForeignKey(a => a.TutorId).OnDelete(DeleteBehavior.Restrict);
                 e.HasOne(a => a.Plantel).WithMany().HasForeignKey(a => a.PlantelId).OnDelete(DeleteBehavior.Restrict);
+                // Si se borra el grupo, el alumno conserva su nivel/grado/letra y queda sin grupo.
+                e.HasOne(a => a.GrupoEscolar).WithMany(g => g.Alumnos).HasForeignKey(a => a.GrupoEscolarId).OnDelete(DeleteBehavior.SetNull);
+            });
+
+            builder.Entity<GrupoEscolar>(e =>
+            {
+                e.ToTable("grupos");
+                // Solo puede haber un 3° B de primaria ACTIVO por escuela; los egresados quedan como historial.
+                e.HasIndex(g => new { g.PlantelId, g.Nivel, g.Grado, g.Letra }).IsUnique().HasFilter("activo");
+                e.Property(g => g.Nivel).HasConversion<string>().HasMaxLength(20);
+                e.HasOne(g => g.Plantel).WithMany().HasForeignKey(g => g.PlantelId).OnDelete(DeleteBehavior.Restrict);
             });
 
             builder.Entity<Clinica>(e =>
@@ -290,6 +302,7 @@ namespace EyesofterWeb.Data
             builder.Entity<Alumno>().HasQueryFilter(a => FiltroEscuelaInactivo || PlantelesPermitidos.Contains(a.PlantelId));
             builder.Entity<Tutor>().HasQueryFilter(t => FiltroEscuelaInactivo || PlantelesPermitidos.Contains(t.PlantelId)
                                                         || t.Alumnos.Any(a => PlantelesPermitidos.Contains(a.PlantelId)));
+            builder.Entity<GrupoEscolar>().HasQueryFilter(g => FiltroEscuelaInactivo || PlantelesPermitidos.Contains(g.PlantelId));
             builder.Entity<Campana>().HasQueryFilter(c => FiltroEscuelaInactivo || PlantelesPermitidos.Contains(c.PlantelId));
             builder.Entity<Convenio>().HasQueryFilter(c => FiltroEscuelaInactivo || PlantelesPermitidos.Contains(c.PlantelId));
             builder.Entity<Tamizaje>().HasQueryFilter(t => FiltroEscuelaInactivo || PlantelesPermitidos.Contains(t.Alumno!.PlantelId));

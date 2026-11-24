@@ -1,0 +1,138 @@
+@model GrupoEscolar
+@{
+    ViewData["Title"] = $"Grupo {Model.Nombre}";
+    var esAdmin = User.IsInRole(Roles.Administrador);
+    var candidatos = (List<Alumno>)ViewBag.Candidatos;
+    var alumnos = Model.Alumnos.Where(a => !Model.Activo || !a.Egresado).ToList();
+    var siguiente = Model.EsUltimoGrado ? null : $"{Model.Grado + 1}° {Model.Letra} - {Model.Nivel}";
+}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <div>
+        <h1 class="h3 mb-0">
+            Grupo @Model.Nombre
+            @if (!Model.Activo) { <span class="badge text-bg-secondary align-middle fs-6">Egresado</span> }
+        </h1>
+        <span class="text-body-secondary">
+            @Model.Plantel?.Nombre · Ciclo @Model.CicloEscolar
+            @if (!string.IsNullOrWhiteSpace(Model.Docente)) { <text>· Docente: @Model.Docente</text> }
+            @if (Model.PromovidoEn is DateTime p) { <text>· Pasó de año el @p.ToLocalTime().ToString("dd/MM/yyyy")</text> }
+        </span>
+    </div>
+    <div class="d-flex flex-wrap gap-2">
+        @if (Model.Activo)
+        {
+            <a asp-controller="Alumnos" asp-action="Create" asp-route-grupoId="@Model.Id" class="btn btn-outline-secondary"><i class="bi bi-person-plus me-1" aria-hidden="true"></i>Alumno nuevo en este grupo</a>
+            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-outline-primary"><i class="bi bi-pencil me-1" aria-hidden="true"></i>Editar</a>
+            @if (esAdmin)
+            {
+                <button type="button" class="btn btn-marca" data-bs-toggle="modal" data-bs-target="#modalPromover">
+                    <i class="bi bi-arrow-up-circle me-1" aria-hidden="true"></i>@(Model.EsUltimoGrado ? "Egresar grupo" : "Pasar de año")
+                </button>
+            }
+        }
+        @if (esAdmin)
+        {
+            <a asp-action="Delete" asp-route-id="@Model.Id" class="btn btn-outline-danger"><i class="bi bi-trash me-1" aria-hidden="true"></i>Eliminar</a>
+        }
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="@(Model.Activo ? "col-lg-7" : "col-12")">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-body"><h2 class="h6 mb-0">Alumnos (@alumnos.Count)</h2></div>
+            <div class="table-responsive">
+                <table class="table table-sm table-hover align-middle mb-0">
+                    <thead><tr><th scope="col">Matrícula</th><th scope="col">Alumno</th><th scope="col">Tutor</th><th scope="col"></th></tr></thead>
+                    <tbody>
+                        @if (alumnos.Count == 0)
+                        {
+                            <tr><td colspan="4" class="text-body-secondary py-3">Sin alumnos. Inscríbelos con la lista de la derecha.</td></tr>
+                        }
+                        @foreach (var a in alumnos)
+                        {
+                            <tr>
+                                <td><code>@a.Matricula</code></td>
+                                <td><a asp-controller="Alumnos" asp-action="Details" asp-route-id="@a.Id">@a.Apellidos @a.Nombre</a>
+                                    @if (a.Egresado) { <span class="badge text-bg-secondary">Egresado</span> }</td>
+                                <td class="small">@a.Tutor?.NombreCompleto</td>
+                                <td class="text-end">
+                                    @if (Model.Activo)
+                                    {
+                                        <form asp-action="Quitar" asp-route-id="@Model.Id" method="post" class="d-inline">
+                                            <input type="hidden" name="alumnoId" value="@a.Id" />
+                                            <button type="submit" class="btn btn-sm btn-outline-secondary" title="Quitar del grupo"><i class="bi bi-person-dash" aria-hidden="true"></i><span class="visually-hidden">Quitar del grupo</span></button>
+                                        </form>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    @if (Model.Activo)
+    {
+        <div class="col-lg-5">
+            <form asp-action="Inscribir" asp-route-id="@Model.Id" method="post" class="card shadow-sm h-100">
+                <div class="card-header bg-body d-flex justify-content-between align-items-center gap-2">
+                    <h2 class="h6 mb-0">Inscribir alumnos</h2>
+                    <button type="submit" class="btn btn-sm btn-marca"><i class="bi bi-person-check me-1" aria-hidden="true"></i>Inscribir marcados</button>
+                </div>
+                <div class="card-body pb-2">
+                    <input type="search" class="form-control form-control-sm" placeholder="Filtrar por nombre, matrícula o grupo" aria-label="Filtrar alumnos" data-filtro-lista="#listaCandidatos" />
+                    <div class="form-text">Si el alumno ya estaba en otro grupo, se cambia a este.</div>
+                </div>
+                <div class="list-group list-group-flush overflow-auto" id="listaCandidatos" style="max-height: 26rem">
+                    @if (candidatos.Count == 0)
+                    {
+                        <div class="list-group-item text-body-secondary">No hay más alumnos en esta escuela.</div>
+                    }
+                    @foreach (var c in candidatos)
+                    {
+                        <label class="list-group-item d-flex gap-2 align-items-center">
+                            <input class="form-check-input mt-0" type="checkbox" name="alumnoIds" value="@c.Id" />
+                            <span class="flex-grow-1">@c.Apellidos @c.Nombre <code class="small">@c.Matricula</code></span>
+                            <span class="badge @(c.GrupoEscolarId is null ? "text-bg-warning" : "text-bg-light")">@(c.GrupoEscolarId is null ? "Sin grupo" : $"{c.Grado}° {c.Grupo} {c.Nivel}")</span>
+                        </label>
+                    }
+                </div>
+            </form>
+        </div>
+    }
+</div>
+
+<a asp-action="Index" asp-route-plantelId="@Model.PlantelId" asp-route-historial="@(!Model.Activo)" class="btn btn-link mt-3 px-0"><i class="bi bi-arrow-left" aria-hidden="true"></i> Volver a grupos</a>
+
+@if (esAdmin && Model.Activo)
+{
+    <div class="modal fade" id="modalPromover" tabindex="-1" aria-labelledby="tituloPromover" aria-hidden="true">
+        <div class="modal-dialog">
+            <form asp-action="Promover" asp-route-id="@Model.Id" method="post" class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title h5" id="tituloPromover">@(Model.EsUltimoGrado ? "Egresar grupo" : "Pasar de año")</h2>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    @if (Model.EsUltimoGrado)
+                    {
+                        <p><strong>@Model.Nombre</strong> es el último grado de @Model.Nivel.ToString().ToLowerInvariant(). El grupo se cerrará y sus <strong>@alumnos.Count</strong> alumno(s) quedarán como <strong>egresados</strong>.</p>
+                        <p class="mb-0 small text-body-secondary">Su historial (tamizajes y casos) se conserva. El grupo queda en la pestaña «Egresados».</p>
+                    }
+                    else
+                    {
+                        <p>El grupo y sus <strong>@alumnos.Count</strong> alumno(s) pasarán de <strong>@Model.Nombre</strong> a <strong>@siguiente</strong>, ciclo <strong>@GrupoEscolar.CicloSiguiente(Model.CicloEscolar)</strong>.</p>
+                        <p class="mb-0 small text-body-secondary">Si ya existe un @siguiente activo, pásalo de año primero o usa «Pasar de año a toda la escuela».</p>
+                    }
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-marca">Confirmar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+}

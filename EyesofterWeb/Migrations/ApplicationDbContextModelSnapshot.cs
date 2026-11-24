@@ -37,6 +37,10 @@ namespace EyesofterWeb.Migrations
                         .HasColumnType("character varying(100)")
                         .HasColumnName("apellidos");
 
+                    b.Property<bool>("Egresado")
+                        .HasColumnType("boolean")
+                        .HasColumnName("egresado");
+
                     b.Property<DateTime>("FechaNacimiento")
                         .HasColumnType("date")
                         .HasColumnName("fecha_nacimiento");
@@ -50,6 +54,10 @@ namespace EyesofterWeb.Migrations
                         .HasMaxLength(1)
                         .HasColumnType("character varying(1)")
                         .HasColumnName("grupo");
+
+                    b.Property<int?>("GrupoEscolarId")
+                        .HasColumnType("integer")
+                        .HasColumnName("grupo_escolar_id");
 
                     b.Property<string>("Matricula")
                         .IsRequired()
@@ -83,6 +91,9 @@ namespace EyesofterWeb.Migrations
 
                     b.HasKey("Id")
                         .HasName("pk_alumnos");
+
+                    b.HasIndex("GrupoEscolarId")
+                        .HasDatabaseName("ix_alumnos_grupo_escolar_id");
 
                     b.HasIndex("Matricula")
                         .HasDatabaseName("ix_alumnos_matricula");
@@ -908,6 +919,65 @@ namespace EyesofterWeb.Migrations
                     b.ToTable("eventos_caso", (string)null);
                 });
 
+            modelBuilder.Entity("EyesofterWeb.Models.GrupoEscolar", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("Activo")
+                        .HasColumnType("boolean")
+                        .HasColumnName("activo");
+
+                    b.Property<string>("CicloEscolar")
+                        .IsRequired()
+                        .HasMaxLength(9)
+                        .HasColumnType("character varying(9)")
+                        .HasColumnName("ciclo_escolar");
+
+                    b.Property<string>("Docente")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("docente");
+
+                    b.Property<int>("Grado")
+                        .HasColumnType("integer")
+                        .HasColumnName("grado");
+
+                    b.Property<string>("Letra")
+                        .IsRequired()
+                        .HasMaxLength(1)
+                        .HasColumnType("character varying(1)")
+                        .HasColumnName("letra");
+
+                    b.Property<string>("Nivel")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("nivel");
+
+                    b.Property<int>("PlantelId")
+                        .HasColumnType("integer")
+                        .HasColumnName("plantel_id");
+
+                    b.Property<DateTime?>("PromovidoEn")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("promovido_en");
+
+                    b.HasKey("Id")
+                        .HasName("pk_grupos");
+
+                    b.HasIndex("PlantelId", "Nivel", "Grado", "Letra")
+                        .IsUnique()
+                        .HasDatabaseName("ix_grupos_plantel_id_nivel_grado_letra")
+                        .HasFilter("activo");
+
+                    b.ToTable("grupos", (string)null);
+                });
+
             modelBuilder.Entity("EyesofterWeb.Models.Notificacion", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1604,12 +1674,20 @@ namespace EyesofterWeb.Migrations
                         .IsRequired()
                         .HasConstraintName("fk_alumnos_planteles_plantel_id");
 
+                    b.HasOne("EyesofterWeb.Models.GrupoEscolar", "GrupoEscolar")
+                        .WithMany("Alumnos")
+                        .HasForeignKey("GrupoEscolarId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_alumnos_grupos_grupo_escolar_id");
+
                     b.HasOne("EyesofterWeb.Models.Tutor", "Tutor")
                         .WithMany("Alumnos")
                         .HasForeignKey("TutorId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("fk_alumnos_tutores_tutor_id");
+
+                    b.Navigation("GrupoEscolar");
 
                     b.Navigation("Plantel");
 
@@ -1808,6 +1886,18 @@ namespace EyesofterWeb.Migrations
                     b.Navigation("Caso");
                 });
 
+            modelBuilder.Entity("EyesofterWeb.Models.GrupoEscolar", b =>
+                {
+                    b.HasOne("EyesofterWeb.Models.Plantel", "Plantel")
+                        .WithMany()
+                        .HasForeignKey("PlantelId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_grupos_planteles_plantel_id");
+
+                    b.Navigation("Plantel");
+                });
+
             modelBuilder.Entity("EyesofterWeb.Models.Pase", b =>
                 {
                     b.HasOne("EyesofterWeb.Models.Caso", "Caso")
@@ -1972,6 +2062,11 @@ namespace EyesofterWeb.Migrations
             modelBuilder.Entity("EyesofterWeb.Models.Clinica", b =>
                 {
                     b.Navigation("Casos");
+                });
+
+            modelBuilder.Entity("EyesofterWeb.Models.GrupoEscolar", b =>
+                {
+                    b.Navigation("Alumnos");
                 });
 
             modelBuilder.Entity("EyesofterWeb.Models.Notificacion", b =>

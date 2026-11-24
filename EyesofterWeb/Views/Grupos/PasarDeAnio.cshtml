@@ -1,0 +1,85 @@
+@model List<EyesofterWeb.Controllers.GruposController.FilaGrupo>
+@{
+    ViewData["Title"] = "Pasar de año a toda la escuela";
+    var escuelas = (List<Plantel>)ViewBag.Escuelas;
+    var plantelId = (int)ViewBag.PlantelId;
+    var nivel = ViewBag.Nivel as NivelEducativo?;
+    var suben = Model.Where(f => !f.Grupo.EsUltimoGrado).ToList();
+    var egresan = Model.Where(f => f.Grupo.EsUltimoGrado).ToList();
+}
+
+<h1 class="h3">Pasar de año a toda la escuela</h1>
+<p class="text-body-secondary">Úsalo una vez al cerrar el ciclo escolar. Cada grupo sube un grado con todos sus alumnos; los grupos del último grado egresan. Si algún grupo no puede pasar, no se cambia ninguno.</p>
+
+<form method="get" class="row g-2 mb-3">
+    @if (escuelas.Count > 1)
+    {
+        <div class="col-sm-6 col-md-4">
+            <select name="plantelId" class="form-select" aria-label="Escuela" data-auto-enviar>
+                @foreach (var e in escuelas) { <option value="@e.Id" selected="@(e.Id == plantelId)">@e.Nombre</option> }
+            </select>
+        </div>
+    }
+    else
+    {
+        <input type="hidden" name="plantelId" value="@plantelId" />
+    }
+    <div class="col-sm-4 col-md-3">
+        <select name="nivel" class="form-select" aria-label="Nivel" data-auto-enviar>
+            <option value="">Primaria y secundaria</option>
+            @foreach (var n in Enum.GetValues<NivelEducativo>()) { <option value="@n" selected="@(nivel == n)">Solo @n.ToString().ToLowerInvariant()</option> }
+        </select>
+    </div>
+</form>
+
+<div class="row g-3 mb-3">
+    <div class="col-md-6">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-body"><h2 class="h6 mb-0"><i class="bi bi-arrow-up-circle me-1" aria-hidden="true"></i>Suben de grado (@suben.Count)</h2></div>
+            <ul class="list-group list-group-flush">
+                @if (suben.Count == 0) { <li class="list-group-item text-body-secondary">Ninguno.</li> }
+                @foreach (var f in suben)
+                {
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span>@f.Grupo.Nombre → <strong>@(f.Grupo.Grado + 1)° @f.Grupo.Letra</strong></span>
+                        <span class="text-body-secondary small">@f.Alumnos alumno(s)</span>
+                    </li>
+                }
+            </ul>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-body"><h2 class="h6 mb-0"><i class="bi bi-mortarboard me-1" aria-hidden="true"></i>Egresan (@egresan.Count)</h2></div>
+            <ul class="list-group list-group-flush">
+                @if (egresan.Count == 0) { <li class="list-group-item text-body-secondary">Ninguno.</li> }
+                @foreach (var f in egresan)
+                {
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span>@f.Grupo.Nombre</span>
+                        <span class="text-body-secondary small">@f.Alumnos alumno(s)</span>
+                    </li>
+                }
+            </ul>
+        </div>
+    </div>
+</div>
+
+@if (Model.Count > 0)
+{
+    <form asp-action="PasarDeAnio" method="post" class="card card-body border-primary shadow-sm">
+        <input type="hidden" name="plantelId" value="@plantelId" />
+        @if (nivel is not null) { <input type="hidden" name="nivel" value="@nivel" /> }
+        <label for="confirmacion" class="form-label">Para confirmar, escribe <strong>PASAR DE AÑO</strong></label>
+        <div class="d-flex flex-wrap gap-2">
+            <input id="confirmacion" name="confirmacion" class="form-control" style="max-width: 18rem" autocomplete="off" required />
+            <button type="submit" class="btn btn-marca"><i class="bi bi-check2-circle me-1" aria-hidden="true"></i>Pasar de año @Model.Count grupo(s)</button>
+            <a asp-action="Index" asp-route-plantelId="@plantelId" class="btn btn-outline-secondary">Cancelar</a>
+        </div>
+        <div class="form-text">Los alumnos sin grupo no cambian. Revisa en «Grupos» que todos estén inscritos antes de continuar.</div>
+    </form>
+}
+else
+{
+    <div class="alert alert-info">No hay grupos activos. <a asp-action="Create">Registra uno</a>.</div>
+}
