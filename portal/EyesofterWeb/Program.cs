@@ -236,7 +236,24 @@ app.UseStatusCodePagesWithReExecute("/Home/Estado/{0}");
 
 app.UseCabecerasSeguridad();
 app.UseResponseCompression();
-app.UseStaticFiles(new StaticFileOptions { OnPrepareResponse = ArchivosEstaticos.PonerCache });
+// .wasm y .mjs: la versión web de la app (wwwroot/app-web, compilada desde kmp/) los necesita con su tipo correcto.
+// /app-web y /app-web/ abren la app web (index.html); el resto de sus archivos los sirve UseStaticFiles.
+app.Use(async (ctx, siguiente) =>
+{
+    var ruta = ctx.Request.Path.Value;
+    if (string.Equals(ruta, CabecerasSeguridad.RutaAppWeb, StringComparison.OrdinalIgnoreCase))
+    {
+        ctx.Response.Redirect(CabecerasSeguridad.RutaAppWeb + "/");
+        return;
+    }
+    if (string.Equals(ruta, CabecerasSeguridad.RutaAppWeb + "/", StringComparison.OrdinalIgnoreCase))
+        ctx.Request.Path = CabecerasSeguridad.RutaAppWeb + "/index.html";
+    await siguiente();
+});
+var tiposArchivo = new Microsoft.AspNetCore.StaticFiles.FileExtensionContentTypeProvider();
+tiposArchivo.Mappings[".wasm"] = "application/wasm";
+tiposArchivo.Mappings[".mjs"] = "text/javascript";
+app.UseStaticFiles(new StaticFileOptions { OnPrepareResponse = ArchivosEstaticos.PonerCache, ContentTypeProvider = tiposArchivo });
 
 app.UseRouting();
 app.UseRateLimiter();

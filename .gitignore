@@ -5,3 +5,6 @@ obj/
 *.suo
 appsettings.*.local.json
 lighthouse-reportes/
+
+# Versión web de la app: se genera desde kmp/ al construir la imagen (portal/Dockerfile).
+portal/EyesofterWeb/wwwroot/app-web/

@@ -1,7 +1,18 @@
-# Portal web EYESOFTER (ASP.NET Core 10) para Railway. Dos etapas:
+# Portal web EYESOFTER (ASP.NET Core 10) para Railway. Etapa 0 compila la app web; luego:
 # Se construye desde la RAÍZ del monorepo (railway.json → dockerfilePath: portal/Dockerfile).
 #  1. "build": el SDK de .NET compila y publica.
 #  2. Imagen final con solo el runtime de ASP.NET, sin código fuente.
+
+# ---------- Etapa 0: la app web (Kotlin/Wasm) desde kmp/ ----------
+# Se publica en el portal bajo /app-web (wwwroot/app-web). Así la app también funciona en iPhone y
+# computadoras desde el navegador, sin otro servicio en Railway.
+FROM eclipse-temurin:21-jdk AS appweb
+WORKDIR /kmp
+COPY kmp/ ./
+RUN chmod +x gradlew \
+ && ./gradlew --no-daemon --console=plain :app:webApp:wasmJsBrowserDistribution \
+ && mkdir -p /appweb \
+ && cp -r app/webApp/build/dist/wasmJs/productionExecutable/. /appweb/
 
 # ---------- Etapa 1: compilar ----------
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
@@ -10,6 +21,7 @@ WORKDIR /src
 COPY portal/EyesofterWeb/EyesofterWeb.csproj EyesofterWeb/
 RUN dotnet restore EyesofterWeb/EyesofterWeb.csproj
 COPY portal/EyesofterWeb/ EyesofterWeb/
+COPY --from=appweb /appweb/ EyesofterWeb/wwwroot/app-web/
 RUN dotnet publish EyesofterWeb/EyesofterWeb.csproj -c Release -o /app --no-restore
 
 # ---------- Etapa 2: ejecutar ----------
