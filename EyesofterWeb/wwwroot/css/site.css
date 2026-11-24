@@ -115,3 +115,98 @@ a { color: #0a58ca; }
 
 /* Enlaces sueltos en pantallas táctiles: al menos 24 px de alto para tocarlos sin errores (WCAG 2.2, 2.5.8). */
 .enlace-tactil { display: inline-block; padding: .25rem 0; min-height: 24px; }
+
+/* ==========================================================================
+   IDENTIDAD COMPARTIDA CON LA APP MÓVIL Y EL ESCRITORIO
+   Estilo "cuaderno de papel" de la app (theme/Theme.kt): fondo claro, tarjetas
+   blancas con borde fino y esquinas de 12 px, SIN sombras, un solo botón relleno
+   (azul) y los demás "fantasma" celestes, etiquetas en píldora y Montserrat en
+   títulos y botones. Va al final: redefine Bootstrap sin tocar cada vista.
+   ========================================================================== */
+@font-face { font-family: "Montserrat"; src: url("../fonts/montserrat_medium.ttf") format("truetype"); font-weight: 500; font-display: swap; }
+@font-face { font-family: "Montserrat"; src: url("../fonts/montserrat_semibold.ttf") format("truetype"); font-weight: 600; font-display: swap; }
+@font-face { font-family: "Montserrat"; src: url("../fonts/montserrat_bold.ttf") format("truetype"); font-weight: 700; font-display: swap; }
+@font-face { font-family: "Montserrat"; src: url("../fonts/montserrat_extrabold.ttf") format("truetype"); font-weight: 800; font-display: swap; }
+
+:root {
+    --eyes-marino: #0A1A3F; --eyes-marino-700: #102A63;
+    --eyes-azul: #0B47A8; --eyes-azul-500: #2F6FD6;
+    --eyes-celeste: #9FC0F2; --eyes-celeste-200: #C9DCF8; --eyes-celeste-100: #E3EDFC; --eyes-celeste-050: #F3F7FE;
+    --eyes-fondo: #F6F8FC; --eyes-borde: rgba(10, 26, 63, .10);
+    --eyes-titulos: "Montserrat", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+
+    --bs-body-bg: var(--eyes-fondo);
+    --bs-body-color: var(--eyes-marino);
+    --bs-emphasis-color: var(--eyes-marino);
+    --bs-secondary-color: rgba(10, 26, 63, .70);
+    --bs-tertiary-bg: var(--eyes-celeste-050);
+    --bs-border-color: var(--eyes-borde);
+    --bs-border-radius: .5rem; --bs-border-radius-lg: .75rem; --bs-border-radius-sm: .375rem;
+    --bs-primary: var(--eyes-azul); --bs-primary-rgb: 11, 71, 168;
+    --bs-link-color: var(--eyes-azul); --bs-link-color-rgb: 11, 71, 168;
+    --bs-link-hover-color: var(--eyes-marino-700); --bs-link-hover-color-rgb: 16, 42, 99;
+    --bs-focus-ring-color: rgba(47, 111, 214, .35);
+}
+a { color: var(--eyes-azul); }
+
+/* Títulos y botones en Montserrat, con letras un poco más juntas en tamaños grandes. */
+h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6, .navbar-brand, .btn, .badge, .nav-link, .card-header, .display-6, .tarjeta-dato .numero, th {
+    font-family: var(--eyes-titulos);
+}
+h1, .h1, h2, .h2, .h3, h3 { font-weight: 800; letter-spacing: -.02em; }
+h4, .h4, h5, .h5, h6, .h6, .card-header { font-weight: 700; }
+
+/* Encabezado en marino, como la barra de la app. */
+.navbar.bg-marca { background-color: var(--eyes-marino) !important; box-shadow: none !important; border-bottom: 1px solid rgba(159, 192, 242, .18); }
+.navbar-dark .navbar-nav .nav-link.active, .navbar-dark .navbar-nav .show > .nav-link { color: #fff; background: rgba(159, 192, 242, .16); border-radius: .5rem; }
+.navbar .dropdown-menu { border: 1px solid var(--eyes-borde); border-radius: .75rem; box-shadow: none; }
+
+/* Tarjetas: blancas, borde fino, 12 px, sin sombra. */
+.card { --bs-card-border-color: var(--eyes-borde); --bs-card-border-radius: .75rem; --bs-card-inner-border-radius: calc(.75rem - 1px); --bs-card-cap-bg: var(--eyes-celeste-050); background: #fff; }
+.shadow-sm, .shadow, .card.shadow-sm { box-shadow: none !important; }
+.card.shadow-sm, .card.border-0 { border: 1px solid var(--eyes-borde) !important; }
+.card-header { border-bottom-color: var(--eyes-borde); }
+.card.tarjeta-dato, .card.shadow-sm.tarjeta-dato { border: 1px solid var(--eyes-borde) !important; border-left: 4px solid var(--eyes-azul) !important; }
+
+/* Bienvenida: el degradado de la marca, con la forma de las tarjetas. */
+.hero { border-radius: .75rem; background: linear-gradient(135deg, var(--eyes-marino) 0%, var(--eyes-marino-700) 55%, var(--eyes-azul) 100%); }
+
+/* Botones: 8 px. Un solo relleno (azul); los contornos pasan a "fantasma" celeste. */
+.btn { --bs-btn-border-radius: .5rem; --bs-btn-font-weight: 600; }
+.btn-primary, .btn-marca {
+    --bs-btn-bg: var(--eyes-azul); --bs-btn-border-color: var(--eyes-azul); --bs-btn-color: #fff;
+    --bs-btn-hover-bg: var(--eyes-marino-700); --bs-btn-hover-border-color: var(--eyes-marino-700); --bs-btn-hover-color: #fff;
+    --bs-btn-active-bg: var(--eyes-marino); --bs-btn-active-border-color: var(--eyes-marino);
+    --bs-btn-disabled-bg: var(--eyes-azul); --bs-btn-disabled-border-color: var(--eyes-azul);
+}
+.btn-outline-primary, .btn-outline-secondary {
+    --bs-btn-color: var(--eyes-azul); --bs-btn-bg: var(--eyes-celeste-100); --bs-btn-border-color: var(--eyes-celeste-100);
+    --bs-btn-hover-color: var(--eyes-marino); --bs-btn-hover-bg: var(--eyes-celeste-200); --bs-btn-hover-border-color: var(--eyes-celeste-200);
+    --bs-btn-active-color: var(--eyes-marino); --bs-btn-active-bg: var(--eyes-celeste); --bs-btn-active-border-color: var(--eyes-celeste);
+    --bs-btn-disabled-color: rgba(10, 26, 63, .55); --bs-btn-disabled-bg: var(--eyes-celeste-050); --bs-btn-disabled-border-color: var(--eyes-celeste-050);
+}
+.btn-outline-light { --bs-btn-border-radius: .5rem; }
+
+/* Etiquetas y estados en píldora. */
+.badge { border-radius: 999px; font-weight: 600; padding: .4em .75em; }
+.badge.text-bg-light { background: var(--eyes-celeste-100) !important; color: var(--eyes-marino) !important; }
+
+/* Campos: borde fino, foco azul. */
+.form-control, .form-select { border-color: rgba(10, 26, 63, .18); border-radius: .5rem; }
+.form-control:focus, .form-select:focus { border-color: var(--eyes-azul-500); box-shadow: 0 0 0 .2rem rgba(47, 111, 214, .20); }
+.form-check-input:checked { background-color: var(--eyes-azul); border-color: var(--eyes-azul); }
+.form-label { font-weight: 600; }
+
+/* Tablas: encabezado celeste muy claro, sin rayas grises. */
+.table { --bs-table-color: var(--eyes-marino); --bs-table-border-color: var(--eyes-borde); --bs-table-striped-bg: var(--eyes-celeste-050); --bs-table-hover-bg: var(--eyes-celeste-050); }
+.table > thead th { background: var(--eyes-celeste-050); color: rgba(10, 26, 63, .70); font-size: .8rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
+
+/* Avisos con la forma de las tarjetas. */
+.alert { border-radius: .75rem; }
+.alert-info { --bs-alert-bg: var(--eyes-celeste-100); --bs-alert-border-color: var(--eyes-celeste-200); --bs-alert-color: var(--eyes-marino); }
+
+/* Paginación, pestañas y pie. */
+.pagination { --bs-pagination-active-bg: var(--eyes-azul); --bs-pagination-active-border-color: var(--eyes-azul); --bs-pagination-color: var(--eyes-azul); }
+.nav-pills { --bs-nav-pills-link-active-bg: var(--eyes-azul); --bs-nav-pills-border-radius: 999px; }
+footer.bg-body-tertiary { background: #fff !important; border-top: 1px solid var(--eyes-borde) !important; }
+.modal-content { border-radius: .75rem; border: 1px solid var(--eyes-borde); }
