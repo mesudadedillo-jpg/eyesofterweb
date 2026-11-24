@@ -45,3 +45,15 @@ document.addEventListener('submit', function (e) {
 document.addEventListener('change', function (e) {
     if (e.target.matches && e.target.matches('[data-auto-enviar]') && e.target.form) e.target.form.submit();
 });
+
+// Filtro de texto sobre una lista: <input data-filtro-lista="#idLista">. Oculta los elementos que no coinciden.
+document.addEventListener('input', function (e) {
+    var selector = e.target.dataset && e.target.dataset.filtroLista;
+    if (!selector) return;
+    var lista = document.querySelector(selector);
+    if (!lista) return;
+    var texto = e.target.value.trim().toLowerCase();
+    lista.querySelectorAll('.list-group-item').forEach(function (el) {
+        el.classList.toggle('d-none', texto !== '' && el.textContent.toLowerCase().indexOf(texto) === -1);
+    });
+});

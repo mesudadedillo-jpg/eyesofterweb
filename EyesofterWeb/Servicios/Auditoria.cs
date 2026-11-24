@@ -70,6 +70,7 @@ namespace EyesofterWeb.Servicios
                     "Tutor" when n is not null => _db.Tutores.IgnoreQueryFilters().Where(t => t.Id == n).Select(t => (int?)t.PlantelId).FirstOrDefault(),
                     "Campana" when n is not null => _db.Campanas.IgnoreQueryFilters().Where(c => c.Id == n).Select(c => (int?)c.PlantelId).FirstOrDefault(),
                     "Convenio" when n is not null => _db.Convenios.IgnoreQueryFilters().Where(c => c.Id == n).Select(c => (int?)c.PlantelId).FirstOrDefault(),
+                    "Grupo" when n is not null => _db.GruposEscolares.IgnoreQueryFilters().Where(g => g.Id == n).Select(g => (int?)g.PlantelId).FirstOrDefault(),
                     "Plantel" when n is not null => n,
                     "Comprobante" when Guid.TryParse(id, out var g) => _db.Comprobantes.IgnoreQueryFilters().Where(c => c.Id == g).Select(c => (int?)c.Caso!.Alumno!.PlantelId).FirstOrDefault(),
                     _ => null

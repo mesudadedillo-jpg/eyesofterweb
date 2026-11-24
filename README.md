@@ -157,7 +157,7 @@ y estas cuentas, todas con esa contraseña (con el correo base `micorreo@gmail.c
 | Especialista de la óptica de prueba | `micorreo+especialista@gmail.com` |
 
 Gmail y Outlook entregan los correos con `+algo` al buzón original, así que la recuperación de contraseña
-llega a quien las configuró. Dirección y Enfermería de prueba también activan la verificación en dos pasos.
+llega a quien las configuró. Dirección de prueba también activa la verificación en dos pasos (para Enfermería y el resto es opcional).
 Si se borra algo, se vuelve a crear al reiniciar; el pase de prueba se renueva al vencer; si cambias
 `CUENTAS_PRUEBA_PASSWORD`, las cuentas toman la nueva contraseña. La óptica de prueba aparece en el
 directorio de clínicas con la leyenda "(ficticia)".

@@ -4,6 +4,9 @@
     var esAdmin = User.IsInRole(Roles.Administrador);
     var puedeEditar = esAdmin || User.IsInRole(Roles.Enfermeria);
     var nivelSel = ViewBag.Nivel as NivelEducativo?;
+    var grupoSel = ViewBag.GrupoId as int?;
+    var egresados = (bool)ViewBag.Egresados;
+    var grupos = (List<GrupoEscolar>)ViewBag.Grupos;
 }
 
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
@@ -13,7 +16,10 @@
     </div>
     @if (puedeEditar)
     {
-        <a asp-action="Create" class="btn btn-marca"><i class="bi bi-plus-lg me-1"></i>Nuevo alumno</a>
+        <div class="d-flex gap-2">
+            <a asp-controller="Grupos" asp-action="Index" class="btn btn-outline-secondary"><i class="bi bi-collection me-1" aria-hidden="true"></i>Grupos</a>
+            <a asp-action="Create" class="btn btn-marca"><i class="bi bi-plus-lg me-1"></i>Nuevo alumno</a>
+        </div>
     }
 </div>
 
@@ -29,6 +35,22 @@
                 <option value="@n" selected="@(nivelSel == n)">@n</option>
             }
         </select>
+    </div>
+    <div class="col-sm-3 col-md-2">
+        <select name="grupoId" class="form-select" aria-label="Grupo">
+            <option value="">Todos los grupos</option>
+            <option value="0" selected="@(grupoSel == 0)">Sin grupo</option>
+            @foreach (var g in grupos)
+            {
+                <option value="@g.Id" selected="@(grupoSel == g.Id)">@g.Nombre</option>
+            }
+        </select>
+    </div>
+    <div class="col-auto d-flex align-items-center">
+        <div class="form-check mb-0">
+            <input class="form-check-input" type="checkbox" name="egresados" value="true" id="verEgresados" checked="@egresados" />
+            <label class="form-check-label" for="verEgresados">Egresados</label>
+        </div>
     </div>
     <div class="col-auto">
         <button class="btn btn-outline-secondary" type="submit"><i class="bi bi-search"></i> Filtrar</button>
@@ -59,7 +81,7 @@
                     <tr>
                         <td><code>@item.Matricula</code></td>
                         <td>@item.NombreCompleto</td>
-                        <td>@item.GradoGrupo</td>
+                        <td>@item.GradoGrupo @if (item.Egresado) { <span class="badge text-bg-secondary ms-1">Egresado</span> } @if (item.GrupoEscolarId is null && !item.Egresado) { <span class="badge text-bg-warning ms-1" title="No pasará de año automáticamente">Sin grupo</span> }</td>
                         <td>@(item.UsaLentes ? "Sí" : "No")</td>
                         <td>@item.Tutor?.NombreCompleto</td>
                         <td class="text-end text-nowrap">

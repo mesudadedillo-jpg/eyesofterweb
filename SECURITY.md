@@ -5,7 +5,7 @@ EYESOFTER trata **datos de salud de menores**. Resumen de las medidas del portal
 | Área | Medida |
 |---|---|
 | Acceso | Cuentas creadas por la escuela (sin registro público); contraseñas con hash PBKDF2 (Identity); bloqueo de 15 min tras 3 intentos |
-| Verificación en dos pasos | TOTP **obligatorio** para Dirección y Enfermería; códigos de respaldo de un solo uso |
+| Verificación en dos pasos | TOTP **obligatorio** para Dirección y opcional para Enfermería, clínicas, tutores y alumnos; códigos de respaldo de un solo uso |
 | Varias escuelas | Filtro global por escuela (`Seguridad/AlcanceEscuela.cs`): el personal solo ve su escuela; lo ajeno es 404 |
 | Cifrado | HTTPS (HSTS); datos de salud y archivos cifrados en la base con AES-256-GCM |
 | Sesión | Cookie HttpOnly/Secure/SameSite, cierre por inactividad (15 min), `Cache-Control: no-store` con sesión |

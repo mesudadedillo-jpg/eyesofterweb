@@ -175,6 +175,7 @@ builder.Services.AddHttpClient();
 builder.Services.Configure<OpcionesEyesofter>(builder.Configuration.GetSection("Eyesofter"));
 builder.Services.AddScoped<Auditoria>();
 builder.Services.AddScoped<Escuelas>();
+builder.Services.AddScoped<GruposEscolares>();
 builder.Services.AddScoped<Notificador>();
 builder.Services.AddScoped<Expedientes>();
 builder.Services.AddScoped<Indicadores>();

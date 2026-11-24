@@ -65,6 +65,13 @@ Las recetas y comprobantes de lentes que suben las familias desde la app o el po
 
 - **Tutores:** alta con teléfono y correo. Un tutor puede tener varios alumnos.
 - **Alumnos:** matrícula, grado, grupo y tutor. La matrícula debe ser la misma que usa el sistema de escritorio.
+- **Grupos:** registra cada grupo (nivel, grado, letra, ciclo escolar y docente) e inscribe a sus alumnos con
+  *Inscribir alumnos* o con *Alumno nuevo en este grupo*. Un alumno con grupo toma de él su grado y letra.
+- **Pasar de año** (Dirección): al cerrar el ciclo, en *Grupos → Pasar de año a toda la escuela* se ve qué grupos
+  suben y cuáles egresan; se confirma escribiendo `PASAR DE AÑO`. Cada grupo sube un grado con todos sus alumnos
+  y avanza su ciclo escolar; 6° de primaria y 3° de secundaria **egresan** (el grupo se cierra y sus alumnos quedan
+  como egresados, con su historial). También se puede pasar un solo grupo desde su ficha. Si algo falla, no se
+  cambia ningún grupo, y un grupo no puede pasar de año dos veces seguidas.
 - **Usuarios** (Dirección): crea cuentas para tutores, Enfermería, especialistas y alumnos. Desde
   aquí también se desactiva una cuenta, se desbloquea o se manda el enlace para que la persona
   ponga su contraseña. Una cuenta desactivada deja de funcionar de inmediato, también en la app.

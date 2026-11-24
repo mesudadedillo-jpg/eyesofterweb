@@ -25,9 +25,9 @@ namespace EyesofterWeb.Controllers
         }
 
         // GET: Alumnos
-        public async Task<IActionResult> Index(string? buscar, NivelEducativo? nivel)
+        public async Task<IActionResult> Index(string? buscar, NivelEducativo? nivel, int? grupoId, bool egresados = false)
         {
-            var consulta = _context.Alumnos.Include(a => a.Tutor).AsQueryable();
+            var consulta = _context.Alumnos.Include(a => a.Tutor).Where(a => a.Egresado == egresados);
 
             if (!string.IsNullOrWhiteSpace(buscar))
             {
@@ -37,9 +37,21 @@ namespace EyesofterWeb.Controllers
             {
                 consulta = consulta.Where(a => a.Nivel == nivel.Value);
             }
+            if (grupoId == 0)
+            {
+                consulta = consulta.Where(a => a.GrupoEscolarId == null);
+            }
+            else if (grupoId.HasValue)
+            {
+                consulta = consulta.Where(a => a.GrupoEscolarId == grupoId);
+            }
 
             ViewBag.Buscar = buscar;
             ViewBag.Nivel = nivel;
+            ViewBag.GrupoId = grupoId;
+            ViewBag.Egresados = egresados;
+            ViewBag.Grupos = await _context.GruposEscolares.AsNoTracking().Where(g => g.Activo)
+                .OrderBy(g => g.Nivel).ThenBy(g => g.Grado).ThenBy(g => g.Letra).ToListAsync();
             return View(await consulta
                 .OrderBy(a => a.Nivel).ThenBy(a => a.Grado).ThenBy(a => a.Grupo).ThenBy(a => a.Apellidos)
                 .ToListAsync());
@@ -52,6 +64,7 @@ namespace EyesofterWeb.Controllers
 
             var alumno = await _context.Alumnos
                 .Include(a => a.Tutor)
+                .Include(a => a.GrupoEscolar)
                 .Include(a => a.Casos).ThenInclude(c => c.Clinica)
                 .FirstOrDefaultAsync(m => m.Id == id);
             if (alumno is null) return NotFound();
@@ -61,26 +74,36 @@ namespace EyesofterWeb.Controllers
 
         // GET: Alumnos/Create
         [Authorize(Roles = Roles.AdminOEnfermeria)]
-        public async Task<IActionResult> Create(int? tutorId)
+        public async Task<IActionResult> Create(int? tutorId, int? grupoId)
         {
             await CargarTutoresAsync(tutorId);
             var plantel = await _escuelas.PorDefectoAsync();
             if (plantel is null) return View("~/Views/Home/SinEscuela.cshtml");
-            await CargarEscuelasAsync(plantel);
-            return View(new Alumno { TutorId = tutorId ?? 0, PlantelId = plantel.Value });
+
+            var alumno = new Alumno { TutorId = tutorId ?? 0, PlantelId = plantel.Value };
+            // "Alumno nuevo en este grupo": se llena escuela, nivel, grado y letra desde el grupo.
+            if (grupoId is int gid && await _context.GruposEscolares.FirstOrDefaultAsync(g => g.Id == gid && g.Activo) is { } grupo)
+            {
+                GruposEscolares.Sincronizar(alumno, grupo);
+                alumno.GrupoEscolar = null;
+            }
+            await CargarEscuelasAsync(alumno.PlantelId);
+            await CargarGruposAsync(alumno.GrupoEscolarId);
+            return View(alumno);
         }
 
         // POST: Alumnos/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = Roles.AdminOEnfermeria)]
-        public async Task<IActionResult> Create([Bind("Matricula,Nombre,Apellidos,FechaNacimiento,Nivel,Grado,Grupo,UsaLentes,TutorId,PlantelId")] Alumno alumno)
+        public async Task<IActionResult> Create([Bind("Matricula,Nombre,Apellidos,FechaNacimiento,Nivel,Grado,Grupo,UsaLentes,TutorId,PlantelId,GrupoEscolarId")] Alumno alumno)
         {
             await ValidarReglasAsync(alumno);
             if (!ModelState.IsValid)
             {
                 await CargarTutoresAsync(alumno.TutorId);
                 await CargarEscuelasAsync(alumno.PlantelId);
+                await CargarGruposAsync(alumno.GrupoEscolarId);
                 return View(alumno);
             }
 
@@ -100,6 +123,7 @@ namespace EyesofterWeb.Controllers
 
             await CargarTutoresAsync(alumno.TutorId);
             await CargarEscuelasAsync(alumno.PlantelId);
+            await CargarGruposAsync(alumno.GrupoEscolarId);
             return View(alumno);
         }
 
@@ -107,7 +131,7 @@ namespace EyesofterWeb.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = Roles.AdminOEnfermeria)]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Matricula,Nombre,Apellidos,FechaNacimiento,Nivel,Grado,Grupo,UsaLentes,TutorId,PlantelId")] Alumno alumno)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,Matricula,Nombre,Apellidos,FechaNacimiento,Nivel,Grado,Grupo,UsaLentes,TutorId,PlantelId,GrupoEscolarId,Egresado")] Alumno alumno)
         {
             if (id != alumno.Id) return NotFound();
             // El alumno debe existir en las escuelas visibles: no se edita "a ciegas" un id de otra escuela.
@@ -118,6 +142,7 @@ namespace EyesofterWeb.Controllers
             {
                 await CargarTutoresAsync(alumno.TutorId);
                 await CargarEscuelasAsync(alumno.PlantelId);
+                await CargarGruposAsync(alumno.GrupoEscolarId);
                 return View(alumno);
             }
 
@@ -197,6 +222,32 @@ namespace EyesofterWeb.Controllers
             {
                 ModelState.AddModelError(nameof(Alumno.TutorId), "El tutor seleccionado no existe.");
             }
+
+            // Con grupo escolar, nivel / grado / letra los pone el grupo (así cambian solos al pasar de año).
+            if (alumno.GrupoEscolarId is int grupoId)
+            {
+                var grupo = await _context.GruposEscolares.AsNoTracking().FirstOrDefaultAsync(g => g.Id == grupoId);
+                if (grupo is null || !grupo.Activo || grupo.PlantelId != alumno.PlantelId)
+                {
+                    ModelState.AddModelError(nameof(Alumno.GrupoEscolarId), "Elige un grupo activo de la misma escuela.");
+                }
+                else if (!alumno.Egresado)
+                {
+                    GruposEscolares.Sincronizar(alumno, grupo);
+                    alumno.GrupoEscolar = null; // no se vuelve a insertar el grupo
+                    foreach (var campo in new[] { nameof(Alumno.Nivel), nameof(Alumno.Grado), nameof(Alumno.Grupo) })
+                        ModelState.Remove(campo);
+                }
+            }
+        }
+
+        private async Task CargarGruposAsync(int? seleccionado)
+        {
+            var grupos = await _context.GruposEscolares.AsNoTracking().Where(g => g.Activo)
+                .OrderBy(g => g.Nivel).ThenBy(g => g.Grado).ThenBy(g => g.Letra)
+                .ToListAsync();
+            ViewData["GrupoEscolarId"] = new SelectList(
+                grupos.Select(g => new { g.Id, Texto = $"{g.Nombre} · {g.CicloEscolar}", g.PlantelId }), "Id", "Texto", seleccionado);
         }
 
         private async Task CargarEscuelasAsync(int? seleccionado) => ViewData["PlantelId"] = await _escuelas.ListaAsync(seleccionado);

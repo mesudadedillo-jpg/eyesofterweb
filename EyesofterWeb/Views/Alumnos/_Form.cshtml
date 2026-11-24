@@ -38,6 +38,23 @@
         <input asp-for="FechaNacimiento" class="form-control" />
         <span asp-validation-for="FechaNacimiento" class="text-danger small"></span>
     </div>
+    <div class="col-md-8">
+        <label asp-for="GrupoEscolarId" class="form-label">Grupo escolar</label>
+        <select asp-for="GrupoEscolarId" asp-items="ViewBag.GrupoEscolarId" class="form-select">
+            <option value="">-- Sin grupo (captura nivel, grado y letra) --</option>
+        </select>
+        <span asp-validation-for="GrupoEscolarId" class="text-danger small"></span>
+        <div class="form-text">Con grupo, el nivel, el grado y la letra se toman del grupo y cambian solos cuando el grupo pasa de año. <a asp-controller="Grupos" asp-action="Create" target="_blank">Registrar un grupo</a></div>
+    </div>
+    @if (Model.Egresado || Model.Id != 0)
+    {
+        <div class="col-md-4 d-flex align-items-end">
+            <div class="form-check form-switch mb-2">
+                <input asp-for="Egresado" class="form-check-input" role="switch" />
+                <label asp-for="Egresado" class="form-check-label">Egresado (ya no está inscrito)</label>
+            </div>
+        </div>
+    }
     <div class="col-6 col-md-3">
         <label asp-for="Nivel" class="form-label requerido"></label>
         <select asp-for="Nivel" asp-items="Html.GetEnumSelectList<NivelEducativo>()" class="form-select"></select>

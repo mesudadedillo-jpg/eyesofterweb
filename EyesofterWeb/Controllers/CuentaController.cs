@@ -358,7 +358,7 @@ namespace EyesofterWeb.Controllers
         }
 
         // ---------- Verificación en dos pasos (TOTP) ----------
-        // Obligatoria para Dirección y Enfermería (ven datos de salud de muchos menores): una
+        // Obligatoria para Dirección (administra cuentas y ve todo el plantel); opcional para los demás: una
         // contraseña robada ya no basta. Funciona con Google Authenticator, Microsoft Authenticator,
         // Authy o cualquier app TOTP. El servidor de la app móvil pide el mismo código.
 
@@ -474,7 +474,7 @@ namespace EyesofterWeb.Controllers
             {
                 ClaveLegible = string.Join(" ", Enumerable.Range(0, (clave!.Length + 3) / 4).Select(i => clave.Substring(i * 4, Math.Min(4, clave.Length - i * 4)))).ToLowerInvariant(),
                 QrDataUri = "data:image/png;base64," + Convert.ToBase64String(_documentos.QrPng(uri, 6)),
-                Obligatoria = User.IsInRole(Roles.Administrador) || User.IsInRole(Roles.Enfermeria)
+                Obligatoria = User.IsInRole(Roles.Administrador)
             };
         }
 
