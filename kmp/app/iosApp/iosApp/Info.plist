@@ -8,6 +8,11 @@
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>EYESOFTER usa tu ubicación solo para mostrarte las clínicas y ópticas más cercanas.</string>
 
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>remote-notification</string>
+	</array>
+
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>NSAllowsLocalNetworking</key>

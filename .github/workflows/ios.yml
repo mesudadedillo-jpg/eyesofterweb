@@ -27,6 +27,20 @@ jobs:
           distribution: temurin
           java-version: "21"
       - uses: gradle/actions/setup-gradle@v4
+      - name: Configuración de Firebase (opcional)
+        env:
+          GOOGLE_SERVICE_INFO_PLIST: ${{ secrets.GOOGLE_SERVICE_INFO_PLIST }}
+        run: |
+          # Sin este secreto la app compila igual, pero sin push (iOSApp.swift lo detecta).
+          if [ -n "$GOOGLE_SERVICE_INFO_PLIST" ]; then
+            printf '%s' "$GOOGLE_SERVICE_INFO_PLIST" > kmp/app/iosApp/iosApp/GoogleService-Info.plist
+            echo "Push en iOS: activadas"
+          else
+            echo "::notice::Sin GOOGLE_SERVICE_INFO_PLIST: la app de iPhone no tendrá push."
+          fi
+      - name: Descargar paquetes de Swift (Firebase)
+        working-directory: kmp/app/iosApp
+        run: xcodebuild -resolvePackageDependencies -project iosApp.xcodeproj
       - name: Compilar para el simulador de iPhone
         working-directory: kmp/app/iosApp
         run: |

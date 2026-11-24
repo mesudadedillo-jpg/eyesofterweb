@@ -8,3 +8,6 @@ lighthouse-reportes/
 
 # Versión web de la app: se genera desde kmp/ al construir la imagen (portal/Dockerfile).
 portal/EyesofterWeb/wwwroot/app-web/
+
+# Configuración de Firebase para iPhone: va como secreto (GOOGLE_SERVICE_INFO_PLIST), no en el repo.
+kmp/app/iosApp/iosApp/GoogleService-Info.plist
