@@ -1678,7 +1678,7 @@ namespace EyesofterWeb.Migrations
                         .WithMany("Alumnos")
                         .HasForeignKey("GrupoEscolarId")
                         .OnDelete(DeleteBehavior.SetNull)
-                        .HasConstraintName("fk_alumnos_grupos_grupo_escolar_id");
+                        .HasConstraintName("fk_alumnos_grupos_escolares_grupo_escolar_id");
 
                     b.HasOne("EyesofterWeb.Models.Tutor", "Tutor")
                         .WithMany("Alumnos")

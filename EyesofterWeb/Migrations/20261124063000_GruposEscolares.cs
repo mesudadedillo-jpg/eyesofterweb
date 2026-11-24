@@ -68,7 +68,7 @@ namespace EyesofterWeb.Migrations
                 filter: "activo");
 
             migrationBuilder.AddForeignKey(
-                name: "fk_alumnos_grupos_grupo_escolar_id",
+                name: "fk_alumnos_grupos_escolares_grupo_escolar_id",
                 table: "alumnos",
                 column: "grupo_escolar_id",
                 principalTable: "grupos",
@@ -98,7 +98,7 @@ WHERE g.activo AND g.plantel_id = a.plantel_id AND g.nivel = a.nivel AND g.grado
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropForeignKey(
-                name: "fk_alumnos_grupos_grupo_escolar_id",
+                name: "fk_alumnos_grupos_escolares_grupo_escolar_id",
                 table: "alumnos");
 
             migrationBuilder.DropTable(
