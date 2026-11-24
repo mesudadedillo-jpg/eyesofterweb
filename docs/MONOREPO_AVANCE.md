@@ -50,7 +50,14 @@ Después: servir la versión web de la app desde el portal y agregar iOS.
 ## Fase 3 — iOS
 
 - Revisar que el workflow `iOS` pase.
-- Pendiente en `iosMain`: `Telefono` (cámara/vibración), push (`Push`, con FCM + llave APNs), mapa nativo (`DirectorioNativo`, opcional:
+- [x] Push en iPhone con FCM (el servidor no cambia): `PushIos` (iosMain) + `iOSApp.swift` (AppDelegate con Firebase),
+  paquete `firebase-ios-sdk` en el proyecto Xcode, entitlement `aps-environment`, `UIBackgroundModes: remote-notification`.
+  Sin `GoogleService-Info.plist` la app funciona sin push. Para activarlas (lo hace la persona dueña de la cuenta):
+  1. En Firebase (mismo proyecto que Android): agregar app iOS con el bundle id definitivo y bajar `GoogleService-Info.plist`.
+  2. Guardar su contenido como secreto `GOOGLE_SERVICE_INFO_PLIST` en GitHub.
+  3. En Apple Developer crear una llave APNs (.p8) y subirla en Firebase → Configuración → Cloud Messaging → app iOS.
+  4. Al publicar en TestFlight/App Store cambiar `aps-environment` a `production` (o dejar que la firma de distribución lo haga).
+- Pendiente en `iosMain`: `Telefono` (cámara/vibración), mapa nativo (`DirectorioNativo`, opcional:
   sin él usa el mapa ilustrado). Todos son parámetros opcionales de `App()`: la app ya funciona sin ellos.
 - `Config.xcconfig`: cambiar `PRODUCT_BUNDLE_IDENTIFIER` (hoy `com.example...`) y `TEAM_ID` al tener la cuenta de Apple.
 - Pantalla Actualizar: en iOS mandar a App Store/TestFlight.
