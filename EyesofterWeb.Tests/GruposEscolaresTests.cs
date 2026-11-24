@@ -156,7 +156,6 @@ namespace EyesofterWeb.Tests
         {
             var snapshot = db.GetService<Microsoft.EntityFrameworkCore.Migrations.IMigrationsAssembly>().ModelSnapshot?.Model;
             if (snapshot is null) return "sin snapshot";
-            if (snapshot is Microsoft.EntityFrameworkCore.Metadata.IMutableModel mutable) snapshot = mutable.FinalizeModel();
             snapshot = db.GetService<Microsoft.EntityFrameworkCore.Infrastructure.IModelRuntimeInitializer>().Initialize(snapshot, designTime: true, validationLogger: null);
             var ops = db.GetService<Microsoft.EntityFrameworkCore.Migrations.IMigrationsModelDiffer>().GetDifferences(
                 snapshot.GetRelationalModel(), db.GetService<Microsoft.EntityFrameworkCore.Metadata.IDesignTimeModel>().Model.GetRelationalModel());
