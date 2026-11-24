@@ -14,10 +14,20 @@ Después: servir la versión web de la app desde el portal y agregar iOS.
       y `versionCode = run_number + 1000` (el número de ejecución se reinicia en el repo nuevo; así nunca baja).
 - [x] URLs del APK/version.json → `eyesofterweb/releases` en `VersionApp.kt`, `ActualizarScreen.kt` y `OpcionesEyesofter.cs`.
 - [x] README, MANUAL_TECNICO, TRAZABILIDAD, kmp/README y kmp/docs/API actualizados.
+- [x] `Pruebas` (dotnet test) pasa en GitHub Actions con la nueva estructura.
+- [x] `eyesofterandroid` (rama `claude/gracious-pasteur-b403lw`): comentarios y docs apuntan a `eyesofterweb/portal` y `kmp/`.
+- [x] Fase 2 (código listo, falta verlo en Railway):
+  - `portal/Dockerfile` tiene la etapa `appweb` (eclipse-temurin:21) que compila
+    `:app:webApp:wasmJsBrowserDistribution` y copia `productionExecutable/` a `wwwroot/app-web/`.
+  - `CabecerasSeguridad`: CSP propia para `/app-web` (`wasm-unsafe-eval`, API Ktor, OSM, geolocalización); pruebas agregadas.
+  - `Program.cs`: MIME `.wasm`/`.mjs`; `/app-web` → `/app-web/` → `index.html`.
+  - Workflow `app-web.yml` compila la app web en cada cambio de `kmp/`.
+  - En la sesión no se pudo compilar localmente (Maven Central devolvía 429); se verifica con `app-web.yml`.
 
 ## Pendiente — fase 1 (monorepo)
 
-1. Comprobar en GitHub Actions que `Pruebas` pasa (no había Docker ni .NET en la sesión).
+1. Revisar que `App web` pase en Actions. Si pasa, cambiar el texto de iPhone en `portal/EyesofterWeb/Views/App/Index.cshtml`
+   (línea ~47) por un botón a `/app-web/`. La app web usa la API Ktor desde el navegador (Ktor ya tiene CORS `anyHost`).
 2. **Railway (servicio del portal):** dejar *Root Directory* vacío y confirmar que usa `railway.json` de la raíz. Verificar `/salud` después del deploy.
 3. **Secretos de GitHub** en `eyesofterweb` (copiarlos de `eyesofterandroidfront`): `EYESOFTER_KEYSTORE_BASE64`,
    `EYESOFTER_KEYSTORE_PASSWORD`, `EYESOFTER_KEY_ALIAS`, `GOOGLE_SERVICES_JSON`. Misma llave de firma, o Android no actualizará encima.
