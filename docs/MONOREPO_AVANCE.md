@@ -22,12 +22,13 @@ Después: servir la versión web de la app desde el portal y agregar iOS.
   - `CabecerasSeguridad`: CSP propia para `/app-web` (`wasm-unsafe-eval`, API Ktor, OSM, geolocalización); pruebas agregadas.
   - `Program.cs`: MIME `.wasm`/`.mjs`; `/app-web` → `/app-web/` → `index.html`.
   - Workflow `app-web.yml` compila la app web en cada cambio de `kmp/`.
-  - En la sesión no se pudo compilar localmente (Maven Central devolvía 429); se verifica con `app-web.yml`.
+  - `App web` pasa en Actions (~4½ min). La página "Descarga la app" tiene el botón de iPhone → `/app-web/`.
+- [x] iOS (inicio): `kmp/app/iosApp` ya existía (Xcode + SwiftUI que carga `MainViewController`).
+  - `IosLocationProvider` (CoreLocation) en `iosMain`, pasado a `App()`; permiso en `Info.plist`.
+  - Workflow `ios.yml`: `xcodebuild` para simulador sin firmar en `macos-latest`.
 
 ## Pendiente — fase 1 (monorepo)
 
-1. Revisar que `App web` pase en Actions. Si pasa, cambiar el texto de iPhone en `portal/EyesofterWeb/Views/App/Index.cshtml`
-   (línea ~47) por un botón a `/app-web/`. La app web usa la API Ktor desde el navegador (Ktor ya tiene CORS `anyHost`).
 2. **Railway (servicio del portal):** dejar *Root Directory* vacío y confirmar que usa `railway.json` de la raíz. Verificar `/salud` después del deploy.
 3. **Secretos de GitHub** en `eyesofterweb` (copiarlos de `eyesofterandroidfront`): `EYESOFTER_KEYSTORE_BASE64`,
    `EYESOFTER_KEYSTORE_PASSWORD`, `EYESOFTER_KEY_ALIAS`, `GOOGLE_SERVICES_JSON`. Misma llave de firma, o Android no actualizará encima.
@@ -48,7 +49,9 @@ Después: servir la versión web de la app desde el portal y agregar iOS.
 
 ## Fase 3 — iOS
 
-- Crear `kmp/iosApp/` (proyecto Xcode que carga el framework `shared`; ya hay objetivos `iosArm64`/`iosSimulatorArm64`).
-- `iosMain`: ubicación (equivalente de `AndroidLocationProvider`), mapa, abrir/compartir PDF, almacenamiento, push (FCM + llave APNs).
+- Revisar que el workflow `iOS` pase.
+- Pendiente en `iosMain`: `Telefono` (cámara/vibración), push (`Push`, con FCM + llave APNs), mapa nativo (`DirectorioNativo`, opcional:
+  sin él usa el mapa ilustrado). Todos son parámetros opcionales de `App()`: la app ya funciona sin ellos.
+- `Config.xcconfig`: cambiar `PRODUCT_BUNDLE_IDENTIFIER` (hoy `com.example...`) y `TEAM_ID` al tener la cuenta de Apple.
 - Pantalla Actualizar: en iOS mandar a App Store/TestFlight.
 - Workflow `publicar-ios.yml` en `macos-latest` → TestFlight. Requiere cuenta Apple Developer (la de la usuaria/usuario).
