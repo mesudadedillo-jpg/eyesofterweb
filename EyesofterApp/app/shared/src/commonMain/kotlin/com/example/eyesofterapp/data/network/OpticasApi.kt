@@ -1,0 +1,176 @@
+package com.example.eyesofterapp.data.network
+
+import com.example.eyesofterapp.data.cache.DiskOpticasCache
+import com.example.eyesofterapp.domain.model.Optica
+import io.ktor.client.HttpClient
+import io.ktor.client.call.body
+import io.ktor.client.plugins.HttpRequestTimeoutException
+import io.ktor.client.request.bearerAuth
+import io.ktor.client.request.get
+import io.ktor.client.request.parameter
+import io.ktor.http.HttpStatusCode
+import io.ktor.http.isSuccess
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
+
+/**
+ * Directorio de ópticas para el mapa. La ruta es pública; si hay sesión se manda el token para
+ * que el servidor agregue el convenio de la escuela de los hijos del tutor (campo `convenio`).
+ */
+class OpticasApi(private val client: HttpClient, private val token: () -> String? = { null }) {
+
+    private val opticasCatalogo = listOf(
+        Optica(1, "Óptica Tulancingo Centro", "Av. Juárez 102, Centro", "Tulancingo", "43600", 20.0825, -98.3622, 1.2, "7757531234", true),
+        Optica(2, "Optometría Visión Real", "Calle Morelos 45", "Tulancingo", "43600", 20.0841, -98.3601, 2.5, "7757535678", false),
+        Optica(3, "Óptica Devlyn Tulancingo", "Plaza Bella Local 12", "Tulancingo", "43600", 20.0890, -98.3580, 3.1, "7757539999", false),
+        Optica(4, "Óptica Visión Central", "Av. Reforma 123", "CDMX", "06600", 19.432608, -99.133209, 1.8, "5555123456", true),
+        Optica(5, "Óptica Salud Visual", "Calle Juarez 456", "CDMX", "06600", 19.427015, -99.167671, 3.4, "5555987654", false),
+        Optica(6, "Centro Oftálmico del Norte", "Av. Insurgentes Sur 789", "CDMX", "03100", 19.380112, -99.172345, 5.2, "5555443322", false),
+        Optica(7, "Óptica Clara Vista", "Hidalgo 101", "Guadalajara", "44100", 20.676667, -103.3475, 2.1, "3336123456", false),
+        Optica(8, "Optometría Moderna", "Zaragoza 202", "Monterrey", "64000", 25.686614, -100.316113, 4.0, "8183123456", false)
+    )
+
+    private val osm = OsmApi(client)
+
+    /** Radio (km) que se usó en la última búsqueda de OpenStreetMap; null si no se pudo consultar. */
+    var ultimoRadioKm: Int? = null
+        private set
+
+    /**
+     * Ópticas cercanas a (lat, lng), en cualquier parte del mundo:
+     *  1. En paralelo: el servidor EYESOFTER (ópticas asociadas) y OpenStreetMap (todas las demás).
+     *  2. Se combinan sin duplicados y se ordenan por distancia.
+     *  3. Si ninguna de las dos fuentes responde, se usa el catálogo local como último recurso.
+     */
+    suspend fun getOpticasCercanas(lat: Double, lng: Double): ResultadoRed<List<Optica>> = coroutineScope {
+        val delServidor = async {
+            ejecutarPeticion {
+                client.get("/opticas/cercanas") {
+                    token()?.let { bearerAuth(it) }
+                    parameter("lat", lat)
+                    parameter("lng", lng)
+                }
+            }
+        }
+        val deOsm = async { osm.buscarOpticas(lat, lng) }
+
+        val resultadoServidor = delServidor.await()
+        val resultadoOsm = deOsm.await()
+        ultimoRadioKm = resultadoOsm?.radioKm
+
+        val asociadas = (resultadoServidor as? ResultadoRed.Exito)?.data.orEmpty()
+            .map { it.copy(distanciaKm = distanciaKm(lat, lng, it.lat, it.lng)) }
+            .filter { it.distanciaKm <= RADIO_MAX_ASOCIADAS_KM }
+
+        val combinada = combinar(asociadas, resultadoOsm?.opticas.orEmpty())
+        if (combinada.isNotEmpty()) {
+            DiskOpticasCache.guardar(combinada)
+            return@coroutineScope ResultadoRed.Exito(combinada)
+        }
+        // OpenStreetMap respondió pero no hay ópticas registradas cerca: lista vacía (no es un error).
+        if (resultadoOsm != null) return@coroutineScope ResultadoRed.Exito(emptyList())
+
+        // Ninguna fuente respondió: catálogo local de respaldo.
+        val localList = opticasCatalogo
+            .map { it.copy(distanciaKm = distanciaKm(lat, lng, it.lat, it.lng)) }
+            .sortedBy { it.distanciaKm }
+        ResultadoRed.Exito(localList)
+    }
+
+    /** Convierte "Tulancingo", "43600" o "Guadalajara" en coordenadas (Nominatim, gratis). */
+    suspend fun geocodificar(texto: String): OsmApi.LugarEncontrado? = osm.geocodificar(texto)
+
+    /** Quita de OSM las ópticas que ya están como asociadas (mismo lugar o mismo nombre muy cerca). */
+    private fun combinar(asociadas: List<Optica>, deOsm: List<Optica>): List<Optica> {
+        val sinDuplicar = deOsm.filter { o ->
+            asociadas.none { a ->
+                val d = distanciaKm(a.lat, a.lng, o.lat, o.lng)
+                d < 0.06 || (d < 0.2 && normalizar(a.nombre) == normalizar(o.nombre))
+            }
+        }
+        return (asociadas + sinDuplicar).sortedBy { it.distanciaKm }.take(MAX_RESULTADOS)
+    }
+
+    private fun normalizar(texto: String): String =
+        texto.lowercase()
+            .replace('á', 'a').replace('é', 'e').replace('í', 'i').replace('ó', 'o').replace('ú', 'u')
+            .filter { it.isLetterOrDigit() }
+
+    suspend fun getOpticasPorCiudadOZip(query: String): ResultadoRed<List<Optica>> {
+        val resultado = ejecutarPeticion {
+            client.get("/opticas/cercanas") {
+                token()?.let { bearerAuth(it) }
+                parameter("query", query)
+                parameter("ciudad", query)
+                parameter("cp", query)
+            }
+        }
+
+        if (resultado is ResultadoRed.Exito && resultado.data.isNotEmpty()) {
+            return resultado
+        }
+
+        val q = query.lowercase().trim()
+        val filtrados = opticasCatalogo.filter {
+            it.ciudad.lowercase().contains(q) ||
+            it.codigoPostal.lowercase().contains(q) ||
+            it.nombre.lowercase().contains(q) ||
+            it.direccion.lowercase().contains(q)
+        }
+
+        val list = if (filtrados.isNotEmpty()) filtrados else opticasCatalogo
+        DiskOpticasCache.guardar(list)
+        return ResultadoRed.Exito(list)
+    }
+
+    suspend fun verificarSalud(): ResultadoRed<Boolean> {
+        val baseUrl = BASE_URL
+        return try {
+            val response = client.get("/salud")
+            if (response.status.isSuccess()) {
+                ResultadoRed.Exito(true)
+            } else {
+                ResultadoRed.ErrorServidor(response.status.value, "Servidor reporta problemas")
+            }
+        } catch (e: HttpRequestTimeoutException) {
+            ResultadoRed.Timeout(baseUrl)
+        } catch (e: Exception) {
+            ResultadoRed.SinConexion
+        }
+    }
+
+    private suspend fun ejecutarPeticion(call: suspend () -> io.ktor.client.statement.HttpResponse): ResultadoRed<List<Optica>> {
+        val baseUrl = BASE_URL
+        return try {
+            val response = call()
+            when {
+                response.status.isSuccess() -> {
+                    val list = response.body<List<Optica>>()
+                    if (list.isNotEmpty()) {
+                        DiskOpticasCache.guardar(list)
+                    }
+                    ResultadoRed.Exito(list)
+                }
+                response.status == HttpStatusCode.Unauthorized -> ResultadoRed.ErrorCliente(401, "No autorizado")
+                response.status.value in 400..499 -> ResultadoRed.ErrorCliente(response.status.value, "Solicitud inválida")
+                response.status.value in 500..599 -> ResultadoRed.ErrorServidor(response.status.value, "Error interno en el servidor")
+                else -> ResultadoRed.ErrorServidor(response.status.value, "Error no esperado")
+            }
+        } catch (e: HttpRequestTimeoutException) {
+            ResultadoRed.Timeout(baseUrl)
+        } catch (e: Exception) {
+            val msg = e.message ?: ""
+            if (msg.contains("Connect", ignoreCase = true) || msg.contains("Host", ignoreCase = true) || msg.contains("Network", ignoreCase = true)) {
+                ResultadoRed.SinConexion
+            } else {
+                ResultadoRed.Desconocido(e)
+            }
+        }
+    }
+
+    private companion object {
+        /** Las asociadas solo se muestran si están a menos de esta distancia. */
+        const val RADIO_MAX_ASOCIADAS_KM = 50.0
+        const val MAX_RESULTADOS = 80
+    }
+}
