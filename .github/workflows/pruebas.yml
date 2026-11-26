@@ -3,7 +3,9 @@ name: Pruebas
 
 on:
   push:
+    paths-ignore: ["EyesofterApp/**"]
   pull_request:
+    paths-ignore: ["EyesofterApp/**"]
   workflow_dispatch: {}
 
 permissions:

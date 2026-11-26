@@ -1,0 +1,31 @@
+# Pruebas de la app multiplataforma (EyesofterApp/) cuando cambia algo de ella.
+name: Pruebas de la app
+
+on:
+  push:
+    paths: ["EyesofterApp/**", ".github/workflows/pruebas-app.yml"]
+  pull_request:
+    paths: ["EyesofterApp/**", ".github/workflows/pruebas-app.yml"]
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  pruebas:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: EyesofterApp
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Probar el código compartido
+        run: |
+          chmod +x gradlew
+          ./gradlew --no-daemon :app:shared:jvmTest

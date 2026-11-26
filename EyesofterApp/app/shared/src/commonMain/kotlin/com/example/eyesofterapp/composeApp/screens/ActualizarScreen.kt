@@ -46,7 +46,7 @@ fun ActualizarScreen(version: VersionPublicada, versionInstalada: String) {
             }
             EyesBotonPrincipal(
                 "Descargar e instalar",
-                onClick = { uri.openUri(version.apk.ifBlank { "https://github.com/mesudadedillo-jpg/eyesofterandroidfront/releases/latest/download/eyesofter.apk" }) },
+                onClick = { uri.openUri(version.apk.ifBlank { "https://github.com/mesudadedillo-jpg/eyesofterweb/releases/latest/download/eyesofter.apk" }) },
                 modifier = Modifier.fillMaxWidth(),
             )
             Text(

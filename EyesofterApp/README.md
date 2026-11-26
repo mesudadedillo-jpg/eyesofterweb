@@ -13,7 +13,7 @@ Escuela Primaria-Secundaria METANOIA (Tulancingo, Hgo.).
 Todos tienen la bandeja de notificaciones (con globito de pendientes) y el directorio de clínicas.
 La sesión se guarda en el teléfono: no hay que escribir la contraseña cada vez.
 
-- **Repositorio:** `https://github.com/mesudadedillo-jpg/eyesofterandroidfront`
+- **Repositorio:** `https://github.com/mesudadedillo-jpg/eyesofterweb`, carpeta `EyesofterApp/` (monorepo con el portal; antes era `eyesofterandroidfront`)
 - **Servidor que usa:** proyecto `eyesofter-backend`, repositorio
   `https://github.com/mesudadedillo-jpg/eyesofterandroid`, desplegado en
   `https://eyesofter-api.up.railway.app`
@@ -156,7 +156,7 @@ sdk.dir=C\:\\Users\\<tu-usuario>\\AppData\\Local\\Android\\Sdk
 
 ### Android (recomendado: Android Studio)
 
-1. **File → Open** → carpeta `eyesofter-app` → esperar el *Gradle sync*.
+1. **File → Open** → carpeta `EyesofterApp` de este repositorio → esperar el *Gradle sync*.
 2. Elegir la configuración **androidApp** y el emulador (por ejemplo Pixel).
 3. **Run ▶**.
 
@@ -268,7 +268,8 @@ servidor los manda por correo si está configurado Resend.
 
 Las familias descargan la app desde la página **Descarga la app** del portal (`/App`), que también
 abre el botón *Descarga la app móvil* del escritorio. Esa página apunta siempre al último APK de
-**Releases** de este repositorio, así que publicar una versión nueva no requiere tocar el portal.
+**Releases** del repositorio `eyesofterweb` (flujo `.github/workflows/publicar-apk.yml`, en la raíz
+del monorepo; se lanza al cambiar algo dentro de `EyesofterApp/`), así que publicar una versión nueva no requiere tocar el portal.
 
 ### Una sola vez: la llave de firma
 
@@ -283,7 +284,7 @@ keytool -genkeypair -v -keystore eyesofter.jks -alias eyesofter -keyalg RSA -key
 # Ya quedó en el portapapeles en Base64.
 ```
 
-En GitHub: **Settings → Secrets and variables → Actions → New repository secret**:
+En GitHub, en el repositorio `eyesofterweb`: **Settings → Secrets and variables → Actions → New repository secret**:
 
 | Secreto | Valor |
 |---|---|

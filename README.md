@@ -7,6 +7,20 @@ Portal de gestión del programa de tamizaje visual de la Escuela Primaria-Secund
 ([`eyesofterandroid`](https://github.com/mesudadedillo-jpg/eyesofterandroid)) usa la misma base
 PostgreSQL y las mismas cuentas.
 
+## Monorepo: portal + app multiplataforma
+
+Este repositorio tiene los dos frentes de EYESOFTER Suite:
+
+| Carpeta | Qué es | Cómo se publica |
+|---|---|---|
+| `EyesofterWeb/` (+ `EyesofterWeb.Tests/`) | Portal web, ASP.NET Core 10 | Railway (`Dockerfile`, `railway.json`) |
+| `EyesofterApp/` | App Kotlin Multiplatform / Compose: **Android, escritorio (JVM), web (Wasm/JS) e iOS** | APK en *Releases* de este repo (`.github/workflows/publicar-apk.yml`) |
+
+La interfaz de la app está **una sola vez** en `EyesofterApp/app/shared` (Compose Multiplatform): un cambio
+ahí sale igual en Android, en la versión de escritorio y en la web de la app. Ver
+[`EyesofterApp/README.md`](EyesofterApp/README.md). Antes la app vivía en el repo `eyesofterandroidfront`
+(su historial se conservó aquí con `git subtree`).
+
 | Documento | Contenido |
 |---|---|
 | [`docs/MANUAL_TECNICO.md`](docs/MANUAL_TECNICO.md) | Arquitectura, modelo de datos, instalación y despliegue (C-RS-01) |
@@ -15,6 +29,7 @@ PostgreSQL y las mismas cuentas.
 | [`docs/RESPALDO.md`](docs/RESPALDO.md) | Respaldo diario y recuperación de la base (C-RC-13, C-RS-05) |
 | [`docs/TRAZABILIDAD.md`](docs/TRAZABILIDAD.md) | Los 119 requisitos y dónde se cumple cada uno |
 | `eyesofterandroid/docs/API.md` | API de la app y del escritorio (C-RS-02) |
+| [`EyesofterApp/README.md`](EyesofterApp/README.md) | App multiplataforma: ejecutar, probar y publicar el APK |
 
 ## Tecnologías
 
@@ -135,7 +150,7 @@ El repositorio trae `Dockerfile` y `railway.json` (healthcheck en `/salud`).
 | `RESEND_API_KEY` | Alternativa a Brevo con [Resend](https://resend.com) (3 000 al mes). Para enviar a cualquiera, el remitente debe ser de un dominio verificado en Resend; con `onboarding@resend.dev` solo llega al correo de tu cuenta de Resend. Si están las dos llaves, se usa Brevo |
 | `TWILIO_ACCOUNT_SID` / `TWILIO_AUTH_TOKEN` / `TWILIO_NUMERO` | (Opcional) Código por SMS al celular del tutor. Twilio cobra (≈ US$0.05 por SMS a México; la cuenta de prueba solo envía a números verificados). Sin ellas, a quien escribe su celular el código le llega al correo. Las mismas en el servidor de la app |
 | `SMS_PREFIJO_PAIS` | (Opcional) Lada para celulares de 10 dígitos. Por defecto `+52` |
-| `Eyesofter__UrlApk` | (Opcional) Dónde se descarga el instalador de Android. Por defecto, el último APK publicado en GitHub Releases de `eyesofterandroidfront` (página pública `/App`) |
+| `Eyesofter__UrlApk` | (Opcional) Dónde se descarga el instalador de Android. Por defecto, el último APK publicado en GitHub Releases de este repositorio (`eyesofterweb`, flujo *Publicar APK*) (página pública `/App`) |
 | `CUENTAS_PRUEBA_PASSWORD` | (Opcional) Crea y mantiene una cuenta de prueba por rol en una escuela ficticia aparte (ver abajo). Pon esta variable a mano en el panel; no la publiques |
 | `CUENTAS_PRUEBA_CORREO` | (Opcional) Correo base de las cuentas de prueba. Si no se define, se usa `ADMIN_CORREO` |
 

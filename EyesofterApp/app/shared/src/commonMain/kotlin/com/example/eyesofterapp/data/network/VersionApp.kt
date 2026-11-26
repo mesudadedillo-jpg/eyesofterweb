@@ -18,7 +18,7 @@ import kotlinx.serialization.json.Json
  * Si no hay internet o GitHub no responde, se deja entrar: la app debe funcionar sin red
  * y el servidor sigue validando cada petición.
  */
-const val URL_VERSION_APP = "https://github.com/mesudadedillo-jpg/eyesofterandroidfront/releases/latest/download/version.json"
+const val URL_VERSION_APP = "https://github.com/mesudadedillo-jpg/eyesofterweb/releases/latest/download/version.json"
 
 /** Los APK de desarrollo (compilados a mano) tienen versionCode 1: a esos no se les exige actualizar. */
 const val VERSION_CODE_MINIMA_PUBLICADA = 100

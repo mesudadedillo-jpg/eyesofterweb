@@ -3,3 +3,5 @@
 **/obj
 **/.vs
 **/*.user
+# La app multiplataforma (Kotlin) no entra a la imagen del portal.
+EyesofterApp
