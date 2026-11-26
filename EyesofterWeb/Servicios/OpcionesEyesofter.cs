@@ -25,6 +25,6 @@ namespace EyesofterWeb.Servicios
         /// Instalador de la app para Android (APK). Por defecto, el último que publicó el flujo
         /// "Publicar APK" del repositorio de la app en GitHub Releases. Eyesofter__UrlApk lo cambia.
         /// </summary>
-        public string UrlApk { get; set; } = "https://github.com/mesudadedillo-jpg/eyesofterandroidfront/releases/latest/download/eyesofter.apk";
+        public string UrlApk { get; set; } = "https://github.com/mesudadedillo-jpg/eyesofterweb/releases/latest/download/eyesofter.apk";
     }
 }

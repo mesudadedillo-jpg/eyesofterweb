@@ -7,7 +7,7 @@ implementación en los tres repositorios:
 |---|---|---|
 | **WEB** | `eyesofterweb` | Portal web ASP.NET Core 10 (dueño de la base y de las cuentas) |
 | **API** | `eyesofterandroid` | Servidor Ktor de la app móvil y del escritorio, despachador de notificaciones |
-| **APP** | `eyesofterandroidfront` | App móvil Kotlin Multiplatform (Android; iOS preparado) |
+| **APP** | `eyesofterweb/EyesofterApp` | App móvil Kotlin Multiplatform (Android; iOS preparado) |
 | **ESC** | `Eyesofter` | Sistema de escritorio JavaFX: examen de agudeza y color, y envío del resultado a la API |
 
 Estado: ✅ cumplido y probado · 🟡 cumplido, pero depende de una configuración o de otro sistema ·
